@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guide: CUDA 11.8 Conda Environment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral Tech -->
+    <!-- Application Structure Plan: The SPA is organized into five logical, thematic sections to create an intuitive user flow. It starts with the primary solution (The Final YAML), then encourages deeper understanding through an 'Interactive Dependency Explorer'. It clarifies key technical trade-offs in 'GPU Acceleration Status', explains foundational 'Key Concepts' (like channel priority), and concludes with a practical 'Usage Guide'. This task-oriented structure (get solution -> explore details -> understand principles -> implement) is more effective for a technical user than the linear format of the source report, allowing them to quickly access the information they need at their desired level of depth. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Final YAML file -> Goal: Inform/Provide -> Viz: HTML `<pre>` block with copy button -> Justification: Provides the core deliverable in a ready-to-use format.
+        - Report Info: Full dependency list and rationale -> Goal: Organize/Explore/Relate -> Viz: Interactive HTML/CSS cards in a grid -> Interaction: Click to expand details -> Justification: Transforms a dense text block into an engaging, explorable interface, making the relationships and reasoning behind each dependency clear.
+        - Report Info: GPU vs CPU library status -> Goal: Compare/Inform -> Viz: Interactive HTML table with icons -> Interaction: Click row to see detailed notes -> Justification: Provides a high-level, scannable comparison of library capabilities, a key finding of the report, with on-demand access to the underlying reasoning.
+        - Report Info: PyTorch version compatibility -> Goal: Inform -> Viz: Static HTML table -> Justification: Clearly presents tabular data from the report.
+        - Report Info: Channel priority -> Goal: Organize/Inform -> Viz: Ordered list styled as a flowchart -> Justification: Visually represents the hierarchy and importance of the conda channels.
+        - Library: Chart.js (Canvas) used for a dependency category donut chart to provide a high-level summary of the environment's composition.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f7f4;
+            color: #1f2937;
+        }
+        .nav-link {
+            transition: color 0.2s, border-bottom-color 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        .yaml-code {
+            white-space: pre;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+        .yaml-code .key { color: #9cdcfe; }
+        .yaml-code .string { color: #ce9178; }
+        .yaml-code .comment { color: #6a9955; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 350px; }
+        }
+        .dependency-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .dependency-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .details-pane {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .details-pane.open {
+            max-height: 1000px; /* Large enough to fit content */
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-gray-800">CUDA 11.8 Environment Guide</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#solution" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Solution</a>
+                        <a href="#explorer" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Explorer</a>
+                        <a href="#gpu-status" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">GPU Status</a>
+                        <a href="#concepts" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Concepts</a>
+                        <a href="#usage" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Usage</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <select id="mobile-nav" class="bg-gray-200 border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        <option value="#solution">Solution</option>
+                        <option value="#explorer">Explorer</option>
+                        <option value="#gpu-status">GPU Status</option>
+                        <option value="#concepts">Concepts</option>
+                        <option value="#usage">Usage</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <!-- Section 1: The Solution (Final YAML) -->
+        <section id="solution" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 mb-4">The Final `conda` YAML File</h2>
+            <p class="text-lg text-gray-600 mb-6 max-w-3xl">
+                This is the core deliverable: a meticulously constructed `conda` environment file for a stable, high-performance project targeting CUDA 11.8. It is designed for immediate use.
+            </p>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold">jennai-root.yaml</h3>
+                    <button id="copy-yaml-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200">
+                        Copy to Clipboard
+                    </button>
+                </div>
+                <div class="relative">
+                    <pre id="yaml-content" class="yaml-code"><code><span class="key">name:</span> <span class="string">jennai-root</span>
+<span class="key">channels:</span>
+  <span class="string">- pytorch</span> <span class="comment"># Priority 1: Official PyTorch for GPU builds</span>
+  <span class="string">- nvidia</span>  <span class="comment"># Priority 2: Core CUDA/cuDNN packages</span>
+  <span class="string">- conda-forge</span> <span class="comment"># Priority 3: Comprehensive community channel</span>
+  <span class="string">- defaults</span>  <span class="comment"># Priority 4: Default Anaconda channel as fallback</span>
+<span class="key">dependencies:</span>
+  <span class="string">- python=3.9</span>
+  <span class="string">- flask</span>
+  <span class="string">- flask-cors</span>
+  <span class="string">- requests</span>
+  <span class="string">- pandas</span>
+  <span class="string">- numpy</span>
+  <span class="string">- matplotlib</span>
+  <span class="string">- pip</span>
+  <span class="string">- cudatoolkit=11.8</span>
+  <span class="string">- cudnn=8.9.7</span>
+  <span class="string">- pytorch::pytorch=2.1.1=py39_cuda118_cudnn8_0</span>
+  <span class="string">- pytorch::torchvision=0.16.0=py39_cuda118_cudnn8_0</span>
+  <span class="string">- pytorch::torchaudio=2.1.1=py39_cuda118_cudnn8_0</span>
+  <span class="string">- pytorch-cuda=11.8</span>
+  <span class="string">- onnxruntime-gpu=1.18.0</span>
+  <span class="string">- scikit-image=0.21.0</span>
+  <span class="string">- opencv-python=4.10.0.84</span>
+  <span class="string">- cupy</span>
+  <span class="key">pip:</span>
+    <span class="string">- google-generativeai</span>
+    <span class="string">- loguru</span>
+    <span class="string">- pytest</span>
+    <span class="string">- ipykernel</span>
+    <span class="string">- onnx==1.16.1</span>
+    <span class="string">- tqdm</span>
+</code></pre>
+                    <div id="copy-success-msg" class="absolute top-4 right-4 bg-green-500 text-white text-sm font-bold py-1 px-3 rounded-full opacity-0 transition-opacity duration-300">
+                        Copied!
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section 2: Interactive Dependency Explorer -->
+        <section id="explorer" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 mb-4">Interactive Dependency Explorer</h2>
+            <p class="text-lg text-gray-600 mb-8 max-w-3xl">
+                The environment is more than just a list of packages. It's a carefully balanced ecosystem. Click on any component below to understand its role, version, and the rationale behind its inclusion.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-1">
+                    <h3 class="text-xl font-semibold mb-4 text-center">Dependency Categories</h3>
+                     <div class="bg-white rounded-lg shadow-lg p-6">
+                        <div class="chart-container">
+                            <canvas id="dependencyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div id="dependency-grid" class="md:col-span-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <!-- Dependency cards will be injected here by JavaScript -->
+                </div>
+            </div>
+            
+            <div id="details-pane-container" class="mt-8">
+                <!-- Details pane will be shown here -->
+            </div>
+        </section>
+
+        <!-- Section 3: GPU Acceleration Status -->
+        <section id="gpu-status" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 mb-4">GPU Acceleration Status</h2>
+            <p class="text-lg text-gray-600 mb-6 max-w-3xl">
+                A key design consideration was maximizing stable GPU usage. Not all libraries leverage the GPU in the same way. This table clarifies which components are GPU-accelerated by default and which require special handling.
+            </p>
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="p-4 text-sm font-semibold text-gray-600">Library</th>
+                            <th class="p-4 text-sm font-semibold text-gray-600">Primary Function</th>
+                            <th class="p-4 text-sm font-semibold text-gray-600">GPU Acceleration</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gpu-status-table-body">
+                       <!-- Rows injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 4: Key Concepts -->
+        <section id="concepts" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 mb-6">Key Concepts & Rationale</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Channel Priority -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4">Channel Priority Explained</h3>
+                    <p class="text-gray-600 mb-6">The order of channels is critical. `conda` searches them from top to bottom. This order ensures we get the correct, official GPU-enabled builds before falling back to general-purpose community channels.</p>
+                    <ol class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-blue-500 text-white font-bold mr-4">1</span>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">pytorch</h4>
+                                <p class="text-gray-600 text-sm">Highest priority for official, stable PyTorch GPU builds.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-blue-400 text-white font-bold mr-4">2</span>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">nvidia</h4>
+                                <p class="text-gray-600 text-sm">Provides core CUDA components like `cudatoolkit` and `cudnn`.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-blue-300 text-white font-bold mr-4">3</span>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">conda-forge</h4>
+                                <p class="text-gray-600 text-sm">Comprehensive channel for general packages, used after specific GPU sources.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                             <span class="flex-shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-gray-300 text-gray-700 font-bold mr-4">4</span>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">defaults</h4>
+                                <p class="text-gray-600 text-sm">Lowest priority fallback for any remaining common packages.</p>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+                <!-- PyTorch Compatibility -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4">PyTorch CUDA 11.8 Compatibility</h3>
+                    <p class="text-gray-600 mb-6">While other versions may work, PyTorch `2.1.1` and its ecosystem are chosen for their documented stability with CUDA 11.8, minimizing risk.</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left font-medium text-gray-500">PyTorch</th>
+                                    <th class="px-4 py-2 text-left font-medium text-gray-500">torchvision</th>
+                                    <th class="px-4 py-2 text-left font-medium text-gray-500">torchaudio</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr class="bg-blue-50">
+                                    <td class="px-4 py-2 font-semibold">2.1.1</td>
+                                    <td class="px-4 py-2">0.16.0</td>
+                                    <td class="px-4 py-2">2.1.1</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2">2.1.0</td>
+                                    <td class="px-4 py-2">0.16.0</td>
+                                    <td class="px-4 py-2">2.1.0</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2">2.0.1</td>
+                                    <td class="px-4 py-2">0.15.2</td>
+                                    <td class="px-4 py-2">2.0.2</td>
+                                </tr>
+                                 <tr>
+                                    <td class="px-4 py-2">2.0.0</td>
+                                    <td class="px-4 py-2">0.15.1</td>
+                                    <td class="px-4 py-2">2.0.1</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Usage Guide -->
+        <section id="usage" class="scroll-mt-24">
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 mb-4">Usage Guide & Best Practices</h2>
+            <p class="text-lg text-gray-600 mb-6 max-w-3xl">
+                Follow these steps to create and manage your environment effectively, ensuring long-term stability and reproducibility.
+            </p>
+            <div class="space-y-8">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4">1. Environment Creation</h3>
+                    <p class="text-gray-600 mb-4">Save the YAML content as `environment.yaml`, then run this command in your terminal:</p>
+                    <pre class="bg-gray-800 text-white p-4 rounded-md font-mono text-sm"><code>conda env create -f environment.yaml</code></pre>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-semibold mb-4">2. Environment Activation</h3>
+                     <p class="text-gray-600 mb-4">Once created, activate the environment to start working:</p>
+                    <pre class="bg-gray-800 text-white p-4 rounded-md font-mono text-sm"><code>conda activate jennai-root</code></pre>
+                </div>
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-r-lg" role="alert">
+                    <h3 class="font-bold text-lg">Important Best Practices</h3>
+                    <ul class="mt-2 list-disc list-inside space-y-1">
+                        <li><strong>Avoid Blanket Updates:</strong> Never run `conda update --all`. It can break the carefully pinned versions. Update packages individually and with caution.</li>
+                        <li><strong>Lock Your Environment:</strong> For perfect reproducibility, export a lock file after creation: `conda env export > environment.lock.yaml`.</li>
+                        <li><strong>Check Your Driver:</strong> Ensure your system's NVIDIA driver is version 452.39 or higher. This is a common source of errors.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white mt-16 border-t">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
+            <p>Interactive Application generated from the "CUDA 11.8 YAML Configuration" Report.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const dependencies = {
+                core: [
+                    { name: 'Python', version: '3.9', desc: 'The core programming language. Version 3.9 is chosen for its stability and broad compatibility with all required packages, avoiding known issues with newer versions.' },
+                    { name: 'CUDA Toolkit', version: '11.8', desc: 'The fundamental NVIDIA platform for GPU computing. The entire environment is built around this specific version.' },
+                    { name: 'cuDNN', version: '8.9.7', desc: 'A GPU-accelerated library for deep neural networks. Version 8.9.7 is a specific requirement for ONNX Runtime 1.18.0 when used with CUDA 11.8.' },
+                    { name: 'pip', version: 'N/A', desc: 'The package installer for Python, used to install libraries not available on conda channels.' }
+                ],
+                deep_learning: [
+                    { name: 'PyTorch', version: '2.1.1', desc: 'The primary deep learning framework. Version 2.1.1 is a stable, documented release for CUDA 11.8.' },
+                    { name: 'torchvision', version: '0.16.0', desc: 'Provides popular datasets, model architectures, and image transformations for computer vision, corresponding to PyTorch 2.1.1.' },
+                    { name: 'torchaudio', version: '2.1.1', desc: 'Provides audio libraries, datasets, and models, corresponding to PyTorch 2.1.1.' },
+                    { name: 'pytorch-cuda', version: '11.8', desc: 'A crucial metapackage that ensures conda installs PyTorch with its required CUDA 11.8 dependencies, preventing a CPU-only fallback.' },
+                    { name: 'ONNX Runtime GPU', version: '1.18.0', desc: 'A high-performance inference engine for ONNX models, specifically the GPU-enabled version compatible with CUDA 11.8.' },
+                    { name: 'ONNX', version: '1.16.1', desc: 'The Open Neural Network Exchange format itself; tools for working with ONNX models.' }
+                ],
+                image_vision: [
+                    { name: 'scikit-image', version: '0.21.0', desc: 'A CPU-based library for image processing. For GPU acceleration, one would need to use `cuCIM` with `CuPy`, which requires code changes.' },
+                    { name: 'OpenCV-Python', version: '4.10.0.84', desc: 'A CPU-based installation of the popular computer vision library. The GPU version is avoided due to known critical conflicts with PyTorch on CUDA 11.8.' },
+                    { name: 'CuPy', version: 'N/A', desc: 'A NumPy/SciPy-compatible array library for GPU-accelerated computing. It is included to enable the optional use of `cuCIM` for GPU-accelerated image processing.' }
+                ],
+                web_utils: [
+                    { name: 'Flask', version: 'N/A', desc: 'A micro web framework for creating web APIs or applications.' },
+                    { name: 'Flask-Cors', version: 'N/A', desc: 'An extension for Flask that handles Cross-Origin Resource Sharing (CORS).' },
+                    { name: 'google-generativeai', version: 'N/A', desc: 'The client library for Google\'s Generative AI APIs.'},
+                    { name: 'Loguru', version: 'N/A', desc: 'A library which aims to bring enjoyable logging to Python.'},
+                    { name: 'Requests', version: 'N/A', desc: 'A simple, yet elegant, HTTP library.'},
+                    { name: 'tqdm', version: 'N/A', desc: 'A fast, extensible progress bar for loops and other iterable tasks.'}
+                ],
+                data_dev: [
+                    { name: 'Pandas', version: 'N/A', desc: 'A powerful data analysis and manipulation library.' },
+                    { name: 'NumPy', version: 'N/A', desc: 'The fundamental package for scientific computing with Python.' },
+                    { name: 'Matplotlib', version: 'N/A', desc: 'A comprehensive library for creating static, animated, and interactive visualizations.' },
+                    { name: 'PyTest', version: 'N/A', desc: 'A framework that makes it easy to write small tests, yet scales to support complex functional testing.' },
+                    { name: 'IPyKernel', version: 'N/A', desc: 'The IPython kernel for Jupyter, enabling interactive computing.' }
+                ]
+            };
+            
+            const categoryMapping = {
+                core: { label: 'Core & CUDA', color: 'rgba(59, 130, 246, 0.7)' },
+                deep_learning: { label: 'Deep Learning', color: 'rgba(139, 92, 246, 0.7)' },
+                image_vision: { label: 'Image/Vision', color: 'rgba(16, 185, 129, 0.7)' },
+                web_utils: { label: 'Web & Utilities', color: 'rgba(239, 68, 68, 0.7)' },
+                data_dev: { label: 'Data & Dev Tools', color: 'rgba(249, 115, 22, 0.7)' }
+            };
+
+            // Populate Dependency Explorer
+            const grid = document.getElementById('dependency-grid');
+            let allDeps = [];
+            for (const category in dependencies) {
+                dependencies[category].forEach(dep => {
+                    allDeps.push({ ...dep, category });
+                });
+            }
+
+            allDeps.forEach(dep => {
+                const card = document.createElement('div');
+                card.className = 'dependency-card cursor-pointer bg-white rounded-lg shadow p-4 flex flex-col items-center justify-center text-center';
+                card.dataset.depName = dep.name;
+                
+                const categoryInfo = categoryMapping[dep.category];
+                card.style.borderColor = categoryInfo.color;
+                card.classList.add('border-b-4');
+
+                card.innerHTML = `
+                    <h4 class="font-semibold text-gray-800 text-sm">${dep.name}</h4>
+                    <p class="text-xs text-gray-500 mt-1">${dep.version}</p>
+                `;
+                grid.appendChild(card);
+            });
+            
+            // Handle card clicks
+            const detailsContainer = document.getElementById('details-pane-container');
+            let currentOpenCard = null;
+
+            grid.addEventListener('click', (e) => {
+                const card = e.target.closest('.dependency-card');
+                if (!card) return;
+
+                const depName = card.dataset.depName;
+                const dep = allDeps.find(d => d.name === depName);
+
+                if (currentOpenCard === card) {
+                    detailsContainer.innerHTML = '';
+                    currentOpenCard.classList.remove('ring-2', 'ring-blue-500');
+                    currentOpenCard = null;
+                    return;
+                }
+
+                if (currentOpenCard) {
+                    currentOpenCard.classList.remove('ring-2', 'ring-blue-500');
+                }
+                
+                card.classList.add('ring-2', 'ring-blue-500');
+                currentOpenCard = card;
+
+                const categoryInfo = categoryMapping[dep.category];
+                detailsContainer.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-xl p-6 border-l-4" style="border-color: ${categoryInfo.color};">
+                        <h3 class="text-2xl font-bold text-gray-900">${dep.name}</h3>
+                        <p class="text-sm font-medium text-gray-500 mb-4">Version: ${dep.version}</p>
+                        <p class="text-gray-700">${dep.desc}</p>
+                    </div>
+                `;
+            });
+
+            // Chart.js Donut Chart
+            const ctx = document.getElementById('dependencyChart').getContext('2d');
+            const chartData = {
+                labels: Object.values(categoryMapping).map(c => c.label),
+                datasets: [{
+                    label: 'Dependency Categories',
+                    data: Object.keys(dependencies).map(cat => dependencies[cat].length),
+                    backgroundColor: Object.values(categoryMapping).map(c => c.color.replace('0.7', '0.8')),
+                    borderColor: Object.values(categoryMapping).map(c => c.color.replace('0.7', '1')),
+                    borderWidth: 1,
+                    hoverOffset: 4
+                }]
+            };
+
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                             labels: {
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        title: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#1f2937',
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 12 },
+                            padding: 10,
+                            cornerRadius: 4,
+                            displayColors: false
+                        }
+                    }
+                }
+            });
+
+            // Populate GPU Status Table
+            const gpuStatusData = [
+                { library: 'PyTorch', func: 'Deep Learning', accelerated: true, notes: 'GPU acceleration is enabled by default via the official `pytorch` channel build and the `pytorch-cuda` metapackage. It bundles its own CUDA runtime.' },
+                { library: 'ONNX Runtime', func: 'ML Model Inference', accelerated: true, notes: 'The `onnxruntime-gpu` package is used, which is explicitly compatible with CUDA 11.8 and requires `cudnn=8.x`.' },
+                { library: 'scikit-image', func: 'Image Processing', accelerated: false, notes: 'Fundamentally a CPU-only library. GPU acceleration requires code changes to use NVIDIA\'s `cuCIM` library with `CuPy` arrays.' },
+                { library: 'opencv-python', func: 'Computer Vision', accelerated: false, notes: 'Installed as CPU-only. Building with CUDA 11.8 support is complex and has known critical conflicts (segmentation faults) with PyTorch.' }
+            ];
+            
+            const gpuTableBody = document.getElementById('gpu-status-table-body');
+            gpuStatusData.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-50 cursor-pointer';
+                row.innerHTML = `
+                    <td class="p-4 font-medium text-gray-900">${item.library}</td>
+                    <td class="p-4 text-gray-600">${item.func}</td>
+                    <td class="p-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.accelerated ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                            ${item.accelerated ? '✔ Accelerated' : '✖ CPU-Only'}
+                        </span>
+                    </td>
+                `;
+                
+                const detailsRow = document.createElement('tr');
+                detailsRow.className = 'details-pane';
+                detailsRow.innerHTML = `<td colspan="3" class="p-4 bg-gray-50 text-gray-600 text-sm">${item.notes}</td>`;
+
+                row.addEventListener('click', () => {
+                    detailsRow.classList.toggle('open');
+                });
+
+                gpuTableBody.appendChild(row);
+                gpuTableBody.appendChild(detailsRow);
+            });
+
+
+            // Copy YAML button
+            const copyBtn = document.getElementById('copy-yaml-btn');
+            const yamlContent = document.getElementById('yaml-content').innerText;
+            const successMsg = document.getElementById('copy-success-msg');
+            
+            copyBtn.addEventListener('click', () => {
+                const tempTextArea = document.createElement('textarea');
+                tempTextArea.value = yamlContent;
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                try {
+                    document.execCommand('copy');
+                    successMsg.style.opacity = '1';
+                    setTimeout(() => {
+                        successMsg.style.opacity = '0';
+                    }, 2000);
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                }
+                document.body.removeChild(tempTextArea);
+            });
+
+            // Smooth scrolling for nav links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            // Mobile nav
+            document.getElementById('mobile-nav').addEventListener('change', function(e) {
+                const targetId = e.target.value;
+                document.querySelector(targetId).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+
+            // Active nav link highlighting on scroll
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: '-50% 0px -50% 0px' });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+        });
+    </script>
+</body>
+</html>

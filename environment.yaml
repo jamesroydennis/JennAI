@@ -1,0 +1,19 @@
+name: jennai-root
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - flask
+  - flask-cors
+  - requests
+  - ipykernel
+  - pip
+  - pip:
+    - google-generativeai
+    - loguru
+    - pytest
+    - numexpr
+    - opencv-python==4.10.0.84
