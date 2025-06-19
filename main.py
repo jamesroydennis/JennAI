@@ -114,11 +114,15 @@ if __name__ == '__main__':
     logger.success("SUCCESS - JennAI OS has successfully booted and performed initial checks. Vibe coding initiated!")
 
     # Run the Flask app if main.py is executed directly and DEBUG_MODE is True
-    if flask_app_instance and DEBUG_MODE:
+    # AND we are not in a test run that should prevent the server from starting
+    if flask_app_instance and DEBUG_MODE and not os.getenv("PYTEST_RUNNING_MAIN"):
         logger.info(f"Starting Flask development server on http://0.0.0.0:5000 (DEBUG_MODE: {DEBUG_MODE})...")
         # Use host='0.0.0.0' to make the server accessible from your network
         # Use port=5000 (or any other port you prefer)
         flask_app_instance.run(debug=DEBUG_MODE, host='0.0.0.0', port=5000)
     elif flask_app_instance:
-        logger.info(f"Flask app created. Not starting dev server automatically (DEBUG_MODE: {DEBUG_MODE}).")
-        logger.info("To run the development server, ensure DEBUG_MODE is True in your config/config.py and run 'python main.py'.")
+        logger.info(f"Flask app created. Not starting dev server automatically (DEBUG_MODE: {DEBUG_MODE}, PYTEST_RUNNING_MAIN: {os.getenv('PYTEST_RUNNING_MAIN')}).")
+        if DEBUG_MODE and not os.getenv("PYTEST_RUNNING_MAIN"):
+             logger.info("To run the development server, ensure DEBUG_MODE is True in your config/config.py and run 'python main.py'.")
+        elif os.getenv("PYTEST_RUNNING_MAIN"):
+            logger.info("Flask dev server start skipped due to PYTEST_RUNNING_MAIN environment variable.")

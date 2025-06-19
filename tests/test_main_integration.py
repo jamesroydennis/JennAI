@@ -22,6 +22,7 @@ def test_main_py_initializes_successfully():
     # Provide a dummy API key to prevent AIGenerator from failing if the key is required at startup.
     env = os.environ.copy()
     env["GOOGLE_API_KEY"] = "DUMMY_API_KEY_FOR_TESTING"
+    env["PYTEST_RUNNING_MAIN"] = "1" # Prevent main.py from starting the blocking Flask server
     # You could also set DEBUG_MODE here if needed, e.g., env["DEBUG_MODE"] = "True"
     # However, main.py reads DEBUG_MODE from config.config, so that should be respected.
 
