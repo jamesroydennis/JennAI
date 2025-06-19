@@ -2,8 +2,8 @@
 
 import os
 from typing import Dict, Any # For options parameter
-from loguru import logger # Import the logger
-# from google.generativeai import GenerativeModel # Uncomment when ready to use actual API
+from loguru import logger
+from google.generativeai import GenerativeModel # Ensure this is uncommented
 from src.business.interfaces.IAIService import IAIService # Import the interface
 
 class AIGenerator(IAIService): # Inherit from IAIService
@@ -15,18 +15,17 @@ class AIGenerator(IAIService): # Inherit from IAIService
             logger.error("API key must be provided for AIGenerator.")
             raise ValueError("API key must be provided for AIGenerator.")
         self.api_key = api_key
-        # self.model = GenerativeModel("gemini-pro") # Uncomment when ready to use actual API
+        self.model = GenerativeModel("gemini-pro") # Initialize the model
         logger.info(f"AIGenerator initialized with API Key (masked): {api_key[:5]}...")
 
     def generate_text(self, prompt: str, options: Dict[str, Any] = None) -> str:
         """
         Generates text based on a given prompt and optional parameters.
-        This implementation is conceptual.
         """
         logger.info(f"Generating text for prompt: '{prompt}' with options: {options}")
-        # response = self.model.generate_content(prompt) # Uncomment for actual API call
-        # return response.text
-        return "Generated content (placeholder)."
+        # Actual API call
+        response = self.model.generate_content(prompt)
+        return response.text
 
     def analyze_image(self, image_data: bytes, options: Dict[str, Any] = None) -> Dict[str, Any]:
         """

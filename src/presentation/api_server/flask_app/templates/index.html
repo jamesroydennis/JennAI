@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- Example Favicon (place jennai-favicon.ico in static/img/) -->
-    <link rel="icon" href="{{ url_for('static', filename='img/jennai-favicon.ico') }}" type="image/x-icon">
+    <!-- Favicon (place favicon.ico in static/) -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
     <header>
         <!-- Example Header Logo (place jennai-logo-header.png in static/img/) -->
-        <img src="{{ url_for('static', filename='img/jennai-logo-header.png') }}" alt="JennAI Logo" style="max-width: 180px; padding: 10px; vertical-align: middle;">
+        <img src="{{ url_for('static', filename='img/jennai-logo.png') }}" alt="JennAI Logo" style="max-width: 180px; max-height:180px; padding: 10px; vertical-align: middle;">
         <h1>{{ title }}</h1>
     </header>
 
@@ -20,6 +20,10 @@
         <p>This page is served from <code>src/presentation/api_server/flask_app/templates/index.html</code>.</p>
         <p>Static files like CSS and JavaScript are linked from the <code>src/presentation/api_server/flask_app/static/</code> directory.</p>
         <div id="js-message" style="margin-top: 20px; font-style: italic;"></div>
+
+        <!-- Under Construction Image -->
+        <img src="{{ url_for('static', filename='img/under_construction.png') }}" alt="Site Under Construction" width="512" height="512" style="margin-top: 30px;">
+
     </main>
 
     <footer>

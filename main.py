@@ -45,6 +45,7 @@ def configure_project_business_dependencies(container: DependencyContainer):
     # Using a factory lambda to provide the API key from environment variables.
     container.register_singleton(IAIService, lambda: AIGenerator(api_key=os.getenv("GOOGLE_API_KEY")))
     logger.info("Registered AIGenerator for IAIService.")
+    
 
     # --- User Management Service Registration (Conceptual) ---
     from src.business.interfaces.IUserManager import IUserManager
@@ -93,16 +94,12 @@ def configure_project_presentation_dependencies(container: DependencyContainer):
     # Import the app factory
     from src.presentation.api_server.flask_app import create_app
 
-    # Create the Flask app instance
-    # You would pass the global_container if your Flask routes need DI
     flask_app = create_app(container=container) 
-    logger.info("Flask application instance created conceptually.")
-    # In a real scenario, you might register the app instance or its components if needed by other parts
-    # For running in development, you might do:
-    # if __name__ == '__main__' and DEBUG_MODE: # Check if main.py is run directly
-    #     logger.info("Attempting to run Flask app in debug mode (conceptual from main.py)...")
-    #     # flask_app.run(debug=True, host='0.0.0.0', port=5000) # This would block
+    logger.info("Flask application instance created.")
+    
     logger.success("SUCCESS - src/presentation dependencies configured (conceptual).")
+    # Return the app instance so it can be run by the main execution block
+    return flask_app
 
 # --- Main Application Execution Block ---
 if __name__ == '__main__':
@@ -112,7 +109,16 @@ if __name__ == '__main__':
 
     configure_project_business_dependencies(global_container)
     configure_project_data_dependencies(global_container) # Add call to configure data dependencies
-    configure_project_presentation_dependencies(global_container)
-
+    flask_app_instance = configure_project_presentation_dependencies(global_container)
 
     logger.success("SUCCESS - JennAI OS has successfully booted and performed initial checks. Vibe coding initiated!")
+
+    # Run the Flask app if main.py is executed directly and DEBUG_MODE is True
+    if flask_app_instance and DEBUG_MODE:
+        logger.info(f"Starting Flask development server on http://0.0.0.0:5000 (DEBUG_MODE: {DEBUG_MODE})...")
+        # Use host='0.0.0.0' to make the server accessible from your network
+        # Use port=5000 (or any other port you prefer)
+        flask_app_instance.run(debug=DEBUG_MODE, host='0.0.0.0', port=5000)
+    elif flask_app_instance:
+        logger.info(f"Flask app created. Not starting dev server automatically (DEBUG_MODE: {DEBUG_MODE}).")
+        logger.info("To run the development server, ensure DEBUG_MODE is True in your config/config.py and run 'python main.py'.")
