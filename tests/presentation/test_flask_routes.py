@@ -56,7 +56,7 @@ def test_home_page_get(client):
     response = client.get('/')
     assert response.status_code == 200
     # Check for content from your index.html
-    # The title "JennAI Home" is passed from default_routes.py
-    assert b"<h1>JennAI Home</h1>" in response.data
+    # The title "Welcome to JennAI" is passed from default_routes.py
+    assert b"<h1>Welcome to JennAI</h1>" in response.data
     assert b"Your JennAI Flask application is up and running!" in response.data
     assert b"under_construction.png" in response.data # Check for the image

@@ -43,6 +43,7 @@ For ensuring project stability after significant changes, the following workflow
 The easiest way to run the full regression suite is using the provided shell script:
 ```bash
 bash admin/run_regression.sh
+
 ```
 This script will perform all the steps below and exit with an appropriate status code. (Note: Ensure the script has execute permissions: `chmod +x admin/run_regression.sh`)
 
