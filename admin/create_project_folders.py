@@ -42,10 +42,17 @@ DIRECTORIES_TO_CREATE = [
     "src/data/obj",
     "src/data/tests",
     "src/presentation",
-    "src/presentation/notebooks",
-    "src/presentation/static",
-    "src/presentation/templates",
-    "src/presentation/tests",
+    "src/presentation/api_server", # For backend API logic
+    "src/presentation/api_server/controllers",
+    "src/presentation/api_server/schemas",
+    "src/presentation/api_server/flask_app", # Example for Flask
+    "src/presentation/api_server/flask_app/routes",
+    "src/presentation/api_server/flask_app/static", # Static files for Flask app
+    "src/presentation/api_server/flask_app/templates", # Templates for Flask app
+    "src/presentation/web_clients", # For frontend client projects
+    # "src/presentation/web_clients/react_app", # You'd init React project here
+    # "src/presentation/web_clients/angular_app", # You'd init Angular project here
+    "src/presentation/tests", # Tests for the presentation layer (e.g., API tests)
     "tests",  # Top-level tests directory
 ]
 
@@ -64,7 +71,12 @@ PACKAGES_TO_INITIALIZE = [
     "src/data/obj",
     "src/data/tests",
     "src/presentation",
-    "src/presentation/tests",
+    "src/presentation/api_server",
+    "src/presentation/api_server/controllers",
+    "src/presentation/api_server/schemas",
+    "src/presentation/api_server/flask_app",
+    "src/presentation/api_server/flask_app/routes",
+    "src/presentation/tests", # For presentation layer tests
     "tests", # Top-level tests directory
 ]
 

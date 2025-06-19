@@ -37,14 +37,52 @@ def configure_project_business_dependencies(container: DependencyContainer):
     Configures dependencies specific to the `src/business` layer.
     """
     logger.info("INFO - Configuring src/business dependencies (conceptual).")
-    
-    # Import the AIGenerator from its correct location
+
+    # --- AI Service Registration ---
+    from src.business.interfaces.IAIService import IAIService
     from src.business.ai.gemini_api import AIGenerator
-    
-    # Register AIGenerator as a singleton or transient based on your needs.
+    # Register AIGenerator as the concrete implementation for IAIService
     # Using a factory lambda to provide the API key from environment variables.
-    container.register_singleton(AIGenerator, lambda: AIGenerator(api_key=os.getenv("GOOGLE_API_KEY")))
+    container.register_singleton(IAIService, lambda: AIGenerator(api_key=os.getenv("GOOGLE_API_KEY")))
+    logger.info("Registered AIGenerator for IAIService.")
+
+    # --- User Management Service Registration (Conceptual) ---
+    from src.business.interfaces.IUserManager import IUserManager
+    # Assume you have a concrete implementation, e.g., InMemoryUserManager or DatabaseUserManager
+    # For this example, let's create a placeholder concrete class here or import it.
+    # from src.business.services.user_service import InMemoryUserManager # Example import
+    class ConceptualUserManager(IUserManager): # Placeholder
+        def create_user(self, user_data): logger.info("ConceptualUserManager: create_user called"); raise NotImplementedError
+        def get_user_by_id(self, user_id): logger.info("ConceptualUserManager: get_user_by_id called"); raise NotImplementedError
+        def get_user_by_email(self, email): logger.info("ConceptualUserManager: get_user_by_email called"); raise NotImplementedError
+    
+    container.register_singleton(IUserManager, ConceptualUserManager)
+    logger.info("Registered ConceptualUserManager for IUserManager.")
+
     logger.success("SUCCESS - src/business dependencies configured (conceptual).")
+
+def configure_project_data_dependencies(container: DependencyContainer):
+    """
+    Configures dependencies specific to the `src/data` layer.
+    """
+    logger.info("INFO - Configuring src/data dependencies (conceptual).")
+
+    # --- CRUD Repository Registration (Conceptual for a User entity) ---
+    from src.data.interfaces.ICrudRepository import ICrudRepository
+    # Assume you have a UserDTO or entity model
+    # from src.data.dto.user_dto import UserDTO # Example import
+    class UserDTO: pass # Placeholder
+
+    # Assume you have a concrete repository implementation for UserDTO
+    # from src.data.repositories.in_memory_user_repository import InMemoryUserRepository # Example
+    class ConceptualUserRepository(ICrudRepository[UserDTO]): # Placeholder
+        def create(self, item): logger.info("ConceptualUserRepository: create called"); raise NotImplementedError
+        def read_by_id(self, item_id): logger.info("ConceptualUserRepository: read_by_id called"); raise NotImplementedError
+        # ... other methods ...
+
+    container.register_singleton(ICrudRepository[UserDTO], ConceptualUserRepository)
+    logger.info("Registered ConceptualUserRepository for ICrudRepository[UserDTO].")
+    logger.success("SUCCESS - src/data dependencies configured (conceptual).")
 
 def configure_project_presentation_dependencies(container: DependencyContainer):
     """
@@ -62,6 +100,7 @@ if __name__ == '__main__':
     logger.info("INFO - JennAI OS is booting up and configuring core services...")
 
     configure_project_business_dependencies(global_container)
+    configure_project_data_dependencies(global_container) # Add call to configure data dependencies
     configure_project_presentation_dependencies(global_container)
 
 
