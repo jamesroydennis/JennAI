@@ -49,6 +49,7 @@ DIRECTORIES_TO_CREATE = [
     "src/presentation/api_server/flask_app/routes",
     "src/presentation/api_server/flask_app/static", # Static files for Flask app
     "src/presentation/api_server/flask_app/static/css", # For CSS files
+    "src/presentation/api_server/flask_app/static/img",  # For Flask app specific images
     "src/presentation/api_server/flask_app/static/js",   # For JavaScript files
     "src/presentation/api_server/flask_app/templates", # Templates for Flask app
     "src/presentation/img", # For general presentation layer images

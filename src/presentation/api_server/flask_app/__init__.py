@@ -1,30 +1,35 @@
-# /home/jdennis/Projects/JennAI/src/presentation/api_server/flask_app/__init__.py
-
 from flask import Flask
-from pathlib import Path
+from loguru import logger
 
-# Import the global dependency container if you plan to inject dependencies into routes
-# from core.dependency_container import DependencyContainer # Assuming global_container is accessible
+# Assuming DependencyContainer might be type-hinted or used if passed directly
+# from core.dependency_container import DependencyContainer
 
-def create_app(container=None): # Pass container if needed for DI in routes
+def create_app(container=None): # Accept the dependency container
     """
-    Application factory for the Flask app.
+    Factory function to create and configure the Flask application.
     """
-    # Calculate path to templates and static folders relative to this file
-    base_dir = Path(__file__).resolve().parent
-    template_folder = base_dir / 'templates'
-    static_folder = base_dir / 'static'
+    logger.info("Creating Flask application instance...")
+    # __name__ here will be 'src.presentation.api_server.flask_app'
+    # Flask will look for 'templates' and 'static' folders relative to this 'flask_app' directory.
+    app = Flask(__name__, template_folder='templates', static_folder='static')
 
-    app = Flask(__name__, template_folder=str(template_folder), static_folder=str(static_folder))
+    # --- Configuration ---
+    # Example: Load configuration from a config object or environment variables
+    # app.config.from_object('your_project.config.FlaskConfig')
+    # app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'a_default_secret_key_for_dev')
+    logger.info(f"Flask app instance created. Static folder: {app.static_folder}, Template folder: {app.template_folder}")
 
-    # Register blueprints
-    from .routes.main_routes import main_bp
-    app.register_blueprint(main_bp)
+    # --- Dependency Injection ---
+    # Store the container on the app context if needed by routes or extensions
+    if container:
+        app.container = container
+        logger.info("Dependency container attached to Flask app.")
 
-    # app.container = container # Make container accessible if needed: app.container.resolve(...)
+    # --- Register Blueprints ---
+    from .routes.default_routes import default_bp  # Import your blueprint(s)
+    app.register_blueprint(default_bp)
+    logger.info("Registered 'default_bp' blueprint.")
+
+    logger.success("Flask application instance configured successfully.")
     return app
 
-# Add this at the end of flask_app/__init__.py for quick testing
-if __name__ == '__main__':
-    app = create_app()
-    app.run(debug=True, host='0.0.0.0', port=5000)

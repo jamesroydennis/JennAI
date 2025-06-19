@@ -3,27 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JennAI Project</title>
-    <style>
-        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f4f4f4; color: #333; text-align: center; }
-        .logo-placeholder { font-size: 2.5em; font-weight: bold; margin-bottom: 20px; color: #4a90e2; }
-        .construction-text { font-size: 1.5em; margin-top: 20px; }
-        .image-placeholder {
-            width: 200px; /* Adjust as needed */
-            height: 150px; /* Adjust as needed */
-            background-color: #e0e0e0;
-            border: 1px dashed #ccc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-style: italic;
-            color: #777;
-        }
-    </style>
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Example Favicon (place jennai-favicon.ico in static/img/) -->
+    <link rel="icon" href="{{ url_for('static', filename='img/jennai-favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
-    <div class="logo-placeholder">JennAI</div>
-    <div class="image-placeholder">(Under Construction Image Placeholder)</div>
-    <p class="construction-text">Our website is currently under construction. Please check back soon!</p>
+    <header>
+        <!-- Example Header Logo (place jennai-logo-header.png in static/img/) -->
+        <img src="{{ url_for('static', filename='img/jennai-logo-header.png') }}" alt="JennAI Logo" style="max-width: 180px; padding: 10px; vertical-align: middle;">
+        <h1>{{ title }}</h1>
+    </header>
+
+    <main>
+        <p>Your JennAI Flask application is up and running!</p>
+        <p>This page is served from <code>src/presentation/api_server/flask_app/templates/index.html</code>.</p>
+        <p>Static files like CSS and JavaScript are linked from the <code>src/presentation/api_server/flask_app/static/</code> directory.</p>
+        <div id="js-message" style="margin-top: 20px; font-style: italic;"></div>
+    </main>
+
+    <footer>
+        <p>&copy; <span id="currentYear"></span> JennAI Project. All rights reserved.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
