@@ -48,7 +48,10 @@ DIRECTORIES_TO_CREATE = [
     "src/presentation/api_server/flask_app", # Example for Flask
     "src/presentation/api_server/flask_app/routes",
     "src/presentation/api_server/flask_app/static", # Static files for Flask app
+    "src/presentation/api_server/flask_app/static/css", # For CSS files
+    "src/presentation/api_server/flask_app/static/js",   # For JavaScript files
     "src/presentation/api_server/flask_app/templates", # Templates for Flask app
+    "src/presentation/img", # For general presentation layer images
     "src/presentation/web_clients", # For frontend client projects
     # "src/presentation/web_clients/react_app", # You'd init React project here
     # "src/presentation/web_clients/angular_app", # You'd init Angular project here

@@ -7,7 +7,18 @@ channels:
 
 dependencies:
   - python=3.9 # Or your specific Python version
-  # ... other conda-installable dependencies ...
+  # Essential CUDA toolkit and cuDNN for the environment
+  - cudatoolkit=11.8
+  - cudnn=8.9.7
+  # Web framework and related
+  - flask
+  - flask-cors
+  # Data handling and scientific computing
+  - numpy
+  - pandas
+  - requests # For HTTP requests
+  - matplotlib # For plotting
+  # Add other conda-installable dependencies like onnxruntime-gpu, scikit-image, cupy if needed
 
   - pip
   - pip:
@@ -27,4 +38,5 @@ dependencies:
     - numexpr
     - opencv-python==4.10.0.84
     - "ruff>=0.1.0"   # Added new dev tool
+    # Add other pip-installable dependencies like ipykernel, onnx, tqdm if needed
     # ... any other pip dependencies

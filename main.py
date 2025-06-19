@@ -89,8 +89,19 @@ def configure_project_presentation_dependencies(container: DependencyContainer):
     Configures dependencies specific to the `src/presentation` layer.
     """
     logger.info("INFO - Configuring src/presentation dependencies (conceptual).")
-    # Example: If you had a Flask app instance defined in src/presentation/app.py
-    # from src.presentation.app import create_flask_app
+    
+    # Import the app factory
+    from src.presentation.api_server.flask_app import create_app
+
+    # Create the Flask app instance
+    # You would pass the global_container if your Flask routes need DI
+    flask_app = create_app(container=container) 
+    logger.info("Flask application instance created conceptually.")
+    # In a real scenario, you might register the app instance or its components if needed by other parts
+    # For running in development, you might do:
+    # if __name__ == '__main__' and DEBUG_MODE: # Check if main.py is run directly
+    #     logger.info("Attempting to run Flask app in debug mode (conceptual from main.py)...")
+    #     # flask_app.run(debug=True, host='0.0.0.0', port=5000) # This would block
     logger.success("SUCCESS - src/presentation dependencies configured (conceptual).")
 
 # --- Main Application Execution Block ---
