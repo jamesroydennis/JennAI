@@ -1,53 +1,22 @@
-# First, ensure you have the google-generativeai library installed in your 'aura' Conda environment.
-# If you get an error like "ModuleNotFoundError: No module named 'google.generativeai'",
-# then uncomment the line below and run it in a new Jupyter cell:
-# !pip install google-generativeai
+# /home/jdennis/Projects/JennAI/config/gemini_api.py
 
-import google.generativeai as genai
 import os
+# from google.generativeai import GenerativeModel # Uncomment when ready to use actual API
 
-# --- Configuration for your API Key ---
-# IMPORTANT: Replace "YOUR_API_KEY" with your actual Google Gemini API Key.
-# It's highly recommended to use environment variables for API keys in real projects,
-# but for initial Jupyter exploration, direct pasting is acceptable for quick testing.
-API_KEY = "YOUR_API_KEY" 
+class AIGenerator:
+    """
+    Conceptual class to represent interaction with a Generative AI model like Gemini.
+    """
+    def __init__(self, api_key: str):
+        if not api_key:
+            raise ValueError("API key must be provided for AIGenerator.")
+        self.api_key = api_key
+        # self.model = GenerativeModel("gemini-pro") # Uncomment when ready to use actual API
+        print(f"AIGenerator initialized with API Key (masked): {api_key[:5]}...")
 
-# Configure the Gemini API with your API Key
-try:
-    genai.configure(api_key=API_KEY)
-    print("Gemini API configured successfully!")
-except Exception as e:
-    print(f"Error configuring Gemini API: {e}")
-    print("Please double-check your API Key.")
-
-# --- Define the Generative Model ---
-# We'll use the 'gemini-2.0-flash' model for its speed and cost-effectiveness,
-# making it ideal for our interactive experiments.
-model = genai.GenerativeModel('gemini-2.0-flash')
-
-# --- Your First Human-Led Prompt! ---
-# This is where you direct the AI's power.
-# Let's start by exploring the core concept of our project: "vibe coding".
-prompt = "Explain the concept of 'vibe coding' in a simple, friendly, and encouraging way, like you're inspiring a fellow engineer. Keep it concise, but convey enthusiasm."
-
-print(f"\n--- Sending your human-crafted prompt to Gemini ---\n'{prompt}'\n")
-
-try:
-    # --- Make the API Call to Gemini ---
-    # The generate_content method sends our prompt to the model and fetches the response.
-    response = model.generate_content(prompt)
-
-    # --- Display Gemini's Response ---
-    # The actual generated text content is typically accessed via response.text
-    if response.text:
-        print("\n--- Aura's Co-Creation (Gemini's Response) ---\n")
-        print(response.text)
-    else:
-        print("\nNo text content received in the response from Gemini.")
-        if response.candidates and response.candidates[0].finish_reason:
-            print(f"AI Model Finish Reason: {response.candidates[0].finish_reason}")
-            print("This might indicate content moderation or safety filters.")
-except Exception as e:
-    print(f"\nAn error occurred during the API call: {e}")
-    print("Possible issues: Incorrect API Key, network problems, or API rate limits.")
-    print("Please verify your API Key and internet connection.")
+    def generate_content(self, prompt: str) -> str:
+        """Generates content based on a prompt (conceptual)."""
+        print(f"Generating content for prompt: '{prompt}'...")
+        # response = self.model.generate_content(prompt) # Uncomment for actual API call
+        # return response.text
+        return "Generated content (placeholder)."

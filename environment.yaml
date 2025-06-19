@@ -1,19 +1,29 @@
 name: jennai-root
 channels:
-  - pytorch
+  - pytorch # Keep pytorch channel even if installing via pip, for other related dependencies
   - nvidia
   - conda-forge
   - defaults
+
 dependencies:
-  - python=3.9
-  - flask
-  - flask-cors
-  - requests
-  - ipykernel
+  - python=3.9 # Or your specific Python version
+  # ... other conda-installable dependencies ...
+
   - pip
   - pip:
+    # The --index-url argument is specifically part of the pip install command.
+    # To use it in environment.yaml, you can add it as an argument after the package.
+    # The exact versions might need to be copied from the PyTorch website's Pip command output.
+    - "torch==2.7.1+cu118 --index-url https://download.pytorch.org/whl/cu118" # Example exact version
+    - "torchvision==0.22.1+cu118 --index-url https://download.pytorch.org/whl/cu118" # Example exact version
+    - "torchaudio==2.7.1+cu118 --index-url https://download.pytorch.org/whl/cu118" # Example exact version
+    # The exact version numbers (+cu118) are crucial for reproducibility with specific CUDA builds.
+    # Get these precise versions from the PyTorch website's pip command or by running `pip list` after a successful manual install.
+
+    # Your other pip dependencies:
     - google-generativeai
     - loguru
     - pytest
     - numexpr
     - opencv-python==4.10.0.84
+    # ... any other pip dependencies
