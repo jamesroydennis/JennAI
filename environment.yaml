@@ -22,8 +22,9 @@ dependencies:
 
     # Your other pip dependencies:
     - google-generativeai
-    - loguru
-    - pytest
+    - "loguru>=0.7.0" # Aligned with pyproject.toml
+    - "pytest>=7.0"   # Aligned with pyproject.toml
     - numexpr
     - opencv-python==4.10.0.84
+    - "ruff>=0.1.0"   # Added new dev tool
     # ... any other pip dependencies

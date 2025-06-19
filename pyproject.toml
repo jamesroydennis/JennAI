@@ -1,0 +1,100 @@
+# pyproject.toml - For project build, metadata, and tool configuration
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+backend-path = ["."] # Specifies that the backend is in the project root
+
+[project]
+name = "jennai"
+version = "0.1.0" # Initial version
+description = "JennAI Boilerplate Project - A monorepo for AI application development."
+readme = "README.md"
+requires-python = ">=3.9" # Matches your environment.yaml
+license = { file = "LICENSE" }
+authors = [
+    { name = "James R Dennis", email = "your_email@example.com" }, # Replace with your actual email
+]
+keywords = ["ai", "boilerplate", "monorepo", "python", "jennai"]
+
+# Runtime dependencies - these should ideally align with your environment.yaml
+# For a project using Conda primarily, this section might be minimal if
+# you're not building a wheel for PyPI that needs to declare pip dependencies.
+# If you do build wheels, list core runtime dependencies here.
+dependencies = [
+    "loguru>=0.7.0", # Example: if loguru is a direct runtime dep
+    # "google-generativeai", # If used directly by runtime code not just dev/notebooks
+    # "torch", # Generally managed by Conda for specific builds
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0", # Specify a version range if desired
+    "ruff>=0.1.0", # If you add ruff to your dev workflow
+    # Add other development tools like type checkers (e.g., "mypy")
+]
+
+[tool.pytest.ini_options]
+testpaths = [ # Pytest will search for tests in these directories
+    "tests",  # For top-level integration/system tests
+    "src"     # For layer-specific unit/component tests (e.g., src/business/tests)
+]
+addopts = [
+    "--import-mode=importlib",
+    "-v",
+]
+markers = [
+    "cuda: marks tests that require CUDA/GPU",
+    "integration: marks integration tests",
+]
+
+[tool.ruff]
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "logs", # Exclude your logs directory
+    "anaconda_projects", # Exclude anaconda_projects
+]
+line-length = 88 # Compatible with Black
+indent-width = 4
+
+# Assume Python 3.9
+target-version = "py39"
+
+[tool.ruff.lint]
+# Enable Pyflakes and Pycodestyle rules by default.
+# For a more comprehensive set, you can add more rule codes or presets.
+# See https://docs.astral.sh/ruff/rules/ for all available rules.
+select = ["E", "F", "W"] # E = pycodestyle errors, F = Pyflakes, W = pycodestyle warnings
+ignore = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"

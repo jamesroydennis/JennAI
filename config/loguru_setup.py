@@ -19,8 +19,10 @@ def setup_logging(log_file_name: str = "jennai.log", debug_mode: bool = True):
 
     log_level = "DEBUG" if debug_mode else "INFO"
 
-    # Add a console handler for development visibility
-    logger.add(sys.stderr, level=log_level, format="{time} {level} {message}", filter="jennai")
+    if debug_mode:
+        # Console handler for debug mode, without the "jennai" specific filter
+        # to allow admin scripts and other utilities to also log to console.
+        logger.add(sys.stderr, level=log_level, format="{time} {level} {message}")
 
     # --- CORRECTED LOG FILE PATH DETERMINATION ---
     # Determine the actual JennAI project root
@@ -41,4 +43,4 @@ def setup_logging(log_file_name: str = "jennai.log", debug_mode: bool = True):
     # Add a file handler for persistent logs
     logger.add(str(log_file_path), rotation="10 MB", level=log_level, compression="zip", retention="10 days") # Convert Path to string for logger.add
 
-    logger.info(f"INFO - Loguru setup complete. Logging to file: {log_file_path}. Running in {log_level} mode.")
+    logger.info(f"Loguru setup complete. Logging to file: {log_file_path}. Running in {log_level} mode.")

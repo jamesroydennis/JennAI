@@ -34,21 +34,26 @@ logger.info(f"INFO - Running in DEBUG_MODE: {DEBUG_MODE}")
 
 def configure_project_business_dependencies(container: DependencyContainer):
     """
-    Configures dependencies specific to the `project/business` layer.
+    Configures dependencies specific to the `src/business` layer.
     """
-    logger.info("INFO - Configuring project/business dependencies (conceptual).")
-    # Example: AI services like AIGenerator will be registered here.
-    # from project.business.gemini_api import AIGenerator
-    # container.register(AIGenerator, lambda: AIGenerator(api_key=os.getenv("GOOGLE_API_KEY")))
-    logger.success("SUCCESS - project/business dependencies configured (conceptual).")
+    logger.info("INFO - Configuring src/business dependencies (conceptual).")
+    
+    # Import the AIGenerator from its correct location
+    from src.business.ai.gemini_api import AIGenerator
+    
+    # Register AIGenerator as a singleton or transient based on your needs.
+    # Using a factory lambda to provide the API key from environment variables.
+    container.register_singleton(AIGenerator, lambda: AIGenerator(api_key=os.getenv("GOOGLE_API_KEY")))
+    logger.success("SUCCESS - src/business dependencies configured (conceptual).")
 
 def configure_project_presentation_dependencies(container: DependencyContainer):
     """
-    Configures dependencies specific to the `project/presentation` layer.
+    Configures dependencies specific to the `src/presentation` layer.
     """
-    logger.info("INFO - Configuring project/presentation dependencies (conceptual).")
-    # This will include Flask app setup later.
-    logger.success("SUCCESS - project/presentation dependencies configured (conceptual).")
+    logger.info("INFO - Configuring src/presentation dependencies (conceptual).")
+    # Example: If you had a Flask app instance defined in src/presentation/app.py
+    # from src.presentation.app import create_flask_app
+    logger.success("SUCCESS - src/presentation dependencies configured (conceptual).")
 
 # --- Main Application Execution Block ---
 if __name__ == '__main__':
