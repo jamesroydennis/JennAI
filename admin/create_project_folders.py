@@ -32,6 +32,7 @@ DIRECTORIES_TO_CREATE = [
     "src",
     "src/business",
     "src/business/ai",
+    "src/business/pyrepopal", # For the new workflow service
     "src/business/sys", # New folder for general system utilities
     "src/business/ai/tests", # Tests for AI components
     "src/business/ai/prompt_templates", # New folder for prompt templates
