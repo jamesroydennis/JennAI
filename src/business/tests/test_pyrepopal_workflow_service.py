@@ -406,12 +406,12 @@ def test_analyze_repository_ai_result_update_with_parsed_data_fails(
 
 # --- Temporary Logging Tests ---
 
-def test_temp_log_error_message():
-    """Temporary test to explicitly log an ERROR message."""
-    raise Exception("Something went wrong!")
-    logger.error("TEMPORARY TEST: This is an explicit ERROR log message for testing.")
+# def test_temp_log_error_message():
+#     """Temporary test to explicitly log an ERROR message."""
+#     raise Exception("Something went wrong!")
+#     logger.error("TEMPORARY TEST: This is an explicit ERROR log message for testing.")
 
-def test_temp_log_warning_message():
-    """Temporary test to explicitly log a WARNING message."""
-    throw
-    logger.warning("TEMPORARY TEST: This is an explicit WARNING log message for testing.")
+# def test_temp_log_warning_message():
+#     """Temporary test to explicitly log a WARNING message."""
+#     throw
+#     logger.warning("TEMPORARY TEST: This is an explicit WARNING log message for testing.")

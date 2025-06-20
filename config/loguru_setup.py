@@ -30,9 +30,12 @@ def setup_logging(log_file_name: str = "jennai.log", debug_mode: Optional[bool] 
     # Add console handler
     # Add color tags for different levels
     # <level> will automatically color based on default, but we can be explicit
-    # <yellow> for WARNING, <red> for ERROR, <bold><red> for CRITICAL, <green> for SUCCESS
-    # Default for INFO is usually plain, DEBUG might be dim or plain.
-    log_format_console = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+    # Customize colors: info-white, success-white, debug-gray, warning-yellow, error-red
+    # Loguru's <level> tag handles most defaults, but we can override or be explicit.
+    # <white> for INFO/SUCCESS, <black> for DEBUG (often renders as gray), <yellow> for WARNING, <red> for ERROR
+    log_format_console = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+    log_format_console += "<level>{level: <8}</level> | " # Use <level> tag for default/configured colors
+    log_format_console += "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
     logger.add(sys.stderr, level=log_level, format=log_format_console, colorize=True)
 
     # Add file handler

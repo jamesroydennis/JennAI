@@ -4,12 +4,23 @@ import subprocess
 import sys
 from pathlib import Path
 import os
+import re # Import regex module
 import pytest
 from config.loguru_setup import logger 
 
 
 # Determine the project root dynamically
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+# Function to strip ANSI escape codes
+def strip_ansi_codes(text):
+    """
+    Removes ANSI escape codes from a string.
+    Useful for comparing console output that includes color codes.
+    """
+    # This regex matches common ANSI escape codes
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    return ansi_escape.sub('', text)
 
 @pytest.mark.integration
 def test_main_py_initializes_successfully():
@@ -43,12 +54,15 @@ def test_main_py_initializes_successfully():
         # Assert that main.py exited successfully
         assert process.returncode == 0, f"main.py exited with code {process.returncode}.\nStderr:\n{process.stderr}\nStdout:\n{process.stdout}"
 
+        # Strip ANSI codes from stderr before checking for messages
+        stderr_cleaned = strip_ansi_codes(process.stderr)
+
         # Check for key success messages in stderr (where Loguru console output goes)
         # With the simplified logging, main.py's subprocess will also log its setup.
-        assert "Loguru setup complete. Console logging active. File logging to: /home/jdennis/Projects/JennAI/logs/jennai.log. Level: DEBUG." in process.stderr
-        assert "SUCCESS - src/business dependencies configured (conceptual)." in process.stderr
-        assert "SUCCESS - src/presentation dependencies configured (conceptual)." in process.stderr
-        assert "SUCCESS - JennAI OS has successfully booted and performed initial checks." in process.stderr
+        assert "Loguru setup complete. Console logging active. File logging to: /home/jdennis/Projects/JennAI/logs/jennai.log. Level: DEBUG." in stderr_cleaned
+        assert "SUCCESS - src/business dependencies configured (conceptual)." in stderr_cleaned
+        assert "SUCCESS - src/presentation dependencies configured (conceptual)." in stderr_cleaned
+        assert "SUCCESS - JennAI OS has successfully booted and performed initial checks." in stderr_cleaned
 
     except FileNotFoundError:
         pytest.fail(f"Failed to find Python interpreter: {sys.executable} or main.py script.")
