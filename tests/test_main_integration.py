@@ -45,7 +45,7 @@ def test_main_py_initializes_successfully():
 
         # Check for key success messages in stderr (where Loguru console output goes)
         # With the simplified logging, main.py's subprocess will also log its setup.
-        assert "Loguru setup complete. Logging to console and to file: /home/jdennis/Projects/JennAI/logs/jennai.log" in process.stderr # Changed this line
+        assert "Loguru setup complete. Console logging active. File logging to: /home/jdennis/Projects/JennAI/logs/jennai.log. Level: DEBUG." in process.stderr
         assert "SUCCESS - src/business dependencies configured (conceptual)." in process.stderr
         assert "SUCCESS - src/presentation dependencies configured (conceptual)." in process.stderr
         assert "SUCCESS - JennAI OS has successfully booted and performed initial checks." in process.stderr

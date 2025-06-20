@@ -47,9 +47,6 @@ class DataCollectService:
                     system_data = json.load(f)
                 logger.success(f"Successfully loaded system information from {self.sys_info_file}")
                 return system_data
-            else:
-                logger.error(f"System information file not found after running profiler: {self.sys_info_file}")
-                return None
         except Exception as e:
             logger.error(f"Failed to collect or load system information: {e}")
             return None
@@ -63,12 +60,12 @@ class DataCollectService:
         try:
             repo_data = repo_data_collector.collect_repository_data(repo_path_str)
             if repo_data.get("error") and "Invalid repository path" in repo_data["error"]: # Check specific error message
-                logger.error(f"Repository data collection failed: {repo_data['error']}")
+                logger.warning(f"Repository data collection handled known issue: {repo_data['error']}")
                 return None
             logger.success(f"Successfully collected repository information from: {repo_path_str}")
             return repo_data
         except Exception as e:
-            logger.error(f"Failed to collect repository information: {e}")
+            logger.warning(f"Handled failure during repository info collection for {repo_path_str}: {e}")
             return None
 
     def _load_prompt_template(self, template_filename: str) -> Optional[str]:
@@ -83,7 +80,7 @@ class DataCollectService:
             except Exception as e:
                 logger.error(f"Could not read template file {template_file_path}: {e}")
                 return None
-        logger.error(f"Prompt template file not found: {template_file_path}")
+        logger.warning(f"Prompt template file not found: {template_file_path}. This may be an expected condition if the template is optional.")
         return None
 
     def _populate_prompt_template(self, template_content: str, data_context: Dict[str, Optional[str]]) -> str:

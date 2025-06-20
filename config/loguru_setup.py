@@ -28,7 +28,12 @@ def setup_logging(log_file_name: str = "jennai.log", debug_mode: Optional[bool] 
     logger.remove()
 
     # Add console handler
-    logger.add(sys.stderr, level=log_level, format="{time} {level} {message}")
+    # Add color tags for different levels
+    # <level> will automatically color based on default, but we can be explicit
+    # <yellow> for WARNING, <red> for ERROR, <bold><red> for CRITICAL, <green> for SUCCESS
+    # Default for INFO is usually plain, DEBUG might be dim or plain.
+    log_format_console = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+    logger.add(sys.stderr, level=log_level, format=log_format_console, colorize=True)
 
     # Add file handler
     current_script_dir = Path(__file__).resolve().parent
@@ -37,4 +42,4 @@ def setup_logging(log_file_name: str = "jennai.log", debug_mode: Optional[bool] 
     os.makedirs(log_dir, exist_ok=True) # Ensure logs directory exists
     actual_log_file_path = log_dir / log_file_name
     logger.add(str(actual_log_file_path), rotation="10 MB", level=log_level, compression="zip", retention="10 days", enqueue=True)
-    logger.info(f"Loguru setup complete. Logging to console and to file: {actual_log_file_path}. Level: {log_level}.")
+    logger.info(f"Loguru setup complete. Console logging active. File logging to: {actual_log_file_path}. Level: {log_level}.")
