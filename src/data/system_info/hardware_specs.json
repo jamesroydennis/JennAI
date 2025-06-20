@@ -1,0 +1,49 @@
+{
+    "os": {
+        "system": "Linux",
+        "release": "6.14.0-15-generic",
+        "version": "#15-Ubuntu SMP PREEMPT_DYNAMIC Sun Apr  6 15:05:05 UTC 2025",
+        "machine": "x86_64",
+        "processor": "x86_64",
+        "hostname": "james-pc"
+    },
+    "cpu": {
+        "physical_cores": 6,
+        "logical_cores": 12,
+        "max_frequency_mhz": 4000.0,
+        "current_frequency_mhz": 2123.52175,
+        "usage_percent": 2.8
+    },
+    "ram": {
+        "total_gb": 15.31,
+        "available_gb": 1.64,
+        "used_gb": 5.61,
+        "percentage_used": 89.3
+    },
+    "disk": {
+        "path_checked": "/home/jdennis/Projects/JennAI",
+        "total_gb": 224.81,
+        "used_gb": 69.37,
+        "free_gb": 143.95,
+        "percentage_used": 32.5
+    },
+    "gpu_info": {
+        "nvidia_driver_version": "570.133.07",
+        "gpus": [
+            {
+                "id": 0,
+                "name": "NVIDIA GeForce GTX 1080 Ti",
+                "total_vram_gb": 11.0,
+                "free_vram_gb": 10.02,
+                "used_vram_gb": 0.88,
+                "compute_capability": "6.1"
+            }
+        ]
+    },
+    "python": {
+        "version": "3.9.23 | packaged by conda-forge | (main, Jun  4 2025, 17:57:12) \n[GCC 13.3.0]",
+        "executable": "/home/jdennis/anaconda3/envs/jennai-root/bin/python",
+        "conda_env": "jennai-root",
+        "conda_prefix": "/home/jdennis/anaconda3/envs/jennai-root"
+    }
+}

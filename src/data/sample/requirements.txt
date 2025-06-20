@@ -1,0 +1,16 @@
+# Requirements for VisoMaster with CUDA 11.8
+
+torch==2.4.1+cu118
+torchvision==0.19.1+cu118
+torchaudio==2.4.1+cu118
+
+numpy==1.26.4
+opencv-python==4.10.0.84
+scikit-image==0.21.0
+matplotlib
+pandas
+
+onnxruntime-gpu==1.18.0
+tensorrt==10.4.0 # tensorrt-cu11
+PySide6==6.8.2.1
+tqdm

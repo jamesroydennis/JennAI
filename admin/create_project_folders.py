@@ -32,14 +32,23 @@ DIRECTORIES_TO_CREATE = [
     "src",
     "src/business",
     "src/business/ai",
+    "src/business/sys", # New folder for general system utilities
+    "src/business/ai/tests", # Tests for AI components
+    "src/business/ai/prompt_templates", # New folder for prompt templates
     "src/business/interfaces",
+    "src/business/sys/tests", # Tests for sys components
     "src/business/notebooks",
     "src/business/tests",
     "src/data",
+    "src/data/implementations/tests", # Tests for data implementation components
     "src/data/implementations",
     "src/data/interfaces",
+    "src/data/generated_prompts", # New folder for storing generated prompts
+    "src/data/min_sys_reqs", # New folder for minimum system requirement files
     "src/data/notebooks",
     "src/data/obj",
+    "src/data/sample", # New folder for sample data files
+    "src/data/system_info", # New folder for system hardware details
     "src/data/tests",
     "src/presentation",
     "src/presentation/api_server", # For backend API logic
@@ -67,8 +76,12 @@ PACKAGES_TO_INITIALIZE = [
     "src",
     "src/business",
     "src/business/ai",
+    "src/business/ai/tests", # Initialize as package
+    "src/business/sys", # Initialize as package
+    "src/business/sys/tests", # Initialize as package
     "src/business/interfaces",
     "src/business/tests",
+    "src/data/implementations/tests", # Initialize as package
     "src/data",
     "src/data/implementations",
     "src/data/interfaces",
