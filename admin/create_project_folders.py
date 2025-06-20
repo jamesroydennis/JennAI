@@ -87,6 +87,7 @@ PACKAGES_TO_INITIALIZE = [
     "src/data/implementations",
     "src/data/interfaces",
     "src/data/obj",
+    "src/data/scripts/sql",
     "src/data/tests",
     "src/presentation",
     "src/presentation/api_server",

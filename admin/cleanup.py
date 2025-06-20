@@ -15,6 +15,7 @@ if str(jennai_root_for_path) not in sys.path:
 
 from loguru import logger # Import the logger instance
 from config.loguru_setup import setup_logging # Import the setup function
+from config.config import DATABASE_FILE_PATH # Import the database path
 
 def main():
     """
@@ -37,14 +38,14 @@ def main():
         # logger.info(f"JennAI Project Root determined as: {jennai_root_path}") # Already logged by setup_logging
 
         # --- Delete jennai.log file ---
+        # Also add the database file to the list of files to delete
         logs_dir = jennai_root_path / "logs"
         
-        # List of log files to delete
-        log_files_to_delete = ["jennai.log"]
+        # List of files to delete (logs and database)
+        files_to_delete = [logs_dir / "jennai.log", DATABASE_FILE_PATH]
 
-        for log_fn in log_files_to_delete:
-            log_file_path_to_delete = logs_dir / log_fn
-            if log_file_path_to_delete.exists() and log_file_path_to_delete.is_file():
+        for file_path_to_delete in files_to_delete:
+            if file_path_to_delete.exists() and file_path_to_delete.is_file():
                 try:
                     log_file_path_to_delete.unlink() # Delete the file
                     logger.info(f"  DELETED log file: {log_file_path_to_delete}")
