@@ -196,3 +196,4 @@ cython_debug/
 .virtual_documents/
 anaconda_projects/
 .trash/
+.~lock.environment.yaml#
