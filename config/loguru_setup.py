@@ -15,8 +15,8 @@ def setup_logging(log_file_name: str = "jennai.log", debug_mode: Optional[bool] 
     Logs to console and to 'logs/jennai.log'.
 
     Args:
-        log_file_name (str): The name of the log file. This will be effectively ignored
-                             as we are standardizing to 'jennai.log'.
+        log_file_name (str): The name of the log file (e.g., "jennai.log", "pytest_session.log"). This function
+                             will attempt to add a file handler for this name if one doesn't exist.
         debug_mode (Optional[bool]): If True, sets level to DEBUG; otherwise, INFO.
                                      If None, reads from config.config.DEBUG_MODE.
     """
@@ -24,17 +24,17 @@ def setup_logging(log_file_name: str = "jennai.log", debug_mode: Optional[bool] 
     current_debug_mode = GLOBAL_DEBUG_MODE if debug_mode is None else debug_mode
     log_level = "DEBUG" if current_debug_mode else "INFO"
 
-    # Always remove previous handlers to ensure a clean setup
+    # Always remove previous handlers to ensure a clean setup for the current context
     logger.remove()
 
     # Add console handler
     logger.add(sys.stderr, level=log_level, format="{time} {level} {message}")
 
-    # Add file handler for jennai.log
+    # Add file handler
     current_script_dir = Path(__file__).resolve().parent
     jennai_root_path = current_script_dir.parent
     log_dir = jennai_root_path / 'logs' # Using Path object for clean joining
     os.makedirs(log_dir, exist_ok=True) # Ensure logs directory exists
-    jennai_log_path = log_dir / "jennai.log" # Standardized log file name
-    logger.add(str(jennai_log_path), rotation="10 MB", level=log_level, compression="zip", retention="10 days")
-    logger.info(f"Loguru setup complete. Logging to console and to file: {jennai_log_path}. Level: {log_level}.")
+    actual_log_file_path = log_dir / log_file_name
+    logger.add(str(actual_log_file_path), rotation="10 MB", level=log_level, compression="zip", retention="10 days", enqueue=True)
+    logger.info(f"Loguru setup complete. Logging to console and to file: {actual_log_file_path}. Level: {log_level}.")

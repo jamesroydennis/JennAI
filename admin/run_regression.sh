@@ -17,6 +17,7 @@ PYTEST_EXIT_CODE=$?
 
 # Optionally, check main application log if main.py was run or tested
 # With Allure, direct log checking for test failures becomes less critical.
+
 # This step might be re-purposed or removed in the future.
 # echo "INFO: Checking logs/jennai.log for application-specific errors..."
 # python admin/check_logs.py logs/jennai.log

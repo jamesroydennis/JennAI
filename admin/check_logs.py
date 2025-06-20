@@ -70,8 +70,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Scan log files for errors and warnings.")
     parser.add_argument(
         "log_file", 
-        nargs='?', 
-        default="logs/pytest.log",  # Default to pytest.log
+        nargs='?',
+        default="logs/jennai.log",  # Default to the main application/session log
         help="Path to the log file to scan (relative to project root, or absolute)."
     )
     args = parser.parse_args()
@@ -103,4 +103,3 @@ if __name__ == "__main__":
     else:
         logger.success("Log scan finished successfully. No critical issues detected.")
         sys.exit(0)
-

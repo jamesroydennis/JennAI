@@ -30,6 +30,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0", # Specify a version range if desired
+    "pytest-loguru", # For enhanced Loguru integration with Pytest
     "allure-pytest", # For Allure reporting
     "ruff>=0.1.0", # If you add ruff to your dev workflow
     # Add other development tools like type checkers (e.g., "mypy")
