@@ -42,7 +42,8 @@ def test_main_py_initializes_successfully():
         assert process.returncode == 0, f"main.py exited with code {process.returncode}.\nStderr:\n{process.stderr}\nStdout:\n{process.stdout}"
 
         # Check for key success messages in stderr (where Loguru console output goes)
-        assert "Loguru setup complete." in process.stderr
+        # When main.py is run under pytest, its setup_logging call for "jennai.log" will be ignored.
+        assert "PYTEST run: Ignoring setup_logging call for 'jennai.log' to preserve pytest.log." in process.stderr
         assert "SUCCESS - src/business dependencies configured (conceptual)." in process.stderr
         assert "SUCCESS - src/presentation dependencies configured (conceptual)." in process.stderr
         assert "SUCCESS - JennAI OS has successfully booted and performed initial checks." in process.stderr

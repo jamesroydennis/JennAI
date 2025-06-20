@@ -45,6 +45,7 @@ class PyRepoPalWorkflowService:
         logger.info("PyRepoPalWorkflowService initialized with all dependencies.")
 
     def _create_initial_session(self, target_repo_identifier: str, user_notes: Optional[str]) -> Optional[AnalysisSessionDTO]:
+        logger.info(f"Attempting to create initial analysis session for: {target_repo_identifier}")
         session_dto = AnalysisSessionDTO.new_session(
             target_repo_id=target_repo_identifier,
             notes=user_notes
@@ -58,6 +59,7 @@ class PyRepoPalWorkflowService:
         return created_session
 
     def _collect_data_and_prepare_prompt(self, current_session: AnalysisSessionDTO, repo_path: str, template_filename: str) -> Optional[Dict[str, Any]]:
+        logger.info(f"Starting data collection and prompt preparation for session {current_session.session_id}")
         collection_result = self.data_collect_service.prepare_analysis_data_and_prompt(
             repo_path=repo_path,
             template_filename=template_filename
@@ -70,6 +72,7 @@ class PyRepoPalWorkflowService:
         return collection_result
 
     def _save_system_profile(self, current_session: AnalysisSessionDTO, system_info_data: Optional[Dict]) -> bool:
+        logger.info(f"Attempting to save system profile for session {current_session.session_id}")
         if system_info_data and current_session.session_id is not None:
             system_profile_dto = SystemProfileDTO.new_profile(
                 session_id=current_session.session_id,
@@ -86,6 +89,7 @@ class PyRepoPalWorkflowService:
         return True # Always true as it's not critical
 
     def _save_repository_snapshot(self, current_session: AnalysisSessionDTO, repo_info_data: Optional[Dict]) -> bool:
+        logger.info(f"Attempting to save repository snapshot for session {current_session.session_id}")
         if repo_info_data is not None and current_session.session_id is not None:
             repo_snapshot_dto = RepositorySnapshotDTO(
                 session_id=current_session.session_id,
@@ -109,6 +113,7 @@ class PyRepoPalWorkflowService:
         return False
 
     def _save_generated_prompt(self, current_session: AnalysisSessionDTO, populated_prompt_str: Optional[str], prompt_template_filename: str) -> Optional[GeneratedPromptDTO]:
+        logger.info(f"Attempting to save generated prompt for session {current_session.session_id}")
         if populated_prompt_str and current_session.session_id is not None:
             generated_prompt_dto = GeneratedPromptDTO(
                 session_id=current_session.session_id,
@@ -132,6 +137,7 @@ class PyRepoPalWorkflowService:
         return None
 
     def _call_ai_service(self, current_session: AnalysisSessionDTO, populated_prompt_str: str) -> Optional[str]:
+        logger.info(f"Calling AI service for session {current_session.session_id}")
         try:
             ai_response_raw = self.ai_service.generate_text(populated_prompt_str)
             if ai_response_raw:
@@ -149,6 +155,7 @@ class PyRepoPalWorkflowService:
             return None
 
     def _save_ai_analysis_result(self, current_session: AnalysisSessionDTO, prompt_id: int, ai_response_raw: str) -> Optional[AIAnalysisResultDTO]:
+        logger.info(f"Attempting to save AI analysis result for session {current_session.session_id}, prompt ID {prompt_id}")
         ai_analysis_result_dto = AIAnalysisResultDTO(
             prompt_id=prompt_id,
             ai_response_raw=ai_response_raw,
@@ -211,7 +218,7 @@ class PyRepoPalWorkflowService:
             repo_info_data: Optional[Dict] = collection_result.get("repo_info")
             populated_prompt_str: Optional[str] = collection_result.get("prompt_str")
 
-            # Step 3: Persist SystemProfile (non-critical failure)
+            # Step 3: Persist SystemProfile
             logger.info("Persisting collected system and repository information...")
             self._save_system_profile(current_session, system_info_data)
 
@@ -225,7 +232,7 @@ class PyRepoPalWorkflowService:
                 return current_session
             prompt_id_for_ai_result = saved_prompt_dto.prompt_id
 
-            # Step 6: Interact with AI Service (critical)
+            # Step 6: Interact with AI Service
             logger.info("Interacting with AI service...")
             # Ensure populated_prompt_str is not None before calling, though _save_generated_prompt should have caught it
             if not populated_prompt_str: # Should be redundant if _save_generated_prompt worked
@@ -238,14 +245,13 @@ class PyRepoPalWorkflowService:
             if not ai_response_raw:
                 return current_session
 
-            # Step 7 (Part 1): Persist AIAnalysisResult (critical)
+            # Step 7 (Part 1): Persist raw AIAnalysisResult
             saved_ai_result_dto = self._save_ai_analysis_result(current_session, prompt_id_for_ai_result, ai_response_raw)
             if not saved_ai_result_dto:
                 return current_session
 
             # Step 7 (Part 2): Parse AI response and update the AIAnalysisResultDTO
             if not self._parse_and_update_ai_result(current_session, saved_ai_result_dto, ai_response_raw):
-                # The status would have been updated by _parse_and_update_ai_result
                 return current_session
 
             logger.info(f"Successfully processed and persisted AI analysis for session {current_session.session_id}.")

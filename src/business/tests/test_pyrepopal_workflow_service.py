@@ -10,6 +10,7 @@ jennai_root_for_path = Path(__file__).resolve().parent.parent.parent.parent
 if str(jennai_root_for_path) not in sys.path:
     sys.path.insert(0, str(jennai_root_for_path))
 
+from config.loguru_setup import logger # Import logger for temporary tests
 from src.business.pyrepopal_workflow_service import PyRepoPalWorkflowService
 from src.business.ai.data_collect_service import DataCollectService
 from src.business.interfaces.IAIService import IAIService
@@ -402,3 +403,15 @@ def test_analyze_repository_ai_result_update_with_parsed_data_fails(
     assert result_session.status == "failed_ai_result_update_parsed"
     mock_analysis_session_repo.update.assert_called_with(result_session) # The session status update
     mock_ai_analysis_result_repo.update.assert_called_once() # Assert that update was attempted
+
+# --- Temporary Logging Tests ---
+
+def test_temp_log_error_message():
+    """Temporary test to explicitly log an ERROR message."""
+    raise Exception("Something went wrong!")
+    logger.error("TEMPORARY TEST: This is an explicit ERROR log message for testing.")
+
+def test_temp_log_warning_message():
+    """Temporary test to explicitly log a WARNING message."""
+    throw
+    logger.warning("TEMPORARY TEST: This is an explicit WARNING log message for testing.")
