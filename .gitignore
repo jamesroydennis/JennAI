@@ -199,6 +199,7 @@ src/data/system_info/
 logs/
 allure-results/
 allure-report/
+/src/presentation/api_server/flask_app/static/css/
 
 .virtual_documents/
 anaconda_projects/

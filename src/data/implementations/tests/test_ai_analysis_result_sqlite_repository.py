@@ -15,63 +15,17 @@ if str(jennai_root_for_path) not in sys.path:
 from src.data.obj.ai_analysis_result_dto import AIAnalysisResultDTO
 from src.data.implementations.ai_analysis_result_sqlite_repository import AIAnalysisResultSQLiteRepository
 
-# SQL to create tables (from datadesign.ipynb)
-CREATE_ANALYSIS_SESSIONS_TABLE_SQL = """
-CREATE TABLE IF NOT EXISTS analysis_sessions (
-    session_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    target_repository_identifier TEXT NOT NULL,
-    analysis_timestamp TEXT NOT NULL,
-    user_notes TEXT,
-    status TEXT
-);
-"""
-CREATE_GENERATED_PROMPTS_TABLE_SQL = """
-CREATE TABLE IF NOT EXISTS generated_prompts (
-    prompt_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    session_id INTEGER NOT NULL,
-    prompt_type TEXT,
-    template_name_used TEXT,
-    prompt_content TEXT NOT NULL,
-    creation_timestamp TEXT NOT NULL,
-    FOREIGN KEY (session_id) REFERENCES analysis_sessions (session_id)
-);
-"""
-CREATE_AI_ANALYSIS_RESULTS_TABLE_SQL = """
-CREATE TABLE IF NOT EXISTS ai_analysis_results (
-    result_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    prompt_id INTEGER NOT NULL,
-    ai_response_raw TEXT NOT NULL,
-    parsed_system_requirements_json TEXT,
-    parsed_dependencies_json TEXT,
-    response_timestamp TEXT NOT NULL,
-    FOREIGN KEY (prompt_id) REFERENCES generated_prompts (prompt_id)
-);
-"""
+@pytest.fixture
+def result_repo(setup_test_database: Path) -> AIAnalysisResultSQLiteRepository: # Use shared fixture
+    # The setup_test_database fixture already creates all necessary tables
+    # and dummy session (ID 1) and prompt (ID 1).
+    return AIAnalysisResultSQLiteRepository(db_path=str(setup_test_database))
 
 @pytest.fixture
-def temp_db_path(tmp_path: Path) -> Path:
-    db_file = tmp_path / "test_pyrepopal_results.db"
-    conn = sqlite3.connect(db_file)
-    cursor = conn.cursor()
-    cursor.execute(CREATE_ANALYSIS_SESSIONS_TABLE_SQL)
-    cursor.execute(CREATE_GENERATED_PROMPTS_TABLE_SQL)
-    cursor.execute(CREATE_AI_ANALYSIS_RESULTS_TABLE_SQL)
-    conn.commit()
-    # Create dummy session and prompt for FK integrity
-    cursor.execute("INSERT INTO analysis_sessions (target_repository_identifier, analysis_timestamp, status) VALUES (?, ?, ?)",
-                   ("test_repo", datetime.utcnow().isoformat(), "created"))
-    session_id = cursor.lastrowid
-    cursor.execute("INSERT INTO generated_prompts (session_id, prompt_content, creation_timestamp) VALUES (?, ?, ?)",
-                   (session_id, "dummy prompt", datetime.utcnow().isoformat()))
-    conn.commit()
-    conn.close()
-    return db_file
+def result_repo_fixture(setup_test_database: Path) -> AIAnalysisResultSQLiteRepository: # Renamed
+    return AIAnalysisResultSQLiteRepository(db_path=str(setup_test_database))
 
-@pytest.fixture
-def result_repo(temp_db_path: Path) -> AIAnalysisResultSQLiteRepository:
-    return AIAnalysisResultSQLiteRepository(db_path=str(temp_db_path))
-
-def test_create_and_read_ai_analysis_result(result_repo: AIAnalysisResultSQLiteRepository):
+def test_create_and_read_ai_analysis_result(result_repo_fixture: AIAnalysisResultSQLiteRepository): # Use renamed fixture
     timestamp_now = datetime.utcnow().isoformat()
     sys_reqs_dict = {"os": "Linux", "ram_gb": 16}
     deps_dict = {"python": "3.9", "pytorch": "2.0"}
@@ -84,10 +38,10 @@ def test_create_and_read_ai_analysis_result(result_repo: AIAnalysisResultSQLiteR
         parsed_system_requirements_json=json.dumps(sys_reqs_dict), # DTO expects string
         parsed_dependencies_json=json.dumps(deps_dict) # DTO expects string
     )
-    created_result = result_repo.create(new_result)
+    created_result = result_repo_fixture.create(new_result)
     assert created_result.result_id is not None
 
-    retrieved_result = result_repo.read_by_id(created_result.result_id)
+    retrieved_result = result_repo_fixture.read_by_id(created_result.result_id)
     assert retrieved_result is not None
     assert retrieved_result.ai_response_raw == "Raw AI output here."
     assert retrieved_result.prompt_id == 1
@@ -95,3 +49,58 @@ def test_create_and_read_ai_analysis_result(result_repo: AIAnalysisResultSQLiteR
     # Check if JSON strings are stored and retrieved correctly
     assert json.loads(retrieved_result.parsed_system_requirements_json) == sys_reqs_dict
     assert json.loads(retrieved_result.parsed_dependencies_json) == deps_dict
+
+def test_update_ai_analysis_result(result_repo_fixture: AIAnalysisResultSQLiteRepository): # Use renamed fixture
+    """Tests updating an existing AI analysis result."""
+    # 1. Create initial result
+    timestamp_initial = datetime.utcnow().isoformat()
+    initial_sys_reqs = {"os": "InitialOS"}
+    initial_deps = {"lib": "v1"}
+    initial_result = AIAnalysisResultDTO(
+        prompt_id=1,
+        ai_response_raw="Initial raw response",
+        response_timestamp=timestamp_initial,
+        parsed_system_requirements_json=json.dumps(initial_sys_reqs),
+        parsed_dependencies_json=json.dumps(initial_deps)
+    )
+    created_result = result_repo_fixture.create(initial_result)
+    assert created_result.result_id is not None
+
+    # 2. Modify the DTO
+    updated_sys_reqs = {"os": "UpdatedOS", "cpu": "i7"}
+    created_result.ai_response_raw = "Updated raw response"
+    created_result.parsed_system_requirements_json = json.dumps(updated_sys_reqs)
+    # Let's assume parsed_dependencies_json remains unchanged for this test
+
+    # 3. Update in repository
+    updated_result_from_repo = result_repo_fixture.update(created_result)
+    assert updated_result_from_repo is not None
+    assert updated_result_from_repo.result_id == created_result.result_id
+
+    # 4. Read back and verify
+    retrieved_after_update = result_repo_fixture.read_by_id(created_result.result_id)
+    assert retrieved_after_update is not None
+    assert retrieved_after_update.ai_response_raw == "Updated raw response"
+    assert json.loads(retrieved_after_update.parsed_system_requirements_json) == updated_sys_reqs
+    assert json.loads(retrieved_after_update.parsed_dependencies_json) == initial_deps # Unchanged
+    assert retrieved_after_update.prompt_id == 1 # Unchanged
+
+def test_delete_ai_analysis_result(result_repo_fixture: AIAnalysisResultSQLiteRepository): # Use renamed fixture
+    """Tests deleting an AI analysis result."""
+    # 1. Create a result to delete
+    result_to_delete = AIAnalysisResultDTO(
+        prompt_id=1,
+        ai_response_raw="Response to be deleted",
+        response_timestamp=datetime.utcnow().isoformat(),
+        parsed_system_requirements_json=json.dumps({"status": "delete_me"}),
+        parsed_dependencies_json=json.dumps({"lib": "to_delete"})
+    )
+    created_result = result_repo_fixture.create(result_to_delete)
+    assert created_result.result_id is not None
+
+    # 2. Delete the result
+    result_repo_fixture.delete(created_result.result_id)
+
+    # 3. Try to read it back
+    retrieved_after_delete = result_repo_fixture.read_by_id(created_result.result_id)
+    assert retrieved_after_delete is None, "AI Analysis Result should be None after deletion."

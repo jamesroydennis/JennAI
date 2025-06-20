@@ -1,0 +1,15 @@
+// _variables.scss
+
+// Color Palette based on JennAI Logo Prompt
+$primary-dark-blue: #35424a;      // Dark slate gray for headers/footers
+$primary-white: #ffffff;          // For text on dark backgrounds and scrollable box background
+$background-light: #92a5bf;       // Very light blue-ish gray for body background
+$text-dark: #333;                 // Main text color
+
+// Accent Colors reflecting "deep blues or teals" with a "vibrant" touch
+$accent-main: #77aaff;            // Main accent for borders, links
+$accent-interactive: #3498db;     // A dynamic blue for interactive elements like buttons/spinners
+
+// Flash Message Colors
+$flash-success: #28a745;
+$flash-error: #dc3545;

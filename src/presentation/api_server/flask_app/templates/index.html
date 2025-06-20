@@ -3,23 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>{{ title }}</title>    
+    {% assets "css_all" %}
+        <link rel="stylesheet" href="{{ ASSET_URL }}">
+    {% endassets %}
     <!-- Favicon (place favicon.ico in static/) -->
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
     <header>
-        <!-- Example Header Logo (place jennai-logo-header.png in static/img/) -->
-        <img src="{{ url_for('static', filename='img/jennai-logo.png') }}" alt="JennAI Logo" style="max-width: 180px; max-height:180px; padding: 10px; vertical-align: middle;">
+        <!-- Inline styles have been moved to style.scss -->
+        <img src="{{ url_for('static', filename='img/jennai-logo.png') }}" alt="JennAI Logo">
         <h1>{{ title }}</h1>
     </header>
 
     <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div id="flash-messages-container" class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
         <p>Your JennAI Flask application is up and running!</p>
         <p>This page is served from <code>src/presentation/api_server/flask_app/templates/index.html</code>.</p>
         <p>Static files like CSS and JavaScript are linked from the <code>src/presentation/api_server/flask_app/static/</code> directory.</p>
         <div id="js-message" style="margin-top: 20px; font-style: italic;"></div>
+
+        <nav style="margin-top: 30px; margin-bottom: 20px; border-top: 1px solid #ccc; padding-top: 20px;">
+            <h3>Reports &amp; Utilities</h3>
+            <ul>
+                <li>
+                    <a href="{{ url_for('allure_report_static', filename='index.html') }}" target="_blank" rel="noopener noreferrer">View Allure Test Report</a>
+                </li>
+                <li>
+                    <form id="run-tests-form" action="{{ url_for('default_bp.run_tests') }}" method="post" style="display: inline-block; margin-top: 10px;">
+                        <button type="submit" id="run-tests-button" class="btn-primary">Run Tests &amp; Generate Report</button>
+                    </form>
+                    <div id="test-status-area" style="display: inline-block; margin-left: 15px;">
+                        <span id="loading-spinner" class="spinner-hidden"></span>
+                        <span id="loading-message" class="spinner-hidden" style="vertical-align: middle; margin-left: 5px;">Tests running...</span>
+                    </div>
+                </li>
+            </ul>
+        </nav>
 
         <!-- Under Construction Image -->
         <img src="{{ url_for('static', filename='img/under_construction.png') }}" alt="Site Under Construction" width="512" height="512" style="margin-top: 30px;">

@@ -1,0 +1,141 @@
+@import 'variables';
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: $background-light;
+    color: $text-dark;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    background: $primary-dark-blue;
+    color: $primary-white;
+    padding: 1rem 20px;
+    text-align: center;
+    border-bottom: $accent-main 3px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px; // Creates space between the logo and title
+
+    img {
+        max-width: 180px;
+        max-height: 180px;
+    }
+
+    h1 {
+        margin: 0;
+        font-size: 2.2rem;
+    }
+}
+
+main {
+    flex-grow: 1;
+    padding: 25px;
+    text-align: center;
+}
+
+footer {
+    text-align: center;
+    padding: 15px;
+    background: $primary-dark-blue;
+    color: $primary-white;
+    font-size: 0.9em;
+
+    p {
+        margin: 0;
+    }
+}
+
+/* Spinner styles */
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: $accent-interactive;
+    border-radius: 50%;
+    width: 20px; /* Smaller size */
+    height: 20px; /* Smaller size */
+    animation: spin 1s linear infinite;
+    display: inline-block; /* To allow text next to it */
+    vertical-align: middle;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.spinner-hidden {
+    display: none;
+}
+
+.spinner-visible {
+    display: inline-block;
+}
+
+/* Flash Messages */
+.flash-messages {
+    padding: 0;
+    list-style: none;
+    margin-bottom: 20px;
+}
+
+.flash {
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    color: #fff;
+}
+.flash.success { background: $flash-success; }
+.flash.error { background: $flash-error; }
+
+/* --- Themed Button Style --- */
+.btn-primary {
+    background-color: $accent-interactive;
+    color: $primary-white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+        background-color: darken($accent-interactive, 10%);
+    }
+
+    &:active {
+        transform: translateY(1px);
+    }
+
+    &:disabled {
+        background-color: lighten($accent-interactive, 20%);
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+}
+
+/* Scrollable Content Box */
+.scrollable-content-box {
+    max-height: 60vh; // Use viewport height for better responsiveness
+    overflow-y: auto; // Use auto to show scrollbar only when needed
+    border: 1px solid darken($background-light, 15%);
+    padding: 15px;
+    background-color: $primary-white;
+    text-align: left; // Align text to the left for readability
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    border-radius: 5px;
+
+    pre {
+        margin: 0;
+        white-space: pre-wrap; // Wrap long lines
+        word-wrap: break-word;
+    }
+}

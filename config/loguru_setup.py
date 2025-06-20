@@ -44,5 +44,5 @@ def setup_logging(log_file_name: str = "jennai.log", debug_mode: Optional[bool] 
     log_dir = jennai_root_path / 'logs' # Using Path object for clean joining
     os.makedirs(log_dir, exist_ok=True) # Ensure logs directory exists
     actual_log_file_path = log_dir / log_file_name
-    logger.add(str(actual_log_file_path), rotation="10 MB", level=log_level, compression="zip", retention="10 days", enqueue=True)
+    logger.add(str(actual_log_file_path), rotation="10 MB", level=log_level, compression="zip", retention="10 days", enqueue=False) # Set enqueue=False for debugging
     logger.info(f"Loguru setup complete. Console logging active. File logging to: {actual_log_file_path}. Level: {log_level}.")

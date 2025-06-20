@@ -13,6 +13,8 @@ dependencies:
   # Web framework and related
   - flask
   - flask-cors
+  - flask-assets # For SCSS compilation
+  - libsass      # SCSS compiler for Flask-Assets
   # Data handling and scientific computing
   - numpy
   - pandas

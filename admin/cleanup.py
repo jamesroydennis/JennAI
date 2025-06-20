@@ -52,7 +52,7 @@ def main():
                 except OSError as e:
                     logger.error(f"  Failed to delete file {file_path_to_delete}. Reason: {e}")
             else:
-                logger.info(f"Log file '{log_fn}' not found (or not a file), no need to delete: {log_file_path_to_delete}")
+                logger.info(f"File '{file_path_to_delete.name}' not found (or not a file), no need to delete: {file_path_to_delete}")
 
         # Define the cache folder names to be removed
         cache_folders_to_remove = [

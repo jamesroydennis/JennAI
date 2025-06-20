@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>    
+    {% assets "css_all" %}
+        <link rel="stylesheet" href="{{ ASSET_URL }}">
+    {% endassets %}
+</head>
+<body>
+    <header>
+        <h1>{{ page_title }}</h1>
+    </header>
+    <main>
+        <div class="scrollable-content-box">
+            {{ content | safe }}
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2024 JennAI. All rights reserved.</p>
+    </footer>
+</body>
+</html>

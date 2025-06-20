@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 from typing import Dict, Any
 from dataclasses import asdict
-
 # --- Root Project Path Setup ---
 jennai_root_for_path = Path(__file__).resolve().parent.parent.parent.parent
 if str(jennai_root_for_path) not in sys.path:

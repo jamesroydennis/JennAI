@@ -6,6 +6,12 @@ Design Elements: Consider a stylized letter 'J' subtly integrated or intertwined
 
 Style: Clean vector art, sleek, professional, and innovative. The logo should feel intelligent and approachable, not overly complex or intimidating.
 
-Color Palette: Primary colors could be deep blues or teals, accented with silver, white, or a subtle vibrant color (like a light electric blue or a soft purple) for a touch of dynamism. Avoid overly playful or cartoonish colors.
+Color Palette: The color palette must align with the established web application theme. Use the following specific colors:
+- Primary Dark Blue/Gray: `#35424a` (for main, solid elements)
+- Interactive Blue: `#3498db` (for dynamic, vibrant accents)
+- Lighter Accent Blue: `#77aaff` (for subtle highlights or borders)
+- White: `#ffffff` (for contrast on dark backgrounds)
 
 Overall Feel: The logo should be suitable for a sophisticated software project, conveying trust, intelligence, and cutting-edge technology."
+
+format: a png file with a transparent backbround
