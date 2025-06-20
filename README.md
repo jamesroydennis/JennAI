@@ -10,6 +10,7 @@ data handling, and presentation layers.
 - `config/`: Configuration files and logging setup.
 - `core/`: Core utilities like the dependency injection container.
 - `logs/`: Default directory for log files.
+  - `jennai.log`: Logs from the main application (`main.py`), Pytest test sessions, and admin scripts.
 - `src/`: Contains the main application source code:
   - `src/business/`: Business logic, AI services.
   - `src/data/`: Data access layers, repositories.
@@ -31,6 +32,7 @@ To get the JennAI project running, follow these steps:
     ```bash
     conda activate jennai-root
     ```
+    This environment includes essential Python packages like `pytest`, `loguru`, `pytest-loguru`, and `allure-pytest`.
 
 3.  **Install Java Development Kit (JDK)**:
     The Allure reporting tool requires Java. Install a JDK (version 8 or higher is typically sufficient).
@@ -39,6 +41,7 @@ To get the JennAI project running, follow these steps:
     Ensure the `java` command is available in your system's PATH and the `JAVA_HOME` environment variable is set.
 
 4.  **Install Allure Command-line Tool**:
+ (This step is for Allure reporting, which is part of the automated regression workflow)
     This tool is needed to generate and view Allure reports.
     *   **Recommended:** Use a package manager (e.g., `brew install allure` on macOS, `scoop install allure` on Windows, or `npm install -g allure-commandline` if you have Node.js/npm).
     *   **Alternatively:** Download the zip/tgz from the Allure GitHub releases page and add its `/bin` directory to your system's PATH.
@@ -49,6 +52,7 @@ To run tests and generate Allure reports, see the Regression Testing Workflow be
 ```bash
 pytest
 ```
+All structured logs (from Pytest, application, admin scripts) will be written to `logs/jennai.log`.
 
 ## Regression Testing Workflow
 
@@ -61,7 +65,7 @@ The easiest way to run the full regression suite is using the provided shell scr
 bash admin/run_regression.sh
 ```
 This script will:
-1. Clean project artifacts (including previous Allure results).
+1. Clean project artifacts (including previous Allure results and log files).
 2. Run `pytest` and generate raw Allure result data.
 3. Generate an HTML Allure report from the results.
 4. Open the Allure report in your web browser.

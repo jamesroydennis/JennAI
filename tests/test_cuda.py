@@ -3,6 +3,8 @@
 import torch
 import pytest # Import pytest for test functionality
 
+from config.loguru_setup import logger 
+
 # This part runs when you execute the script directly (e.g., 'python tests/test_cuda.py')
 # It provides immediate feedback on CUDA availability.
 if __name__ == '__main__':

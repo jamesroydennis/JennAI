@@ -38,15 +38,20 @@ def main():
 
         # --- Delete jennai.log file ---
         logs_dir = jennai_root_path / "logs"
-        jennai_log_file_path = logs_dir / "jennai.log"
-        if jennai_log_file_path.exists() and jennai_log_file_path.is_file():
-            try:
-                jennai_log_file_path.unlink() # Delete the file
-                logger.info(f"  DELETED log file: {jennai_log_file_path}")
-            except OSError as e:
-                logger.error(f"  Failed to delete log file {jennai_log_file_path}. Reason: {e}")
-        else:
-            logger.info(f"Log file not found (or not a file), no need to delete: {jennai_log_file_path}")
+        
+        # List of log files to delete
+        log_files_to_delete = ["jennai.log"]
+
+        for log_fn in log_files_to_delete:
+            log_file_path_to_delete = logs_dir / log_fn
+            if log_file_path_to_delete.exists() and log_file_path_to_delete.is_file():
+                try:
+                    log_file_path_to_delete.unlink() # Delete the file
+                    logger.info(f"  DELETED log file: {log_file_path_to_delete}")
+                except OSError as e:
+                    logger.error(f"  Failed to delete log file {log_file_path_to_delete}. Reason: {e}")
+            else:
+                logger.info(f"Log file '{log_fn}' not found (or not a file), no need to delete: {log_file_path_to_delete}")
 
         # Define the cache folder names to be removed
         cache_folders_to_remove = [

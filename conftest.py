@@ -10,9 +10,8 @@ jennai_root_for_path = Path(__file__).resolve().parent
 if str(jennai_root_for_path) not in sys.path:
     sys.path.insert(0, str(jennai_root_for_path))
 
-from config.loguru_setup import setup_logging, logger
+from config.loguru_setup import setup_logging, logger # Import setup and logger from config
 from config.config import DEBUG_MODE # Use the global DEBUG_MODE
-from loguru import logger
 
 def pytest_configure(config):
     """

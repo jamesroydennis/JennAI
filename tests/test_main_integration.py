@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 import os
 import pytest
+from config.loguru_setup import logger 
+
 
 # Determine the project root dynamically
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -43,7 +45,7 @@ def test_main_py_initializes_successfully():
 
         # Check for key success messages in stderr (where Loguru console output goes)
         # With the simplified logging, main.py's subprocess will also log its setup.
-        assert "Loguru setup complete. Logging to console and to file: /home/jdennis/Projects/JennAI/logs/jennai.log" in process.stderr
+        assert "Loguru setup complete. Logging to console and to file: /home/jdennis/Projects/JennAI/logs/jennai.log" in process.stderr # Changed this line
         assert "SUCCESS - src/business dependencies configured (conceptual)." in process.stderr
         assert "SUCCESS - src/presentation dependencies configured (conceptual)." in process.stderr
         assert "SUCCESS - JennAI OS has successfully booted and performed initial checks." in process.stderr
