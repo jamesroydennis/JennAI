@@ -1,8 +1,8 @@
 {
     "os": {
         "system": "Linux",
-        "release": "6.14.0-15-generic",
-        "version": "#15-Ubuntu SMP PREEMPT_DYNAMIC Sun Apr  6 15:05:05 UTC 2025",
+        "release": "6.14.0-22-generic",
+        "version": "#22-Ubuntu SMP PREEMPT_DYNAMIC Wed May 21 15:01:51 UTC 2025",
         "machine": "x86_64",
         "processor": "x86_64",
         "hostname": "james-pc"
@@ -11,21 +11,21 @@
         "physical_cores": 6,
         "logical_cores": 12,
         "max_frequency_mhz": 4000.0,
-        "current_frequency_mhz": 1664.4277499999998,
-        "usage_percent": 5.6
+        "current_frequency_mhz": 3010.21075,
+        "usage_percent": 2.1
     },
     "ram": {
         "total_gb": 15.31,
-        "available_gb": 2.37,
-        "used_gb": 5.24,
-        "percentage_used": 84.5
+        "available_gb": 8.43,
+        "used_gb": 4.63,
+        "percentage_used": 44.9
     },
     "disk": {
         "path_checked": "/home/jdennis/Projects/JennAI",
         "total_gb": 224.81,
-        "used_gb": 69.34,
-        "free_gb": 143.98,
-        "percentage_used": 32.5
+        "used_gb": 71.15,
+        "free_gb": 142.17,
+        "percentage_used": 33.4
     },
     "gpu_info": {
         "nvidia_driver_version": "570.133.07",

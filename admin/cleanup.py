@@ -46,11 +46,11 @@ def main():
 
         for file_path_to_delete in files_to_delete:
             if file_path_to_delete.exists() and file_path_to_delete.is_file():
-                try:
-                    log_file_path_to_delete.unlink() # Delete the file
-                    logger.info(f"  DELETED log file: {log_file_path_to_delete}")
+                try: # Use file_path_to_delete instead of log_file_path_to_delete
+                    file_path_to_delete.unlink() # Delete the file
+                    logger.info(f"  DELETED file: {file_path_to_delete}")
                 except OSError as e:
-                    logger.error(f"  Failed to delete log file {log_file_path_to_delete}. Reason: {e}")
+                    logger.error(f"  Failed to delete file {file_path_to_delete}. Reason: {e}")
             else:
                 logger.info(f"Log file '{log_fn}' not found (or not a file), no need to delete: {log_file_path_to_delete}")
 
