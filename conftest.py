@@ -10,7 +10,7 @@ jennai_root_for_path = Path(__file__).resolve().parent
 if str(jennai_root_for_path) not in sys.path:
     sys.path.insert(0, str(jennai_root_for_path))
 
-from config.loguru_setup import setup_logging
+from config.loguru_setup import setup_logging, logger
 from config.config import DEBUG_MODE # Use the global DEBUG_MODE
 from loguru import logger
 
@@ -23,5 +23,5 @@ def pytest_configure(config):
     # Setup logging for the test session, directing to a separate file
     # The log level (DEBUG/INFO) will be determined by DEBUG_MODE from config.py
     # Console logging will also respect DEBUG_MODE as per loguru_setup.py logic
-    setup_logging(log_file_name="pytest.log", debug_mode=DEBUG_MODE)
-    logger.info(f"Pytest session logging initialized. Log file: pytest.log, DEBUG_MODE: {DEBUG_MODE}")
+    setup_logging(log_file_name="jennai.log", debug_mode=DEBUG_MODE) # Standardized to jennai.log
+    logger.info(f"Pytest session logging initialized. Log file: jennai.log, DEBUG_MODE: {DEBUG_MODE}")

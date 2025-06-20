@@ -36,6 +36,7 @@ dependencies:
     - "loguru>=0.7.0" # Aligned with pyproject.toml
     - "pytest>=7.0"   # Aligned with pyproject.toml
     - numexpr
+    - allure-pytest # For Allure reporting
     - opencv-python==4.10.0.84
     - "ruff>=0.1.0"   # Added new dev tool
     # Add other pip-installable dependencies like ipykernel, onnx, tqdm if needed

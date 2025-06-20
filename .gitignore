@@ -193,7 +193,11 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+logs/
+allure-results/
+allure-report/
+
 .virtual_documents/
 anaconda_projects/
 .trash/
-.~lock.*#
+.~lock.environment.yaml#

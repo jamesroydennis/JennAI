@@ -36,8 +36,26 @@ def main():
         # This print statement was likely for debugging before logger was integrated.
         # logger.info(f"JennAI Project Root determined as: {jennai_root_path}") # Already logged by setup_logging
 
+        # --- Delete jennai.log file ---
+        logs_dir = jennai_root_path / "logs"
+        jennai_log_file_path = logs_dir / "jennai.log"
+        if jennai_log_file_path.exists() and jennai_log_file_path.is_file():
+            try:
+                jennai_log_file_path.unlink() # Delete the file
+                logger.info(f"  DELETED log file: {jennai_log_file_path}")
+            except OSError as e:
+                logger.error(f"  Failed to delete log file {jennai_log_file_path}. Reason: {e}")
+        else:
+            logger.info(f"Log file not found (or not a file), no need to delete: {jennai_log_file_path}")
+
         # Define the cache folder names to be removed
-        cache_folders_to_remove = ['__pycache__', '.pytest_cache', '.virtual_documents']
+        cache_folders_to_remove = [
+            '__pycache__',
+            '.pytest_cache',
+            '.virtual_documents',
+            'allure-results', # Add Allure results directory
+            'allure-report'   # Add Allure report directory
+        ]
 
         logger.info(f"Starting comprehensive cleanup under JennAI root: {jennai_root_path}")
 
@@ -96,7 +114,6 @@ if __name__ == "__main__":
     # jennai_root_for_path is already defined globally and points to the project root
     jennai_root_path_main = jennai_root_for_path
 
-
     # Setup logging first
     # Pass debug_mode=True or False based on your preference for the cleanup script
     # You might want cleanup to always be verbose, or respect the global config
@@ -104,7 +121,4 @@ if __name__ == "__main__":
     setup_logging(debug_mode=True)
     logger.info("Loguru setup complete for cleanup.py.")
 
-    exit_code = main() # Run the cleanup
-    if exit_code == 0: # Only run eza if cleanup was successful
-        run_eza_tree(jennai_root_path_main)
-    exit(exit_code)
+    exit(main()) # Run the cleanup and exit with its code

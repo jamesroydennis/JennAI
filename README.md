@@ -18,18 +18,34 @@ data handling, and presentation layers.
 
 ## Setup
 
-1. Ensure you have Conda installed.
-2. Create the Conda environment from the `environment.yaml` file:
-   ```bash
-   conda env create -f environment.yaml
-   ```
-3. Activate the environment:
-   ```bash
-   conda activate jennai-root
-   ```
+To get the JennAI project running, follow these steps:
+
+1.  **Install Conda**: Ensure you have Conda (Miniconda or Anaconda) installed.
+
+2.  **Create and Activate Conda Environment**:
+    Create the Conda environment from the `environment.yaml` file:
+    ```bash
+    conda env create -f environment.yaml
+    ```
+    Activate the environment:
+    ```bash
+    conda activate jennai-root
+    ```
+
+3.  **Install Java Development Kit (JDK)**:
+    The Allure reporting tool requires Java. Install a JDK (version 8 or higher is typically sufficient).
+    *   **Recommended:** Use a package manager (e.g., `brew install openjdk` on macOS, `sudo apt install default-jdk` on Ubuntu, `scoop install java` on Windows).
+    *   **Alternatively:** Download from Adoptium (OpenJDK) or Oracle.
+    Ensure the `java` command is available in your system's PATH and the `JAVA_HOME` environment variable is set.
+
+4.  **Install Allure Command-line Tool**:
+    This tool is needed to generate and view Allure reports.
+    *   **Recommended:** Use a package manager (e.g., `brew install allure` on macOS, `scoop install allure` on Windows, or `npm install -g allure-commandline` if you have Node.js/npm).
+    *   **Alternatively:** Download the zip/tgz from the Allure GitHub releases page and add its `/bin` directory to your system's PATH.
 
 ## Running Tests
 
+To run tests and generate Allure reports, see the Regression Testing Workflow below. For a quick test run without full reporting, you can use:
 ```bash
 pytest
 ```
@@ -43,27 +59,33 @@ For ensuring project stability after significant changes, the following workflow
 The easiest way to run the full regression suite is using the provided shell script:
 ```bash
 bash admin/run_regression.sh
-
 ```
-This script will perform all the steps below and exit with an appropriate status code. (Note: Ensure the script has execute permissions: `chmod +x admin/run_regression.sh`)
+This script will:
+1. Clean project artifacts (including previous Allure results).
+2. Run `pytest` and generate raw Allure result data.
+3. Generate an HTML Allure report from the results.
+4. Open the Allure report in your web browser.
+5. Exit with an appropriate status code based on test outcomes.
+
+(Note: Ensure the script has execute permissions: `chmod +x admin/run_regression.sh`. You also need the Allure command-line tool installed and in your PATH, which requires Java.)
 
 **Manual Steps (if not using the script):**
 
 1.  **Clean Project Artifacts**:
-    Remove cached files and display the current project tree.
+    Remove cached files, previous Allure results, and old log files.
     ```bash
     python admin/cleanup.py
     ```
 
 2.  **Run Automated Tests**:
-    Execute all unit and integration tests. Test-specific logs are written to `logs/pytest.log`.
+    Execute all unit and integration tests and generate Allure result data.
     ```bash
-    pytest
+    pytest --alluredir=allure-results
     ```
 
-3.  **Check Logs for Errors**:
-    Scan the `pytest.log` file for any critical error patterns. This script will exit with a non-zero status code if errors are found.
+3.  **Generate and View Allure Report**:
+    Process the raw results to create an HTML report and open it.
     ```bash
-    python admin/check_logs.py logs/pytest.log
+    allure generate allure-results -o allure-report --clean
+    allure open allure-report
     ```
-    You can also use `python admin/check_logs.py logs/jennai.log` to scan the main application log if it was run independently.
