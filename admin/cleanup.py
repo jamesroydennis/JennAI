@@ -49,7 +49,13 @@ def main():
             logger.info(f"Log file not found (or not a file), no need to delete: {jennai_log_file_path}")
 
         # Define the cache folder names to be removed
-        cache_folders_to_remove = ['__pycache__', '.pytest_cache', '.virtual_documents']
+        cache_folders_to_remove = [
+            '__pycache__',
+            '.pytest_cache',
+            '.virtual_documents',
+            'allure-results', # Add Allure results directory
+            'allure-report'   # Add Allure report directory
+        ]
 
         logger.info(f"Starting comprehensive cleanup under JennAI root: {jennai_root_path}")
 
