@@ -15,7 +15,7 @@ if str(jennai_root) not in sys.path:
 # --- Centralized Core Imports ---
 # These modules are now directly discoverable from the JennAI root
 from config.loguru_setup import setup_logging
-from config.config import DEBUG_MODE
+from config.config import DEBUG_MODE, DATABASE_FILE_PATH # Import DATABASE_FILE_PATH
 from core.dependency_container import DependencyContainer
 
 # --- Global Setup (Orchestrated by main.py) ---
@@ -41,6 +41,10 @@ def configure_project_business_dependencies(container: DependencyContainer):
     # --- AI Service Registration ---
     from src.business.interfaces.IAIService import IAIService
     from src.business.ai.gemini_api import AIGenerator
+    from src.business.ai.data_collect_service import DataCollectService
+    # Import the new workflow service (adjust path if it's different)
+    from src.business.pyrepopal_workflow_service import PyRepoPalWorkflowService
+
     # Register AIGenerator as the concrete implementation for IAIService
     # Using a factory lambda to provide the API key from environment variables.
     container.register_singleton(IAIService, lambda: AIGenerator(api_key=os.getenv("GOOGLE_API_KEY")))
@@ -60,6 +64,23 @@ def configure_project_business_dependencies(container: DependencyContainer):
     container.register_singleton(IUserManager, ConceptualUserManager)
     logger.info("Registered ConceptualUserManager for IUserManager.")
 
+    # --- Register DataCollectService (as it's a dependency for PyRepoPalWorkflowService) ---
+    container.register_singleton(DataCollectService, DataCollectService)
+    logger.info("Registered DataCollectService.")
+
+    # --- Register PyRepoPalWorkflowService ---
+    # It depends on DataCollectService, IAIService, and several repositories
+    container.register_singleton(
+        PyRepoPalWorkflowService,
+        lambda: PyRepoPalWorkflowService(
+            data_collect_service=container.resolve(DataCollectService),
+            ai_service=container.resolve(IAIService),
+            # Repository dependencies will be resolved when PyRepoPalWorkflowService is instantiated
+            # assuming they are registered in configure_project_data_dependencies
+        )
+    ) # Repositories will be injected by the container when PyRepoPalWorkflowService is resolved
+    logger.info("Registered PyRepoPalWorkflowService factory.")
+
     logger.success("SUCCESS - src/business dependencies configured (conceptual).")
 
 def configure_project_data_dependencies(container: DependencyContainer):
@@ -69,20 +90,64 @@ def configure_project_data_dependencies(container: DependencyContainer):
     logger.info("INFO - Configuring src/data dependencies (conceptual).")
 
     # --- CRUD Repository Registration (Conceptual for a User entity) ---
+    # This part can be removed or adapted if UserDTO is not actually used.
     from src.data.interfaces.ICrudRepository import ICrudRepository
-    # Assume you have a UserDTO or entity model
-    # from src.data.dto.user_dto import UserDTO # Example import
     class UserDTO: pass # Placeholder
-
-    # Assume you have a concrete repository implementation for UserDTO
-    # from src.data.repositories.in_memory_user_repository import InMemoryUserRepository # Example
     class ConceptualUserRepository(ICrudRepository[UserDTO]): # Placeholder
         def create(self, item): logger.info("ConceptualUserRepository: create called"); raise NotImplementedError
         def read_by_id(self, item_id): logger.info("ConceptualUserRepository: read_by_id called"); raise NotImplementedError
-        # ... other methods ...
-
     container.register_singleton(ICrudRepository[UserDTO], ConceptualUserRepository)
-    logger.info("Registered ConceptualUserRepository for ICrudRepository[UserDTO].")
+    logger.info("Registered ConceptualUserRepository for ICrudRepository[UserDTO] (placeholder).")
+
+    # --- Register SQLite Repositories for PyRepoPal DTOs ---
+    from src.data.obj.analysis_session_dto import AnalysisSessionDTO
+    from src.data.implementations.analysis_session_sqlite_repository import AnalysisSessionSQLiteRepository
+    from src.data.obj.system_profile_dto import SystemProfileDTO
+    from src.data.implementations.system_profile_sqlite_repository import SystemProfileSQLiteRepository
+    from src.data.obj.repository_snapshot_dto import RepositorySnapshotDTO
+    from src.data.implementations.repository_snapshot_sqlite_repository import RepositorySnapshotSQLiteRepository
+    # We'll need to create GeneratedPromptSQLiteRepository and AIAnalysisResultSQLiteRepository as well.
+    # For now, let's assume they exist and follow the same pattern.
+    from src.data.obj.generated_prompt_dto import GeneratedPromptDTO
+    from src.data.implementations.generated_prompt_sqlite_repository import GeneratedPromptSQLiteRepository # Assuming this will be created
+    from src.data.obj.ai_analysis_result_dto import AIAnalysisResultDTO
+    from src.data.implementations.ai_analysis_result_sqlite_repository import AIAnalysisResultSQLiteRepository # Assuming this will be created
+
+    db_path_str = str(DATABASE_FILE_PATH) # Get DB path from config
+
+    container.register_singleton(
+        ICrudRepository[AnalysisSessionDTO],
+        lambda: AnalysisSessionSQLiteRepository(db_path=db_path_str)
+    )
+    logger.info(f"Registered AnalysisSessionSQLiteRepository for ICrudRepository[AnalysisSessionDTO] with DB: {db_path_str}")
+
+    container.register_singleton(
+        ICrudRepository[SystemProfileDTO],
+        lambda: SystemProfileSQLiteRepository(db_path=db_path_str)
+    )
+    logger.info(f"Registered SystemProfileSQLiteRepository for ICrudRepository[SystemProfileDTO] with DB: {db_path_str}")
+
+    container.register_singleton(
+        ICrudRepository[RepositorySnapshotDTO],
+        lambda: RepositorySnapshotSQLiteRepository(db_path=db_path_str)
+    )
+    logger.info(f"Registered RepositorySnapshotSQLiteRepository for ICrudRepository[RepositorySnapshotDTO] with DB: {db_path_str}")
+
+    # Register GeneratedPromptSQLiteRepository
+    container.register_singleton(
+        ICrudRepository[GeneratedPromptDTO],
+        lambda: GeneratedPromptSQLiteRepository(db_path=db_path_str)
+    )
+    logger.info(f"Registered GeneratedPromptSQLiteRepository for ICrudRepository[GeneratedPromptDTO] with DB: {db_path_str}")
+
+    # Register AIAnalysisResultSQLiteRepository
+    container.register_singleton(
+        ICrudRepository[AIAnalysisResultDTO],
+        lambda: AIAnalysisResultSQLiteRepository(db_path=db_path_str)
+    )
+    logger.info(f"Registered AIAnalysisResultSQLiteRepository for ICrudRepository[AIAnalysisResultDTO] with DB: {db_path_str}")
+
+
     logger.success("SUCCESS - src/data dependencies configured (conceptual).")
 
 def configure_project_presentation_dependencies(container: DependencyContainer):
@@ -107,8 +172,18 @@ if __name__ == '__main__':
 
     logger.info("INFO - JennAI OS is booting up and configuring core services...")
 
+    # Order matters if dependencies are cross-layer during configuration itself,
+    # but typically resolution happens lazily.
+    # Data layer first, then business layer.
+    configure_project_data_dependencies(global_container)
     configure_project_business_dependencies(global_container)
-    configure_project_data_dependencies(global_container) # Add call to configure data dependencies
+
+    # Now that all dependencies are registered, we can resolve the workflow service
+    # to ensure its own dependencies (like repositories) are injected correctly.
+    # This is also a good place to test if the DI setup is correct.
+    # workflow_service = global_container.resolve(PyRepoPalWorkflowService)
+    # logger.info(f"PyRepoPalWorkflowService resolved: {workflow_service is not None}")
+
     flask_app_instance = configure_project_presentation_dependencies(global_container)
 
     logger.success("SUCCESS - JennAI OS has successfully booted and performed initial checks. Vibe coding initiated!")

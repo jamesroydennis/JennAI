@@ -11,10 +11,10 @@ class GeneratedPromptDTO:
     Maps to the 'generated_prompts' table.
     """
     session_id: int  # Foreign key to AnalysisSessionDTO.session_id
-    prompt_type: str # e.g., "min_sys_reqs_determination", "dependency_resolution"
-    template_name_used: Optional[str] = None
     prompt_content: str
+    prompt_type: str # e.g., "min_sys_reqs_determination", "dependency_resolution"
     creation_timestamp: str # ISO 8601 string
+    template_name_used: Optional[str] = None
 
     prompt_id: Optional[int] = None # Primary Key, auto-generated
 

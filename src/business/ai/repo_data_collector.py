@@ -11,24 +11,7 @@ jennai_root_for_path = Path(__file__).resolve().parent.parent.parent.parent
 if str(jennai_root_for_path) not in sys.path:
     sys.path.insert(0, str(jennai_root_for_path))
 
-try:
-    from config.loguru_setup import setup_logging
-    from loguru import logger
-    # Configure logging for this module.
-    # Ensures that if this script is run standalone or imported, logging is set up.
-    if not logger._core.handlers: # Check if logger is already configured
-        setup_logging(debug_mode=True, log_file_name="repo_data_collector.log")
-except ImportError:
-    # Fallback to standard print if loguru is not available or path setup fails.
-    # This might happen if the script is moved or run in a very isolated context.
-    print("Warning: Loguru logging not initialized for repo_data_collector. Falling back to print statements.")
-    class PrintLogger:
-        def info(self, msg): print(f"INFO: {msg}")
-        def warning(self, msg): print(f"WARNING: {msg}")
-        def error(self, msg): print(f"ERROR: {msg}")
-        def success(self, msg): print(f"SUCCESS: {msg}")
-        def debug(self, msg): print(f"DEBUG: {msg}")
-    logger = PrintLogger()
+from config.loguru_setup import logger # Simply import the configured logger
 
 def _read_file_content(file_path: Path) -> Optional[str]:
     """

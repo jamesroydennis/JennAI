@@ -143,7 +143,7 @@ class SQLiteRepository(ICrudRepository[T], Generic[T]):
         finally:
             conn.close()
 
-    def update(self, item: T) -> T:
+    def update(self, item: T) -> Optional[T]:
         data = self._entity_to_dict(item)
         item_id = data.pop(self.pk_column, None) 
         if item_id is None:
@@ -154,7 +154,8 @@ class SQLiteRepository(ICrudRepository[T], Generic[T]):
         set_clause = ', '.join([f"{key} = ?" for key in data.keys()])
         if not set_clause: # Nothing to update
             logger.warning(f"No fields to update for item ID {item_id} in '{self.table_name}'. Returning item as is.")
-            return item
+            # Consider if this should return item or None if no actual update query is run.
+            return self.read_by_id(item_id) # Or return item if that's preferred for "no fields to update"
             
         sql = f"UPDATE {self.table_name} SET {set_clause} WHERE {self.pk_column} = ?"
         values = list(data.values()) + [item_id]
@@ -166,9 +167,11 @@ class SQLiteRepository(ICrudRepository[T], Generic[T]):
                 cursor.execute(sql, values)
                 if cursor.rowcount == 0:
                     logger.warning(f"No item found with {self.pk_column} {item_id} to update in '{self.table_name}'. Update had no effect.")
+                    return None # Indicate that the item was not found/updated
                 else:
                     logger.success(f"Updated item with {self.pk_column} {item_id} in '{self.table_name}'")
-            return item # Or self.read_by_id(item_id) for consistency
+            # Return the updated item, potentially by re-reading it to get DB-generated values
+            return self.read_by_id(item_id) # This ensures consistency
         except sqlite3.Error as e:
             logger.error(f"Error updating item {self.pk_column} {item_id} in '{self.table_name}': {e}")
             raise
@@ -204,4 +207,3 @@ class SQLiteRepository(ICrudRepository[T], Generic[T]):
             logger.error(f"Error creating table '{self.table_name}': {e}")
         finally:
             conn.close()
-

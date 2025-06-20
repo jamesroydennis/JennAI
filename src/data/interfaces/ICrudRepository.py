@@ -62,7 +62,7 @@ class ICrudRepository(ABC, Generic[T]):
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, item: T) -> T:
+    def update(self, item: T) -> Optional[T]:
         """
         Updates an existing item in the repository.
 
@@ -70,7 +70,8 @@ class ICrudRepository(ABC, Generic[T]):
             item: The item with updated information.
 
         Returns:
-            The updated item.
+            The updated item if the update was successful and the item existed,
+            otherwise None if the item was not found to update (no rows affected).
 
         Raises:
             NotImplementedError: This method must be implemented by subclasses.

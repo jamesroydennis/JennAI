@@ -125,7 +125,7 @@ def test_populate_prompt_template_empty_data(service, mock_template_content, sam
 
 @patch('src.business.ai.data_collect_service.sys_profiler.main')
 @patch('src.business.ai.data_collect_service.repo_data_collector.collect_repository_data')
-def test_generate_and_save_repo_analysis_prompt_success(
+def test_prepare_analysis_data_and_prompt_success( # Renamed test to reflect method
     mock_collect_repo_data, mock_sys_profiler_main, service, 
     tmp_path, mock_template_content, sample_repo_data_full
 ):
@@ -143,50 +143,61 @@ def test_generate_and_save_repo_analysis_prompt_success(
     template_file = template_dir / "actual_template.md"
     template_file.write_text(mock_template_content) # Use the mock_template_content for this test
     
-    # Generated prompts directory
-    generated_prompts_dir = tmp_path / "src" / "data" / "generated_prompts"
-    generated_prompts_dir.mkdir(parents=True, exist_ok=True) # Ensure this temp dir is created
+    # Generated prompts directory is no longer managed by DataCollectService directly
+    # generated_prompts_dir = tmp_path / "src" / "data" / "generated_prompts"
+    # generated_prompts_dir.mkdir(parents=True, exist_ok=True) 
 
 
     # Override service paths to use tmp_path
     service.prompt_template_dir = template_dir
-    service.generated_prompts_dir = generated_prompts_dir
+    # service.generated_prompts_dir = generated_prompts_dir # This attribute was removed
     # sys_info_file path is also part of service, but _collect_system_info is mocked for its side effect
+    # We also need to mock the sys_info_file location if _collect_system_info is to write/read from it.
+    # However, for this test, sys_profiler.main is mocked, and _collect_system_info reads from service.sys_info_file
+    # Let's ensure sys_info_file points to a temporary location for the _collect_system_info part.
+    temp_sys_info_dir = tmp_path / "src" / "data" / "system_info"
+    temp_sys_info_dir.mkdir(parents=True, exist_ok=True)
+    service.sys_info_file = temp_sys_info_dir / "hardware_specs.json"
+    # Create a dummy system info file that sys_profiler.main would create
+    # and _collect_system_info would read.
+    dummy_sys_info_content = {"os": "mockOS"}
+    with open(service.sys_info_file, 'w') as f:
+        import json
+        json.dump(dummy_sys_info_content, f)
 
     # --- Call the Service Method ---
     repo_path_to_scan = "/fake/repo/path" # This path isn't actually used due to mocking collect_repository_data
-    output_filename = "test_output_prompt.txt"
     
-    result_path = service.generate_and_save_repo_analysis_prompt(
+    result_dict = service.prepare_analysis_data_and_prompt(
         repo_path=repo_path_to_scan,
-        template_filename="actual_template.md", # The template file we created in tmp_path
-        output_prompt_filename=output_filename
+        template_filename="actual_template.md" # The template file we created in tmp_path
     )
 
     # --- Assertions ---
     mock_sys_profiler_main.assert_called_once()
     mock_collect_repo_data.assert_called_once_with(repo_path_to_scan)
     
-    assert result_path is not None
-    assert result_path.name == output_filename
-    assert result_path.parent == generated_prompts_dir
-    assert result_path.exists()
+    assert result_dict is not None
+    assert "prompt_str" in result_dict
+    assert "system_info" in result_dict
+    assert "repo_info" in result_dict
+    assert result_dict["system_info"] == dummy_sys_info_content # Check if mocked system info was loaded
+    assert result_dict["repo_info"] == sample_repo_data_full
 
     # Verify content of the generated prompt
-    generated_prompt_text = result_path.read_text()
+    generated_prompt_text = result_dict["prompt_str"]
     assert "Repository Description: A sample repository for testing." in generated_prompt_text
     assert "README: This is a README." in generated_prompt_text
     assert "REQUIREMENTS_TXT: package1==1.0\npackage2>=2.0" in generated_prompt_text
     assert "UNEXPECTED_KEY: Some extra info." in generated_prompt_text
 
 @patch('src.business.ai.data_collect_service.repo_data_collector.collect_repository_data')
-def test_generate_and_save_repo_analysis_prompt_repo_collection_fails(mock_collect_repo_data, service):
+def test_prepare_analysis_data_and_prompt_repo_collection_fails(mock_collect_repo_data, service): # Renamed test
     """Test case where repository data collection fails."""
     mock_collect_repo_data.return_value = None # Simulate failure
 
-    result_path = service.generate_and_save_repo_analysis_prompt(
+    result_dict = service.prepare_analysis_data_and_prompt(
         repo_path="/fake/repo",
-        template_filename="any_template.md",
-        output_prompt_filename="wont_be_created.txt"
+        template_filename="any_template.md"
     )
-    assert result_path is None
+    assert result_dict is None
