@@ -22,5 +22,5 @@ def pytest_configure(config):
     # Setup logging for the test session, directing to a separate file
     # The log level (DEBUG/INFO) will be determined by DEBUG_MODE from config.py
     # Console logging will also respect DEBUG_MODE as per loguru_setup.py logic
-    setup_logging(log_file_name="jennai.log", debug_mode=DEBUG_MODE) # Standardized to jennai.log
-    logger.info(f"Pytest session logging initialized. Log file: jennai.log, DEBUG_MODE: {DEBUG_MODE}")
+    setup_logging(log_file_name="pytest_session.log", debug_mode=DEBUG_MODE)
+    logger.info(f"Pytest session logging initialized. Log file: logs/pytest_session.log, DEBUG_MODE: {DEBUG_MODE}")

@@ -40,7 +40,10 @@ def main():
         logs_dir = jennai_root_path / "logs"
         
         # List of log files to delete
-        log_files_to_delete = ["jennai.log"]
+        log_files_to_delete = [
+            "jennai.log",
+            "pytest_session.log"
+        ]
 
         for log_fn in log_files_to_delete:
             log_file_path_to_delete = logs_dir / log_fn

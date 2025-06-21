@@ -10,7 +10,8 @@ data handling, and presentation layers.
 - `config/`: Configuration files and logging setup.
 - `core/`: Core utilities like the dependency injection container.
 - `logs/`: Default directory for log files.
-  - `jennai.log`: Logs from the main application (`main.py`), Pytest test sessions, and admin scripts.
+  - `jennai.log`: Logs from the main application (`main.py`) and admin scripts.
+  - `pytest_session.log`: Logs generated specifically during `pytest` test runs.
 - `src/`: Contains the main application source code:
   - `src/business/`: Business logic, AI services.
   - `src/data/`: Data access layers, repositories.
