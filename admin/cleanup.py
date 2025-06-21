@@ -21,7 +21,7 @@ from config.config import DATABASE_FILE_PATH # Import the database path
 def main():
     """
     Recursively deletes specified Python-related cache folders and other
-    temporary folders within the JennAI project root.
+    temporary folders within the PyRepo-Pal project root.
     """
     try:
         # Determine the JennAI project root dynamically.
@@ -45,7 +45,7 @@ def main():
         # List of log files to delete
         # Combine all files to delete into one list of Path objects
         files_to_delete_full_paths = [
-            logs_dir / "jennai.log",
+            logs_dir / "pyrepopal.log",
             logs_dir / "pytest_session.log",
             DATABASE_FILE_PATH # This is already a Path object from config.py
         ]

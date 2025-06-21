@@ -54,41 +54,68 @@ def main():
     """
     Main function to parse arguments and run the selected regression mode.
     """
+    # --- Manual Help Flag Check ---
+    if '--help' in sys.argv or '-h' in sys.argv:
+        print("""
+Usage: admin/run_regression.py
+
+Runs an interactive regression testing suite for the JennAI project.
+Use the arrow keys to select an option and press Enter.
+
+Modes:
+  - Test only:                          Runs pytest.
+  - Clean, then Test:                   Cleans artifacts, then runs pytest.
+  - Clean, Test, and Report:            Cleans, tests, and generates/opens an Allure report.
+  - Destroy, Create, and Test:          Destructive. Resets logs, DB, folders, then tests.
+  - Destroy, Create, Test, and Report:  Destructive. Full reset, test, and report.
+
+Environments:
+  - DEFAULT: Use environment set by OS (JENNAI_ENVIRONMENT) or 'DEV' default.
+  - DEV:     Force the environment to 'DEV' for this run.
+  - TEST:    Force the environment to 'TEST' for this run.
+""")
+        sys.exit(0)
+
+    logger.info("Please use the arrow keys to navigate and Enter to select an option.")
     # --- Interactive Mode & Environment Selection ---
     questions = [
         inquirer.List(
             'mode',
             message="Select a regression mode",
             choices=[
-                ('Clean artifacts, then Test (no report)', 'clean-test'),
-                ('Clean artifacts, Test, then Generate and Open Report', 'clean-test-report'),
-                ('Only Run Tests (no report)', 'test'),
-                ('Run Tests, then Generate and Open Report', 'test-report'),
-                ('Destroy all, Create folders/DB, then Test (no report)', 'destroy-create-test'),
-                ('Destroy all, Create folders/DB, Test, and Report', 'destroy-create-test-report')
+                ("Test only", 'test'),
+                ("Clean, then Test", 'clean-test'),
+                ("Clean, Test, and Report", 'clean-test-report'),
+                ("Destroy, Create, and Test", 'destroy-create-test'),
+                ("Destroy, Create, Test, and Report", 'destroy-create-test-report')
             ],
-            default='clean-test'
+            default='test'
         ),
         inquirer.List(
             'environment',
             message="Select the target environment",
-            choices=['DEV', 'TEST'],
-            default='TEST'
+            choices=['DEFAULT', 'DEV', 'TEST'],
+            default='DEFAULT'
         ),
     ]
     
     answers = inquirer.prompt(questions)
 
     if answers is None:
-        logger.warning("No selection made. Exiting.")
+        # If the user cancels (e.g., Ctrl+C), answers will be None.
+        # Provide a clear exit message.
+        logger.info("Operation cancelled by user. Exiting.")
         sys.exit(0)
 
     mode = answers['mode']
     environment = answers['environment']
 
     # --- Set Environment Variable ---
-    os.environ["JENNAI_ENVIRONMENT"] = environment
-    logger.info(f"Environment set to '{environment}'")
+    if environment != 'DEFAULT':
+        os.environ["JENNAI_ENVIRONMENT"] = environment
+        logger.info(f"Environment explicitly set to '{environment}' for this run.")
+    else:
+        logger.info("Using default environment as determined by config.config (JENNAI_ENVIRONMENT env var or 'DEV').")
 
     # --- Mode Logic ---
     logger.info(f"Running in mode: '{mode}'")
@@ -122,7 +149,7 @@ def main():
 
     if do_test:
         logger.info("--- Step 4: Running Tests and Reports ---")
-        report_pytest_args = ['bash', 'admin/report-pytest.sh']
+        report_pytest_args = ['bash', 'admin/report_tests.sh']
         if not do_report:
             report_pytest_args.extend(['--no-generate', '--no-open'])
         

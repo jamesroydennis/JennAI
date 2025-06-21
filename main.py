@@ -22,10 +22,10 @@ from core.dependency_container import DependencyContainer
 setup_logging(debug_mode=DEBUG_MODE) # Initialize Loguru for the entire monorepo
 from loguru import logger # Import the configured logger instance
 
-logger.info(f"INFO - JennAI Monorepo Main: Orchestration initialized.")
+logger.info(f"INFO - PyRepo-Pal Main: Orchestration initialized.")
 logger.info(f"INFO - Python interpreter: {sys.executable}")
 logger.info(f"INFO - Current working directory: {os.getcwd()}")
-logger.info(f"INFO - JennAI project root added to PATH: {jennai_root}")
+logger.info(f"INFO - PyRepo-Pal project root added to PATH: {jennai_root}")
 logger.info(f"INFO - Running in DEBUG_MODE: {DEBUG_MODE}")
 
 # --- Dependency Configuration Functions for Sub-Projects ---
