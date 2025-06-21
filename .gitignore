@@ -205,3 +205,4 @@ allure-report/
 anaconda_projects/
 .trash/
 .~lock.environment.yaml#
+.vscode/
