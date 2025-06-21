@@ -43,15 +43,13 @@ def main():
         logs_dir = jennai_root_path / "logs"
         
         # List of log files to delete
-        # Combine all files to delete into one list of Path objects
-        files_to_delete_full_paths = [
+        log_files_to_delete = [
             logs_dir / "pyrepopal.log",
             logs_dir / "pytest_session.log",
-            DATABASE_FILE_PATH # This is already a Path object from config.py
         ]
 
         logger.info("Starting file cleanup...")
-        for file_path in files_to_delete_full_paths:
+        for file_path in log_files_to_delete:
             if file_path.exists() and file_path.is_file():
                 try:
                     file_path.unlink()

@@ -22,7 +22,7 @@ def index():
     # if hasattr(current_app, 'container'):
     #     # Example: ai_service = current_app.container.resolve(IAIService)
     #     logger.debug("DI container is available on current_app.")
-    return render_template('index.html', title="Welcome to JennAI")
+    return render_template('index.html', title="Welcome to PyRepo-Pal!")
 
 @default_bp.route('/health')
 def health_check():
@@ -30,7 +30,7 @@ def health_check():
     A simple health check endpoint.
     """
     logger.info("Route '/health' accessed for health check.")
-    return jsonify({"status": "ok", "message": "JennAI Flask API is healthy"}), 200
+    return jsonify({"status": "ok", "message": "PyRepo-Pal Flask API is healthy"}), 200
 
 @default_bp.route('/run_tests', methods=['POST'])
 def run_tests():

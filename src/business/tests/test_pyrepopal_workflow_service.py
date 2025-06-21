@@ -13,6 +13,7 @@ if str(jennai_root_for_path) not in sys.path:
 from config.loguru_setup import logger # Import logger for temporary tests
 from src.business.pyrepopal_workflow_service import PyRepoPalWorkflowService
 from src.business.ai.ai_response_parser import AIResponseParser, AIResponseParsingError
+import json
 from src.business.ai.data_collect_service import DataCollectService
 from src.business.interfaces.IAIService import IAIService
 from src.data.interfaces.ICrudRepository import ICrudRepository
@@ -116,7 +117,7 @@ def test_analyze_repository_happy_path(
     mock_initial_session = AnalysisSessionDTO(session_id=mock_session_id, target_repository_identifier="test/repo", analysis_timestamp="sometime", status="session_created", user_notes=None)
     mock_analysis_session_repo.create.return_value = mock_initial_session
 
-    mock_system_info = {"os_info": {"mock_platform": "TestOS"}} # Corrected structure
+    mock_system_info = {"os": {"mock_platform": "TestOS"}} # Use the correct key 'os' to match service logic
     mock_repo_info = {"readme_content": "Test README"}
     mock_prompt_str = "Test prompt content"
     mock_data_collect_service.prepare_analysis_data_and_prompt.return_value = {
@@ -125,7 +126,7 @@ def test_analyze_repository_happy_path(
         "prompt_str": mock_prompt_str
     }
 
-    mock_system_profile_repo.create.return_value = SystemProfileDTO(profile_id=1, session_id=mock_session_id, profile_timestamp="now", os_info=mock_system_info.get("os_info"))
+    mock_system_profile_repo.create.return_value = SystemProfileDTO(profile_id=1, session_id=mock_session_id, profile_timestamp="now", os_info=json.dumps(mock_system_info.get("os")))
     mock_repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, readme_content="Test README", requirements_txt_content=None, environment_yaml_content=None, existing_min_sys_reqs_content=None)
     
     mock_prompt_id = 99
@@ -158,7 +159,9 @@ def test_analyze_repository_happy_path(
     mock_system_profile_repo.create.assert_called_once()
     # We could add more detailed assertions on the DTO passed to create if needed
     assert mock_system_profile_repo.create.call_args[0][0].session_id == mock_session_id
-    assert mock_system_profile_repo.create.call_args[0][0].os_info == mock_system_info.get("os_info")
+    # Assert that the DTO's os_info field contains the JSON string of the 'os' part of our mock data
+    expected_os_info_json = json.dumps(mock_system_info.get("os"))
+    assert mock_system_profile_repo.create.call_args[0][0].os_info == expected_os_info_json
 
     mock_repository_snapshot_repo.create.assert_called_once()
     assert mock_repository_snapshot_repo.create.call_args[0][0].session_id == mock_session_id

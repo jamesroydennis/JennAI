@@ -11,7 +11,6 @@ if str(jennai_root_for_path) not in sys.path:
 
 from loguru import logger
 from config.loguru_setup import setup_logging
-from admin.cleanup import main as run_cleanup # Import the cleanup function
 
 # --- Configuration ---
 # Determine the JennAI project root dynamically.
@@ -76,6 +75,7 @@ DIRECTORIES_TO_CREATE = [
 
 # Directories that should be Python packages (i.e., need an __init__.py)
 PACKAGES_TO_INITIALIZE = [
+    "admin", # Initialize as package
     "config",
     "core",
     "src",
@@ -111,13 +111,6 @@ def create_folders_and_inits():
     Creates the defined directory structure and adds __init__.py files
     to specified package directories.
     """
-    # Run cleanup first to ensure a clean slate
-    logger.info("Running cleanup before creating folders...")
-    cleanup_exit_code = run_cleanup()
-    if cleanup_exit_code != 0:
-        logger.error("Cleanup failed during folder creation. Aborting.")
-        sys.exit(1) # Exit if cleanup fails
-
     logger.info("Starting project folder creation...")
 
     # Create directories

@@ -4,6 +4,10 @@ import sys
 import os
 from pathlib import Path
 
+# --- Load Environment Variables from .env file ---
+from dotenv import load_dotenv
+load_dotenv() # This will load .env file from the current directory or parent directories
+
 # --- Root Project Path Setup (CRITICAL for Monorepo Imports) ---
 # This block ensures the main /JennAI project root is always on Python's sys.path.
 # This allows all sub-projects (project/data, project/business, etc.)
@@ -45,9 +49,15 @@ def configure_project_business_dependencies(container: DependencyContainer):
     from src.business.ai.ai_response_parser import AIResponseParser # Import the new parser
     # Import the new workflow service (adjust path if it's different)
     from src.business.pyrepopal_workflow_service import PyRepoPalWorkflowService
+    # Import DTOs and ICrudRepository for resolving dependencies
+    from src.data.interfaces.ICrudRepository import ICrudRepository
+    from src.data.obj.analysis_session_dto import AnalysisSessionDTO
+    from src.data.obj.system_profile_dto import SystemProfileDTO
+    from src.data.obj.repository_snapshot_dto import RepositorySnapshotDTO
+    from src.data.obj.generated_prompt_dto import GeneratedPromptDTO
+    from src.data.obj.ai_analysis_result_dto import AIAnalysisResultDTO
 
     # Register AIGenerator as the concrete implementation for IAIService
-    # Using a factory lambda to provide the API key from environment variables.
     container.register_singleton(IAIService, lambda: AIGenerator(api_key=os.getenv("GOOGLE_API_KEY")))
     logger.info("Registered AIGenerator for IAIService.")
     
@@ -81,10 +91,14 @@ def configure_project_business_dependencies(container: DependencyContainer):
             data_collect_service=container.resolve(DataCollectService),
             ai_service=container.resolve(IAIService),
             ai_response_parser=container.resolve(AIResponseParser), # Inject the parser
-            # Repository dependencies will be resolved when PyRepoPalWorkflowService is instantiated
-            # assuming they are registered in configure_project_data_dependencies
+            # Inject all the required repository dependencies
+            analysis_session_repo=container.resolve(ICrudRepository[AnalysisSessionDTO]),
+            system_profile_repo=container.resolve(ICrudRepository[SystemProfileDTO]),
+            repository_snapshot_repo=container.resolve(ICrudRepository[RepositorySnapshotDTO]),
+            generated_prompt_repo=container.resolve(ICrudRepository[GeneratedPromptDTO]),
+            ai_analysis_result_repo=container.resolve(ICrudRepository[AIAnalysisResultDTO])
         )
-    ) # Repositories will be injected by the container when PyRepoPalWorkflowService is resolved
+    )
     logger.info("Registered PyRepoPalWorkflowService factory.")
 
     logger.success("SUCCESS - src/business dependencies configured (conceptual).")

@@ -15,7 +15,7 @@ from config.loguru_setup import setup_logging # Import the setup function
 from config.config import DATABASE_FILE_PATH # Import the database path from config
 from loguru import logger # Import the configured logger instance
 
-def setup_database(db_path: Path):
+def setup_database(db_path: Path, destroy_first: bool = False):
     """
     Sets up the SQLite database by creating tables if they don't exist.
     """
@@ -30,18 +30,21 @@ def setup_database(db_path: Path):
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        # SQL statements to create tables
-        # Now, we first drop the table if it exists, then create it.
-        create_tables_sql = """
-        DROP TABLE IF EXISTS ai_analysis_results;
-        DROP TABLE IF EXISTS generated_prompts;
-        DROP TABLE IF EXISTS repository_snapshots;
-        DROP TABLE IF EXISTS system_profiles;
-        DROP TABLE IF EXISTS analysis_sessions;
+        if destroy_first:
+            logger.warning("Dropping all existing tables before creation...")
+            drop_tables_sql = """
+            DROP TABLE IF EXISTS ai_analysis_results;
+            DROP TABLE IF EXISTS generated_prompts;
+            DROP TABLE IF EXISTS repository_snapshots;
+            DROP TABLE IF EXISTS system_profiles;
+            DROP TABLE IF EXISTS analysis_sessions;
+            """
+            cursor.executescript(drop_tables_sql)
+            logger.info("All tables dropped.")
 
-        -- Table to track individual analysis sessions
-        -- Recreating the table after dropping it
-        CREATE TABLE analysis_sessions (
+        # Use CREATE TABLE IF NOT EXISTS to be non-destructive by default
+        create_tables_sql = """
+        CREATE TABLE IF NOT EXISTS analysis_sessions (
             session_id INTEGER PRIMARY KEY AUTOINCREMENT,
             target_repository_identifier TEXT NOT NULL, -- Path or identifier of the repo analyzed
             analysis_timestamp TEXT NOT NULL,          -- ISO 8601 timestamp of session creation
@@ -49,8 +52,7 @@ def setup_database(db_path: Path):
             status TEXT                                -- Current status (e.g., 'created', 'failed_data_collection', 'completed_successfully')
         );
 
-        -- Table to store system profile data collected for a session
-        CREATE TABLE system_profiles (
+        CREATE TABLE IF NOT EXISTS system_profiles (
             profile_id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id INTEGER NOT NULL,               -- Foreign key to analysis_sessions
             profile_timestamp TEXT NOT NULL,           -- ISO 8601 timestamp of profile collection
@@ -63,8 +65,7 @@ def setup_database(db_path: Path):
             FOREIGN KEY (session_id) REFERENCES analysis_sessions (session_id)
         );
 
-        -- Table to store a snapshot of key repository files for a session
-        CREATE TABLE repository_snapshots (
+        CREATE TABLE IF NOT EXISTS repository_snapshots (
             snapshot_id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id INTEGER NOT NULL,               -- Foreign key to analysis_sessions
             readme_content TEXT,                       -- Content of README.md
@@ -74,8 +75,7 @@ def setup_database(db_path: Path):
             FOREIGN KEY (session_id) REFERENCES analysis_sessions (session_id)
         );
 
-        -- Table to store the prompts generated and sent to the AI for a session
-        CREATE TABLE generated_prompts (
+        CREATE TABLE IF NOT EXISTS generated_prompts (
             prompt_id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id INTEGER NOT NULL,               -- Foreign key to analysis_sessions
             prompt_type TEXT,                          -- Type of prompt (e.g., 'initial_analysis', 'follow_up')
@@ -85,8 +85,7 @@ def setup_database(db_path: Path):
             FOREIGN KEY (session_id) REFERENCES analysis_sessions (session_id)
         );
 
-        -- Table to store the raw AI responses and parsed results
-        CREATE TABLE ai_analysis_results (
+        CREATE TABLE IF NOT EXISTS ai_analysis_results (
             result_id INTEGER PRIMARY KEY AUTOINCREMENT,
             prompt_id INTEGER NOT NULL,                -- Foreign key to generated_prompts
             ai_response_raw TEXT NOT NULL,             -- The raw text response received from the AI
@@ -100,7 +99,10 @@ def setup_database(db_path: Path):
         # Execute all create table statements
         cursor.executescript(create_tables_sql)
         conn.commit()
-        logger.success(f"Database schema reset and created for: {db_path}")
+        if destroy_first:
+            logger.success(f"Database schema reset and created for: {db_path}")
+        else:
+            logger.success(f"Database schema verified/created for: {db_path}")
         return 0 # Indicate success
 
     except sqlite3.Error as e:
@@ -123,5 +125,5 @@ if __name__ == "__main__":
     logger.info(f"Using database path from config: {db_file_path}")
 
     # Run the database setup
-    exit_code = setup_database(db_file_path)
+    exit_code = setup_database(db_file_path, destroy_first=True) # Standalone run should be destructive
     sys.exit(exit_code)

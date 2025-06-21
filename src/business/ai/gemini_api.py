@@ -15,7 +15,7 @@ class AIGenerator(IAIService): # Inherit from IAIService
             logger.error("API key must be provided for AIGenerator.")
             raise ValueError("API key must be provided for AIGenerator.")
         self.api_key = api_key
-        self.model = GenerativeModel("gemini-pro") # Initialize the model
+        self.model = GenerativeModel("gemini-1.5-flash-latest") # Use a current, valid model name
         logger.info(f"AIGenerator initialized with API Key (masked): {api_key[:5]}...")
 
     def generate_text(self, prompt: str, options: Dict[str, Any] = None) -> str:

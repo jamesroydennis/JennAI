@@ -37,6 +37,7 @@ dependencies:
     # Your other pip dependencies:
     - google-generativeai
     - "loguru>=0.7.0" # Aligned with pyproject.toml
+    - "python-dotenv>=1.0.0" # For managing environment variables from .env files
     - "pytest>=7.0"   # Aligned with pyproject.toml
     - numexpr
     - inquirer # For interactive command-line menus

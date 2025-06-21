@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
 import pytest
 
 # --- Root Project Path Setup (CRITICAL for Imports) ---
@@ -19,6 +20,10 @@ def pytest_configure(config):
     and before the test collection process starts.
     We use this to set up our custom Loguru logging for the test session.
     """
+    # Load environment variables from .env file before any tests run
+    load_dotenv()
+    logger.info("Loaded environment variables from .env file for pytest session.")
+
     # Setup logging for the test session, directing to a separate file
     # The log level (DEBUG/INFO) will be determined by DEBUG_MODE from config.py
     # Console logging will also respect DEBUG_MODE as per loguru_setup.py logic

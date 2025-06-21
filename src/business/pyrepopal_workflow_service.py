@@ -80,9 +80,17 @@ class PyRepoPalWorkflowService:
     def _save_system_profile(self, current_session: AnalysisSessionDTO, system_info_data: Optional[Dict]) -> bool:
         logger.info(f"Attempting to save system profile for session {current_session.session_id}")
         if system_info_data and current_session.session_id is not None:
-            system_profile_dto = SystemProfileDTO.new_profile(
+            # Construct the DTO directly to ensure correct field mapping
+            # from the profiler's output to the DTO's attributes.
+            system_profile_dto = SystemProfileDTO(
                 session_id=current_session.session_id,
-                profile_data=system_info_data
+                profile_timestamp=datetime.utcnow().isoformat(),
+                os_info=json.dumps(system_info_data.get("os")),
+                cpu_info=json.dumps(system_info_data.get("cpu")),
+                ram_info=json.dumps(system_info_data.get("ram")),
+                gpu_info=json.dumps(system_info_data.get("gpu_info")),
+                disk_info=json.dumps(system_info_data.get("disk")),
+                python_info=json.dumps(system_info_data.get("python"))
             )
             saved_system_profile = self.system_profile_repo.create(system_profile_dto)
             if not saved_system_profile or saved_system_profile.profile_id is None:

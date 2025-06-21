@@ -85,6 +85,7 @@ The design of this script adheres to several key software engineering principles
 import argparse
 import inquirer # For interactive menus
 import subprocess
+import shutil
 import sys
 from pathlib import Path
 import os
@@ -131,6 +132,35 @@ def run_command(command_list, check=True):
         sys.exit(result.returncode)
     return result
 
+def setup_environment_file():
+    """
+    Checks for .env.example and creates .env from it if it doesn't exist.
+    """
+    logger.info("Checking for local environment file (.env)...")
+    
+    # Use the project root defined in this script
+    project_root = jennai_root_for_path 
+    
+    env_example_path = project_root / ".env.example"
+    env_path = project_root / ".env"
+
+    if not env_example_path.exists():
+        logger.error(f"'.env.example' not found at {env_example_path}. Cannot create .env file.")
+        return 1 # Indicate failure
+
+    if env_path.exists():
+        logger.info(f"'.env' file already exists at {env_path}. No action taken.")
+        return 0 # Indicate success, no action needed
+
+    try:
+        shutil.copy(env_example_path, env_path)
+        logger.success(f"Successfully created '.env' from '.env.example'.")
+        logger.warning("Please open the new '.env' file and add your secret API keys.")
+        return 0 # Indicate success
+    except Exception as e:
+        logger.critical(f"Failed to create '.env' file: {e}")
+        return 1 # Indicate failure
+
 def main():
     """
     Main function to parse arguments and run the selected regression mode.
@@ -162,13 +192,16 @@ Environments:
     mode_question = [
         inquirer.List(
             'mode',
-            message="Select a regression mode",
+            message="Select an administrative task",
             choices=[
                 ("Test only: Runs the Pytest test suite.", 'test'),
-                ("Clean, then Test: Cleans artifacts, then runs Pytest.", 'clean-test'),
-                ("Clean, Test, and Report: Cleans artifacts, runs Pytest, and generates/opens an Allure report.", 'clean-test-report'),
-                ("Destroy, Create, and Test", 'destroy-create-test'),
-                ("Destroy, Create, Test, and Report", 'destroy-create-test-report')
+                # Green color for "Clean" options
+                ("\033[92mClean, then Test: Cleans artifacts, then runs Pytest.\033[0m", 'clean-test'),
+                ("\033[92mClean, Test, and Report: Cleans, tests, and generates an Allure report.\033[0m", 'clean-test-report'),
+                # Orange/Yellow color for "Destroy" options
+                ("\033[93mDestroy, Create, and Test: Resets the project and runs tests.\033[0m", 'destroy-create-test'),
+                ("\033[93mDestroy, Create, Test, and Report: Full reset, test, and report.\033[0m", 'destroy-create-test-report'),
+                ("Initial Project Setup: Run this once for a new clone.", 'setup')
             ],
             default='test'
         )
@@ -179,6 +212,32 @@ Environments:
         logger.info("Operation cancelled by user. Exiting.")
         sys.exit(0)
     mode = mode_answers['mode']
+
+    # Handle the one-time setup mode separately as it has a unique flow.
+    if mode == 'setup':
+        logger.info("--- Running Initial Project Setup ---")
+        if setup_environment_file() != 0:
+            logger.error("Failed to set up .env file. Aborting.")
+            sys.exit(1)
+        if run_cleanup() != 0:
+            logger.error("Cleanup failed during setup. Aborting.")
+            sys.exit(1)
+        run_create_folders()
+        # Setup mode should always be a full destroy and create
+        if run_setup_db(DATABASE_FILE_PATH, destroy_first=True) != 0:
+            logger.error("Database setup failed during setup. Aborting.")
+            sys.exit(1)
+        
+        # New step: Run tests to verify the setup
+        logger.info("--- Verifying Setup by Running Tests ---")
+        test_command_args = ['bash', 'admin/report_tests.sh', '--no-generate', '--no-open']
+        run_command(test_command_args) # This will exit on failure
+        logger.success("Verification tests passed successfully.")
+
+        logger.info("--- Displaying Project Tree ---")
+        run_eza_tree(jennai_root_for_path)
+        logger.success("Initial project setup complete and verified! You can now run other admin tasks.")
+        sys.exit(0)
 
     # If a destructive mode is chosen, prompt for confirmation immediately.
     if 'destroy' in mode:
@@ -215,12 +274,14 @@ Environments:
 
     # Determine which steps to run based on the mode
     do_cleanup = 'clean' in mode or 'destroy' in mode
-    do_create = 'create' in mode
+    # The 'create' step now only applies to 'destroy' modes.
+    do_create = 'destroy' in mode
     do_test = 'test' in mode
     do_report = 'report' in mode
 
     if do_cleanup:
         logger.info("--- Step 1: Cleaning Project ---")
+        # Cleanup now only removes logs and caches, not the DB.
         if run_cleanup() != 0:
             logger.error("Cleanup failed. Aborting.")
             sys.exit(1)
@@ -230,11 +291,20 @@ Environments:
         run_create_folders() # Assumes this doesn't return a status code, but is safe to run
         
         logger.info("--- Step 3: Setting Up Database ---")
-        if run_setup_db(DATABASE_FILE_PATH) != 0: # Pass the path and check for non-zero exit code
+        # Only 'destroy' modes will get here. They should drop tables first.
+        if run_setup_db(DATABASE_FILE_PATH, destroy_first=True) != 0:
             logger.error("Database setup failed. Aborting.")
             sys.exit(1)
 
     if do_test:
+        # Before running tests, we need to ensure the DB schema exists,
+        # especially for 'clean' and 'test' modes where we didn't run the create step.
+        if not do_create:
+            logger.info("--- Verifying Database Schema ---")
+            if run_setup_db(DATABASE_FILE_PATH, destroy_first=False) != 0:
+                logger.error("Database schema verification failed. Aborting.")
+                sys.exit(1)
+
         logger.info("--- Step 4: Running Tests and Reports ---")
         report_pytest_args = ['bash', 'admin/report_tests.sh']
         if not do_report:
