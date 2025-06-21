@@ -78,7 +78,7 @@ Environments:
 
     logger.info("Please use the arrow keys to navigate and Enter to select an option.")
     # --- Interactive Mode & Environment Selection ---
-    questions = [
+    mode_question = [
         inquirer.List(
             'mode',
             message="Select a regression mode",
@@ -90,7 +90,25 @@ Environments:
                 ("Destroy, Create, Test, and Report", 'destroy-create-test-report')
             ],
             default='test'
-        ),
+        )
+    ]
+    
+    mode_answers = inquirer.prompt(mode_question)
+    if mode_answers is None:
+        logger.info("Operation cancelled by user. Exiting.")
+        sys.exit(0)
+    mode = mode_answers['mode']
+
+    # If a destructive mode is chosen, prompt for confirmation immediately.
+    if 'destroy' in mode:
+        # Use ANSI escape codes for red color (\033[91m) and to reset (\033[0m)
+        warning_prompt = "\033[91mWARNING: Data loss is imminent. This will restore the project to a clean and functioning state.\033[0m Are you sure?"
+        if not confirm_action(warning_prompt):
+            logger.warning("Operation cancelled by user.")
+            sys.exit(0)
+
+    # Now, prompt for the environment.
+    env_question = [
         inquirer.List(
             'environment',
             message="Select the target environment",
@@ -98,17 +116,11 @@ Environments:
             default='DEFAULT'
         ),
     ]
-    
-    answers = inquirer.prompt(questions)
-
-    if answers is None:
-        # If the user cancels (e.g., Ctrl+C), answers will be None.
-        # Provide a clear exit message.
+    env_answers = inquirer.prompt(env_question)
+    if env_answers is None:
         logger.info("Operation cancelled by user. Exiting.")
         sys.exit(0)
-
-    mode = answers['mode']
-    environment = answers['environment']
+    environment = env_answers['environment']
 
     # --- Set Environment Variable ---
     if environment != 'DEFAULT':
@@ -127,12 +139,6 @@ Environments:
     do_report = 'report' in mode
 
     if do_cleanup:
-        if 'destroy' in mode:
-            warning_prompt = "WARNING: This will destroy the database and all logs. Are you sure?"
-            if not confirm_action(warning_prompt):
-                logger.warning("Operation cancelled by user.")
-                sys.exit(0)
-        
         logger.info("--- Step 1: Cleaning Project ---")
         if run_cleanup() != 0:
             logger.error("Cleanup failed. Aborting.")
