@@ -39,6 +39,7 @@ dependencies:
     - "loguru>=0.7.0" # Aligned with pyproject.toml
     - "pytest>=7.0"   # Aligned with pyproject.toml
     - numexpr
+    - inquirer # For interactive command-line menus
     - pytest-loguru # For enhanced Loguru integration with Pytest
     - allure-pytest # For Allure reporting
     - opencv-python==4.10.0.84

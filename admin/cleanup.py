@@ -15,6 +15,7 @@ if str(jennai_root_for_path) not in sys.path:
 
 from loguru import logger # Import the logger instance
 from config.loguru_setup import setup_logging # Import the setup function
+from admin import tree # Import the new tree utility
 from config.config import DATABASE_FILE_PATH # Import the database path
 
 def main():
@@ -97,30 +98,6 @@ def main():
         logger.critical(f"An unexpected error occurred during cleanup: {e}")
         return 1 # Indicate an error
 
-def run_eza_tree(project_root: Path):
-    """
-    Attempts to run 'eza --tree' and prints its output using the logger.
-    """
-    logger.info("Attempting to display project tree with 'eza --tree'...")
-    try:
-        # Check if eza is installed by trying to get its version
-        subprocess.run(["eza", "--version"], check=True, capture_output=True, text=True)
-        
-        # Run eza --tree
-        result = subprocess.run(["eza", "--tree"], cwd=project_root, check=True, capture_output=True, text=True)
-        # Print eza tree output directly to console, not to the log file.
-        print("\n------------------- Project Tree (eza) -------------------")
-        print(result.stdout.strip())
-        print("--------------------------------------------------------")
-        logger.info("Successfully displayed project tree using 'eza --tree'.")
-    except FileNotFoundError:
-        logger.warning("'eza' command not found. Skipping tree view. Please install eza to use this feature.")
-    except subprocess.CalledProcessError as e:
-        logger.error(f"'eza --tree' command failed with error: {e}")
-        logger.error(f"  Stderr: {e.stderr}")
-    except Exception as e:
-        logger.error(f"An unexpected error occurred while trying to run 'eza --tree': {e}")
-
 if __name__ == "__main__":
     # Determine project root once for both functions
     # jennai_root_for_path is already defined globally and points to the project root
@@ -133,4 +110,6 @@ if __name__ == "__main__":
     setup_logging(debug_mode=True)
     logger.info("Loguru setup complete for cleanup.py.")
 
-    exit(main()) # Run the cleanup and exit with its code
+    exit_code = main() # Run the cleanup
+    tree.run_eza_tree(jennai_root_path_main) # Call the tree utility after cleanup
+    exit(exit_code) # Exit with the cleanup's code

@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 #!/bin/bash
 echo "INFO: Starting regression workflow..."
 
@@ -62,3 +63,5 @@ else
     allure open allure-report # Open report on success too
     exit 0
 fi
+=======
+>>>>>>> Stashed changes
