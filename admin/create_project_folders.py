@@ -67,7 +67,9 @@ DIRECTORIES_TO_CREATE = [
     # "src/presentation/web_clients/react_app", # You'd init React project here
     # "src/presentation/web_clients/angular_app", # You'd init Angular project here
     "src/presentation/tests", # Tests for the presentation layer (e.g., API tests)
-    "tests",  # Top-level tests directory
+    "tests", # Top-level tests directory
+    "tests/sample_repos", # For sample repository data for testing
+    "tests/sample_repos/proofconcept", # A specific sample repo
 ]
 
 # Directories that should be Python packages (i.e., need an __init__.py)
@@ -97,6 +99,7 @@ PACKAGES_TO_INITIALIZE = [
     "src/presentation/api_server/flask_app/routes",
     "src/presentation/tests", # For presentation layer tests
     "tests", # Top-level tests directory
+    "tests/sample_repos", # Initialize as a package for potential future test utilities
 ]
 
 def create_folders_and_inits():

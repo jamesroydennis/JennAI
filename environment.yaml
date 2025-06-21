@@ -31,6 +31,7 @@ dependencies:
     - "torchvision==0.22.1+cu118 --index-url https://download.pytorch.org/whl/cu118" # Example exact version
     - "torchaudio==2.7.1+cu118 --index-url https://download.pytorch.org/whl/cu118" # Example exact version
     # The exact version numbers (+cu118) are crucial for reproducibility with specific CUDA builds.
+    - pydantic # For structured data validation
     # Get these precise versions from the PyTorch website's pip command or by running `pip list` after a successful manual install.
 
     # Your other pip dependencies:

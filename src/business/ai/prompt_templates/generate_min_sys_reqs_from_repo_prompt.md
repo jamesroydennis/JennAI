@@ -1,68 +1,70 @@
-# Prompt to Determine Minimum System Requirements for a Software Repository
+---
+title: Generate Minimum System Requirements from Repository Information as JSON
+description: |
+  This prompt instructs the AI to analyze repository information (README, requirements.txt, environment.yaml, existing system requirements) and generate a JSON object representing the minimum system requirements. The JSON object MUST strictly adhere to the following schema:
 
-You are an expert system analyst AI. Your task is to analyze the provided information extracted from a software repository and determine its minimum system requirements.
+  ```json
+  {
+    "cpu_cores": integer (required, positive),
+    "ram_gb": float (required, positive),
+    "storage_gb": float (required, positive),
+    "operating_system": array of strings (optional),
+    "dependencies": array of strings (optional),
+    "notes": string (optional)
+  }
+  ```
 
-## Repository Context
-*(Optional: If available, provide a brief description of the repository's purpose or name. Placeholder: {{repository_description}})*
+  **Field Descriptions:**
 
-## Information Extracted from Repository Files:
+  *   `cpu_cores`: Minimum number of CPU cores required. Must be a positive integer.
+  *   `ram_gb`: Minimum RAM in gigabytes. Must be a positive float.
+  *   `storage_gb`: Minimum free storage space in gigabytes. Must be a positive float.
+  *   `operating_system`: (Optional) List of compatible operating systems (e.g., `["Windows 10", "Ubuntu 20.04"]`).
+  *   `dependencies`: (Optional) List of required software or libraries (e.g., `["python>=3.9", "pytorch==2.1", "cuda==11.8"]`).
+  *   `notes`: (Optional) Additional context or notes regarding the requirements.
 
-### 1. Content from README.md:
-```text
+  **Response Format:**
+
+  Provide the system requirements as a single JSON object, enclosed in a markdown code block like this:
+
+  ```json
+  {
+    "cpu_cores": 4,
+    "ram_gb": 8.0,
+    "storage_gb": 20.0,
+    "operating_system": ["Windows 10", "Ubuntu 20.04"],
+    "dependencies": ["python>=3.8", "numpy", "pandas"],
+    "notes": "A dedicated GPU with at least 4GB of VRAM is highly recommended for optimal performance."
+  }
+  ```
+
+  Do not include any introductory or explanatory text outside of the JSON code block. The response should be directly parsable as JSON.
+---
+
+## Instructions:
+
+Given the following information about a software repository, determine the minimum system requirements necessary to run the software.
+
+### Repository Information:
+
+**README Content:**
+```
 {{readme_content}}
 ```
-*(If README.md was not found or is empty, this section will state: "README.md not found or empty.")*
 
-### 2. Content from requirements.txt (if available):
-```text
+**requirements.txt Content:**
+```
 {{requirements_txt_content}}
 ```
-*(If requirements.txt was not found or is empty, this section will state: "requirements.txt not found or empty.")*
 
-### 3. Content from environment.yaml (if available):
-```text
+**environment.yaml Content:**
+```
 {{environment_yaml_content}}
 ```
-*(If environment.yaml was not found or is empty, this section will state: "environment.yaml not found or empty.")*
 
-### 4. Content from Existing Minimum System Requirements Definition (if available):
-```text
-{{existing_min_sys_reqs_content}}
+**Existing Minimum System Requirements (if available):**
 ```
-*(If no existing min-sys-requirements file was found or it is empty, this section will state: "No existing min-sys-requirements file found or empty.")*
-
-## Task:
-Based on all the provided information above, please synthesize and list the minimum system requirements for this repository.
-Focus on identifying requirements for the following categories if the information allows:
-
-- **Operating System(s):** (e.g., Linux, Windows, macOS; specific versions or distributions if inferable)
-- **CPU:** (e.g., minimum cores, architecture like x86_64, arm64, if inferable)
-- **System RAM:** (e.g., minimum GB)
-- **GPU:** (e.g., "NVIDIA GPU required", "AMD GPU required", "Any modern GPU"; minimum VRAM in GB; specific series like "NVIDIA RTX 20-series or newer"; minimum CUDA version if NVIDIA and inferable; minimum Compute Capability if inferable)
-- **Disk Space:** (e.g., minimum GB for installation, dependencies, and typical datasets)
-- **Python Version:** (e.g., "3.8+", "==3.9.x")
-- **Key Software Dependencies or Runtimes:** (e.g., "CUDA Toolkit 11.8", "cuDNN 8.x", "Node.js 16+", specific compilers, database versions)
-
-If information for a category is not clearly available or cannot be reasonably inferred from the provided text, please state "Not specified" or "Cannot be determined from provided information" for that category. Be cautious about making assumptions if the text is not explicit.
-
-## Desired Output Format:
-Please provide the minimum system requirements as a JSON object. Use the following keys if applicable, and add others if necessary. If a value cannot be determined, use `null` or "Not specified".
-
-```json
-{
-  "operating_system": "Linux (e.g., Ubuntu 20.04+)",
-  "cpu_architecture": "x86_64",
-  "cpu_cores_min": 4,
-  "ram_min_gb": 8,
-  "gpu_required": true,
-  "gpu_type_preference": "NVIDIA",
-  "gpu_vram_min_gb": 6,
-  "gpu_cuda_version_min": "11.8",
-  "gpu_compute_capability_min": "6.1",
-  "disk_space_min_gb": 50,
-  "python_version_min": "3.9",
-  "key_software_dependencies": ["CUDA Toolkit 11.8", "cuDNN 8.x"]
-}
+{{existing_min_sys_reqs_content}}
 ```
 
 Analyze the provided text carefully and generate the JSON output.

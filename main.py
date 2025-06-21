@@ -42,6 +42,7 @@ def configure_project_business_dependencies(container: DependencyContainer):
     from src.business.interfaces.IAIService import IAIService
     from src.business.ai.gemini_api import AIGenerator
     from src.business.ai.data_collect_service import DataCollectService
+    from src.business.ai.ai_response_parser import AIResponseParser # Import the new parser
     # Import the new workflow service (adjust path if it's different)
     from src.business.pyrepopal_workflow_service import PyRepoPalWorkflowService
 
@@ -68,6 +69,10 @@ def configure_project_business_dependencies(container: DependencyContainer):
     container.register_singleton(DataCollectService, DataCollectService)
     logger.info("Registered DataCollectService.")
 
+    # --- Register AIResponseParser ---
+    container.register_singleton(AIResponseParser, AIResponseParser)
+    logger.info("Registered AIResponseParser.")
+
     # --- Register PyRepoPalWorkflowService ---
     # It depends on DataCollectService, IAIService, and several repositories
     container.register_singleton(
@@ -75,6 +80,7 @@ def configure_project_business_dependencies(container: DependencyContainer):
         lambda: PyRepoPalWorkflowService(
             data_collect_service=container.resolve(DataCollectService),
             ai_service=container.resolve(IAIService),
+            ai_response_parser=container.resolve(AIResponseParser), # Inject the parser
             # Repository dependencies will be resolved when PyRepoPalWorkflowService is instantiated
             # assuming they are registered in configure_project_data_dependencies
         )

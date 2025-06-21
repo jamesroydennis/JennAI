@@ -12,14 +12,18 @@ if str(jennai_root_for_path) not in sys.path:
     sys.path.insert(0, str(jennai_root_for_path))
 
 from config.loguru_setup import logger
-from src.business.ai.data_collect_service import DataCollectService # Will be refactored
+from src.business.ai.data_collect_service import DataCollectService
 from src.business.interfaces.IAIService import IAIService
+# Import the new parser and its related components
+from src.business.ai.ai_response_parser import AIResponseParser, AIResponseParsingError
 from src.data.interfaces.ICrudRepository import ICrudRepository
 from src.data.obj.analysis_session_dto import AnalysisSessionDTO
 from src.data.obj.system_profile_dto import SystemProfileDTO
 from src.data.obj.repository_snapshot_dto import RepositorySnapshotDTO
 from src.data.obj.generated_prompt_dto import GeneratedPromptDTO
 from src.data.obj.ai_analysis_result_dto import AIAnalysisResultDTO
+# Import the DTO we'll be parsing into
+from src.data.obj.min_sys_reqs_dto import MinSysReqsDTO
 
 class PyRepoPalWorkflowService:
     """
@@ -30,6 +34,7 @@ class PyRepoPalWorkflowService:
     def __init__(self,
                  data_collect_service: DataCollectService,
                  ai_service: IAIService,
+                 ai_response_parser: AIResponseParser, # Add the parser dependency
                  analysis_session_repo: ICrudRepository[AnalysisSessionDTO],
                  system_profile_repo: ICrudRepository[SystemProfileDTO],
                  repository_snapshot_repo: ICrudRepository[RepositorySnapshotDTO],
@@ -37,6 +42,7 @@ class PyRepoPalWorkflowService:
                  ai_analysis_result_repo: ICrudRepository[AIAnalysisResultDTO]):
         self.data_collect_service = data_collect_service
         self.ai_service = ai_service
+        self.ai_response_parser = ai_response_parser
         self.analysis_session_repo = analysis_session_repo
         self.system_profile_repo = system_profile_repo
         self.repository_snapshot_repo = repository_snapshot_repo
@@ -173,24 +179,25 @@ class PyRepoPalWorkflowService:
     def _parse_and_update_ai_result(self, current_session: AnalysisSessionDTO, ai_result_to_update: AIAnalysisResultDTO, ai_response_raw: str) -> bool:
         logger.info(f"Attempting to parse AI response for session {current_session.session_id}, result ID {ai_result_to_update.result_id}.")
         try:
-            # Attempt to parse the raw response to ensure it's valid JSON
-            json.loads(ai_response_raw) # We don't need the parsed data here, just the validation
-            
-            # If parsing is successful, the raw response is considered valid JSON.
-            # Store the raw (but validated) JSON string.
-            ai_result_to_update.parsed_system_requirements_json = ai_response_raw
-            # ai_result_to_update.parsed_dependencies_json could be populated here if AI provides a separate structure for it
+            # Use the dedicated parser to validate and structure the response
+            parsed_dto = self.ai_response_parser.parse_response_to_model(ai_response_raw, MinSysReqsDTO)
 
+            # Serialize the validated Pydantic model back to a clean, indented JSON string for storage.
+            # This ensures we store a canonical, validated representation in the database.
+            ai_result_to_update.parsed_system_requirements_json = parsed_dto.model_dump_json(indent=4)
+
+            # Persist the updated DTO with the parsed JSON
             updated_dto = self.ai_analysis_result_repo.update(ai_result_to_update)
-            if not updated_dto: # Assuming update returns the updated DTO or None on failure
+            if not updated_dto:
                 logger.error(f"Failed to update AI analysis result with parsed data for session {current_session.session_id}, result ID {ai_result_to_update.result_id}.")
                 current_session.status = "failed_ai_result_update_parsed"
                 self.analysis_session_repo.update(current_session)
                 return False
+
             logger.success(f"Successfully updated AI analysis result with parsed JSON for session {current_session.session_id}, result ID {ai_result_to_update.result_id}.")
             return True
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse AI response as JSON for session {current_session.session_id}, result ID {ai_result_to_update.result_id}: {e}")
+        except AIResponseParsingError as e:
+            logger.error(f"Failed to parse AI response for session {current_session.session_id}, result ID {ai_result_to_update.result_id}: {e}")
             current_session.status = "failed_ai_response_parsing"
             self.analysis_session_repo.update(current_session)
             return False
@@ -233,6 +240,7 @@ class PyRepoPalWorkflowService:
             prompt_id_for_ai_result = saved_prompt_dto.prompt_id
 
             # Step 6: Interact with AI Service
+            logger.debug(f"Prompt content being sent to AI for session {current_session.session_id}:\n{populated_prompt_str}")
             logger.info("Interacting with AI service...")
             # Ensure populated_prompt_str is not None before calling, though _save_generated_prompt should have caught it
             if not populated_prompt_str: # Should be redundant if _save_generated_prompt worked

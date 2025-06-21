@@ -12,6 +12,7 @@ if str(jennai_root_for_path) not in sys.path:
 
 from config.loguru_setup import logger # Import logger for temporary tests
 from src.business.pyrepopal_workflow_service import PyRepoPalWorkflowService
+from src.business.ai.ai_response_parser import AIResponseParser, AIResponseParsingError
 from src.business.ai.data_collect_service import DataCollectService
 from src.business.interfaces.IAIService import IAIService
 from src.data.interfaces.ICrudRepository import ICrudRepository
@@ -20,6 +21,7 @@ from src.data.obj.system_profile_dto import SystemProfileDTO
 from src.data.obj.repository_snapshot_dto import RepositorySnapshotDTO
 from src.data.obj.generated_prompt_dto import GeneratedPromptDTO
 from src.data.obj.ai_analysis_result_dto import AIAnalysisResultDTO
+from src.data.obj.min_sys_reqs_dto import MinSysReqsDTO
 
 @pytest.fixture
 def mock_data_collect_service():
@@ -28,6 +30,10 @@ def mock_data_collect_service():
 @pytest.fixture
 def mock_ai_service():
     return MagicMock(spec=IAIService)
+
+@pytest.fixture
+def mock_ai_response_parser():
+    return MagicMock(spec=AIResponseParser)
 
 @pytest.fixture
 def mock_analysis_session_repo():
@@ -51,13 +57,14 @@ def mock_ai_analysis_result_repo():
 
 def test_pyrepopal_workflow_service_initialization(
     mock_data_collect_service, mock_ai_service, mock_analysis_session_repo,
-    mock_system_profile_repo, mock_repository_snapshot_repo,
+    mock_system_profile_repo, mock_repository_snapshot_repo, mock_ai_response_parser,
     mock_generated_prompt_repo, mock_ai_analysis_result_repo
 ):
     """Tests that PyRepoPalWorkflowService initializes correctly with all mocked dependencies."""
     service = PyRepoPalWorkflowService(
         data_collect_service=mock_data_collect_service,
         ai_service=mock_ai_service,
+        ai_response_parser=mock_ai_response_parser,
         analysis_session_repo=mock_analysis_session_repo,
         system_profile_repo=mock_system_profile_repo,
         repository_snapshot_repo=mock_repository_snapshot_repo,
@@ -67,6 +74,7 @@ def test_pyrepopal_workflow_service_initialization(
     assert service is not None
     assert service.data_collect_service == mock_data_collect_service
     assert service.ai_service == mock_ai_service
+    assert service.ai_response_parser == mock_ai_response_parser
     assert service.analysis_session_repo == mock_analysis_session_repo
     assert service.system_profile_repo == mock_system_profile_repo
     assert service.repository_snapshot_repo == mock_repository_snapshot_repo
@@ -75,7 +83,7 @@ def test_pyrepopal_workflow_service_initialization(
 
 @pytest.fixture
 def workflow_service(
-    mock_data_collect_service, mock_ai_service, mock_analysis_session_repo,
+    mock_data_collect_service, mock_ai_service, mock_ai_response_parser, mock_analysis_session_repo,
     mock_system_profile_repo, mock_repository_snapshot_repo,
     mock_generated_prompt_repo, mock_ai_analysis_result_repo
 ):
@@ -83,6 +91,7 @@ def workflow_service(
     return PyRepoPalWorkflowService(
         data_collect_service=mock_data_collect_service,
         ai_service=mock_ai_service,
+        ai_response_parser=mock_ai_response_parser,
         analysis_session_repo=mock_analysis_session_repo,
         system_profile_repo=mock_system_profile_repo,
         repository_snapshot_repo=mock_repository_snapshot_repo,
@@ -93,12 +102,13 @@ def workflow_service(
 def test_analyze_repository_happy_path(
     workflow_service: PyRepoPalWorkflowService,
     mock_data_collect_service: MagicMock,
-    mock_analysis_session_repo, # Removed type hint
-    mock_system_profile_repo, # Removed type hint
-    mock_repository_snapshot_repo, # Removed type hint
-    mock_generated_prompt_repo, # Removed type hint
+    mock_analysis_session_repo: MagicMock,
+    mock_system_profile_repo: MagicMock,
+    mock_repository_snapshot_repo: MagicMock,
+    mock_generated_prompt_repo: MagicMock,
     mock_ai_service: MagicMock,
-    mock_ai_analysis_result_repo # Removed type hint
+    mock_ai_analysis_result_repo: MagicMock,
+    mock_ai_response_parser: MagicMock
 ):
     """Tests the happy path where all data collection and persistence succeed."""
     # --- Mock Setup ---
@@ -121,14 +131,21 @@ def test_analyze_repository_happy_path(
     mock_prompt_id = 99
     mock_generated_prompt_repo.create.return_value = GeneratedPromptDTO(prompt_id=mock_prompt_id, session_id=mock_session_id, prompt_content=mock_prompt_str, prompt_type="initial_analysis", creation_timestamp="now", template_name_used="template.md")
 
-    mock_ai_response_raw = "{\"key\": \"value\"}"
+    mock_ai_response_raw = "```json\n{\"cpu_cores\": 2, \"ram_gb\": 4.0, \"storage_gb\": 10.0}\n```"
     mock_ai_service.generate_text.return_value = mock_ai_response_raw
     
+    # Mock the parser's successful return
+    mock_parsed_dto = MinSysReqsDTO(cpu_cores=2, ram_gb=4.0, storage_gb=10.0)
+    mock_ai_response_parser.parse_response_to_model.return_value = mock_parsed_dto
+
     # Mock for initial save of AIAnalysisResultDTO
     saved_ai_result_dto_before_parse = AIAnalysisResultDTO(result_id=1, prompt_id=mock_prompt_id, ai_response_raw=mock_ai_response_raw, response_timestamp="now")
     mock_ai_analysis_result_repo.create.return_value = saved_ai_result_dto_before_parse
+    
     # Mock for update after parsing
-    mock_ai_analysis_result_repo.update.return_value = AIAnalysisResultDTO(result_id=1, prompt_id=mock_prompt_id, ai_response_raw=mock_ai_response_raw, response_timestamp="now", parsed_system_requirements_json=mock_ai_response_raw)
+    # The service will serialize the DTO back to JSON for storage
+    expected_json_in_db = mock_parsed_dto.model_dump_json(indent=4)
+    mock_ai_analysis_result_repo.update.return_value = AIAnalysisResultDTO(result_id=1, prompt_id=mock_prompt_id, ai_response_raw=mock_ai_response_raw, response_timestamp="now", parsed_system_requirements_json=expected_json_in_db)
 
     # --- Call Method ---
     result_session = workflow_service.analyze_repository("test/repo", "template.md")
@@ -156,12 +173,15 @@ def test_analyze_repository_happy_path(
     ai_result_dto_arg = mock_ai_analysis_result_repo.create.call_args[0][0]
     assert ai_result_dto_arg.prompt_id == mock_prompt_id
     assert ai_result_dto_arg.ai_response_raw == mock_ai_response_raw
+    
+    mock_ai_response_parser.parse_response_to_model.assert_called_once_with(mock_ai_response_raw, MinSysReqsDTO)
 
     mock_ai_analysis_result_repo.update.assert_called_once()
     updated_ai_result_dto_arg = mock_ai_analysis_result_repo.update.call_args[0][0]
     assert updated_ai_result_dto_arg.result_id == 1 # from saved_ai_result_dto_before_parse
-    assert updated_ai_result_dto_arg.parsed_system_requirements_json == mock_ai_response_raw
-
+    # Assert that the JSON stored in the DB is the clean, serialized version of our DTO
+    assert updated_ai_result_dto_arg.parsed_system_requirements_json == expected_json_in_db
+    
     # In happy path, status should be "completed_successfully" (or whatever the final success status is)
     # For now, the method ends before AI interaction, so let's check the last status update before that.
     # The provided code sets it to "completed_successfully" if all these steps pass.
@@ -172,7 +192,8 @@ def test_analyze_repository_happy_path(
 def test_analyze_repository_no_system_info(
     workflow_service: PyRepoPalWorkflowService,
     mock_data_collect_service: MagicMock,
-    mock_analysis_session_repo, # Removed type hint
+    mock_analysis_session_repo: MagicMock,
+    mock_ai_response_parser: MagicMock,
     mock_system_profile_repo: MagicMock # We need to assert it's NOT called
 ):
     """Tests behavior when no system information is collected."""
@@ -189,12 +210,15 @@ def test_analyze_repository_no_system_info(
     workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, readme_content="Test README")
     workflow_service.generated_prompt_repo.create.return_value = GeneratedPromptDTO(prompt_id=1, session_id=mock_session_id, prompt_content="Test prompt", prompt_type="initial", creation_timestamp="now", template_name_used="template.md")
     
-    mock_valid_json_response = "{\"key\": \"mock_ai_output_for_no_sys_info_test\"}"
-    workflow_service.ai_service.generate_text.return_value = mock_valid_json_response
+    mock_ai_response_raw = "{\"cpu_cores\": 2, \"ram_gb\": 4.0, \"storage_gb\": 10.0}"
+    workflow_service.ai_service.generate_text.return_value = mock_ai_response_raw
+    # Mock parser success
+    mock_parsed_dto = MinSysReqsDTO(cpu_cores=2, ram_gb=4.0, storage_gb=10.0)
+    mock_ai_response_parser.parse_response_to_model.return_value = mock_parsed_dto
     # Mock initial save of AI result
-    workflow_service.ai_analysis_result_repo.create.return_value = AIAnalysisResultDTO(result_id=1, prompt_id=1, ai_response_raw=mock_valid_json_response, response_timestamp="now")
+    workflow_service.ai_analysis_result_repo.create.return_value = AIAnalysisResultDTO(result_id=1, prompt_id=1, ai_response_raw=mock_ai_response_raw, response_timestamp="now")
     # Mock update after parsing
-    workflow_service.ai_analysis_result_repo.update.return_value = AIAnalysisResultDTO(result_id=1, prompt_id=1, ai_response_raw=mock_valid_json_response, response_timestamp="now", parsed_system_requirements_json=mock_valid_json_response)
+    workflow_service.ai_analysis_result_repo.update.return_value = AIAnalysisResultDTO(result_id=1, prompt_id=1, ai_response_raw=mock_ai_response_raw, response_timestamp="now", parsed_system_requirements_json=mock_parsed_dto.model_dump_json())
 
 
     result_session = workflow_service.analyze_repository("test/repo_no_sysinfo", "template.md")
@@ -208,7 +232,7 @@ def test_analyze_repository_no_system_info(
 def test_analyze_repository_snapshot_save_fails(
     workflow_service: PyRepoPalWorkflowService,
     mock_data_collect_service: MagicMock,
-    mock_analysis_session_repo, # Removed type hint
+    mock_analysis_session_repo: MagicMock,
     mock_repository_snapshot_repo: MagicMock
 ):
     """Tests behavior when repository snapshot save fails (critical)."""
@@ -238,7 +262,7 @@ def test_analyze_repository_snapshot_save_fails(
 def test_analyze_repository_prompt_save_fails(
     workflow_service: PyRepoPalWorkflowService,
     mock_data_collect_service: MagicMock,
-    mock_analysis_session_repo, # Removed type hint
+    mock_analysis_session_repo: MagicMock,
     mock_generated_prompt_repo: MagicMock
 ):
     """Tests behavior when generated prompt save fails (critical)."""
@@ -268,7 +292,7 @@ def test_analyze_repository_prompt_save_fails(
 def test_analyze_repository_ai_interaction_empty_response(
     workflow_service: PyRepoPalWorkflowService,
     mock_data_collect_service: MagicMock,
-    mock_analysis_session_repo, # Removed type hint
+    mock_analysis_session_repo: MagicMock,
     mock_ai_service: MagicMock
 ):
     """Tests behavior when AI service returns an empty response."""
@@ -298,7 +322,7 @@ def test_analyze_repository_ai_interaction_empty_response(
 def test_analyze_repository_ai_interaction_exception(
     workflow_service: PyRepoPalWorkflowService,
     mock_data_collect_service: MagicMock,
-    mock_analysis_session_repo, # Removed type hint
+    mock_analysis_session_repo: MagicMock,
     mock_ai_service: MagicMock
 ):
     """Tests behavior when AI service interaction raises an exception."""
@@ -328,9 +352,9 @@ def test_analyze_repository_ai_interaction_exception(
 def test_analyze_repository_ai_result_save_fails(
     workflow_service: PyRepoPalWorkflowService,
     mock_data_collect_service: MagicMock,
-    mock_analysis_session_repo, # Removed type hint
+    mock_analysis_session_repo: MagicMock,
     mock_ai_service: MagicMock,
-    mock_ai_analysis_result_repo # Removed type hint
+    mock_ai_analysis_result_repo: MagicMock
 ):
     """Tests behavior when saving AI analysis result fails."""
     mock_session_id = 404
@@ -351,23 +375,25 @@ def test_analyze_repository_ai_result_save_fails(
 def test_analyze_repository_ai_response_parsing_fails(
     workflow_service: PyRepoPalWorkflowService,
     mock_data_collect_service: MagicMock,
-    mock_analysis_session_repo, # Removed type hint
+    mock_analysis_session_repo: MagicMock,
     mock_ai_service: MagicMock,
-    mock_ai_analysis_result_repo # Removed type hint
+    mock_ai_analysis_result_repo,
+    mock_ai_response_parser: MagicMock
 ):
-    """Tests behavior when AI response is not valid JSON."""
+    """Tests behavior when AI response parsing fails."""
     mock_session_id = 505
     mock_initial_session = AnalysisSessionDTO(session_id=mock_session_id, target_repository_identifier="test/repo_parse_fail", analysis_timestamp="sometime", status="session_created", user_notes=None)
     mock_analysis_session_repo.create.return_value = mock_initial_session
     mock_data_collect_service.prepare_analysis_data_and_prompt.return_value = {"system_info": None, "repo_info": {}, "prompt_str": "prompt"} # system_info as None
-    workflow_service.system_profile_repo.create.return_value = SystemProfileDTO(profile_id=1, session_id=mock_session_id, profile_timestamp="now", os_info={})
     workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, readme_content="Test README")
     workflow_service.generated_prompt_repo.create.return_value = GeneratedPromptDTO(prompt_id=1, session_id=mock_session_id, prompt_content="prompt", prompt_type="initial", creation_timestamp="now", template_name_used="template.md")
     
-    invalid_json_response = "This is not JSON"
+    invalid_json_response = "This is not valid JSON at all."
     mock_ai_service.generate_text.return_value = invalid_json_response
     # Mock initial save of AI result
     mock_ai_analysis_result_repo.create.return_value = AIAnalysisResultDTO(result_id=1, prompt_id=1, ai_response_raw=invalid_json_response, response_timestamp="now")
+    # Mock the parser to raise an error
+    mock_ai_response_parser.parse_response_to_model.side_effect = AIResponseParsingError("Could not extract JSON.")
 
     result_session = workflow_service.analyze_repository("test/repo_parse_fail", "template.md")
 
@@ -379,21 +405,23 @@ def test_analyze_repository_ai_response_parsing_fails(
 def test_analyze_repository_ai_result_update_with_parsed_data_fails(
     workflow_service: PyRepoPalWorkflowService,
     mock_data_collect_service: MagicMock,
-    mock_analysis_session_repo, # Removed type hint
+    mock_analysis_session_repo: MagicMock,
     mock_ai_service: MagicMock,
-    mock_ai_analysis_result_repo # Removed type hint
+    mock_ai_analysis_result_repo,
+    mock_ai_response_parser: MagicMock
 ):
     """Tests behavior when updating AIAnalysisResultDTO with parsed data fails."""
     mock_session_id = 606
     mock_initial_session = AnalysisSessionDTO(session_id=mock_session_id, target_repository_identifier="test/repo_update_fail", analysis_timestamp="sometime", status="session_created", user_notes=None)
     mock_analysis_session_repo.create.return_value = mock_initial_session
     mock_data_collect_service.prepare_analysis_data_and_prompt.return_value = {"system_info": None, "repo_info": {}, "prompt_str": "prompt"} # system_info as None
-    workflow_service.system_profile_repo.create.return_value = SystemProfileDTO(profile_id=1, session_id=mock_session_id, profile_timestamp="now", os_info={})
     workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, readme_content="Test README")
     workflow_service.generated_prompt_repo.create.return_value = GeneratedPromptDTO(prompt_id=1, session_id=mock_session_id, prompt_content="prompt", prompt_type="initial", creation_timestamp="now", template_name_used="template.md")
     
-    valid_json_response = "{\"key\": \"valid_json\"}"
+    valid_json_response = "{\"cpu_cores\": 2, \"ram_gb\": 4.0, \"storage_gb\": 10.0}"
     mock_ai_service.generate_text.return_value = valid_json_response
+    mock_parsed_dto = MinSysReqsDTO(cpu_cores=2, ram_gb=4.0, storage_gb=10.0)
+    mock_ai_response_parser.parse_response_to_model.return_value = mock_parsed_dto
     mock_ai_analysis_result_repo.create.return_value = AIAnalysisResultDTO(result_id=1, prompt_id=1, ai_response_raw=valid_json_response, response_timestamp="now")
     mock_ai_analysis_result_repo.update.return_value = None # Simulate failure of the update operation
 

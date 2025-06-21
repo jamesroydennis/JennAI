@@ -42,20 +42,23 @@ def main():
         logs_dir = jennai_root_path / "logs"
         
         # List of log files to delete
-        log_files_to_delete = [
-            "jennai.log",
-            "pytest_session.log"
+        # Combine all files to delete into one list of Path objects
+        files_to_delete_full_paths = [
+            logs_dir / "jennai.log",
+            logs_dir / "pytest_session.log",
+            DATABASE_FILE_PATH # This is already a Path object from config.py
         ]
 
-        for file_path_to_delete in files_to_delete:
-            if file_path_to_delete.exists() and file_path_to_delete.is_file():
-                try: # Use file_path_to_delete instead of log_file_path_to_delete
-                    file_path_to_delete.unlink() # Delete the file
-                    logger.info(f"  DELETED file: {file_path_to_delete}")
+        logger.info("Starting file cleanup...")
+        for file_path in files_to_delete_full_paths:
+            if file_path.exists() and file_path.is_file():
+                try:
+                    file_path.unlink()
+                    logger.info(f"  DELETED file: {file_path}")
                 except OSError as e:
-                    logger.error(f"  Failed to delete file {file_path_to_delete}. Reason: {e}")
+                    logger.error(f"  Failed to delete file {file_path}. Reason: {e}")
             else:
-                logger.info(f"File '{file_path_to_delete.name}' not found (or not a file), no need to delete: {file_path_to_delete}")
+                logger.info(f"File '{file_path.name}' not found (or not a file), no need to delete: {file_path}")
 
         # Define the cache folder names to be removed
         cache_folders_to_remove = [

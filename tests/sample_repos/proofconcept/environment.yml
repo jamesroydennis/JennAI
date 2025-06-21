@@ -1,0 +1,2 @@
+# Conda environment definition for VisoMaster with CUDA 11.8
+name: visomaster
