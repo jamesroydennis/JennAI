@@ -41,8 +41,11 @@ def main():
         # Also add the database file to the list of files to delete
         logs_dir = jennai_root_path / "logs"
         
-        # List of files to delete (logs and database)
-        files_to_delete = [logs_dir / "jennai.log", DATABASE_FILE_PATH]
+        # List of log files to delete
+        log_files_to_delete = [
+            "jennai.log",
+            "pytest_session.log"
+        ]
 
         for file_path_to_delete in files_to_delete:
             if file_path_to_delete.exists() and file_path_to_delete.is_file():
