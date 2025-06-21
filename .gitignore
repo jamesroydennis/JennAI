@@ -196,6 +196,10 @@ cython_debug/
 # Generated system info
 src/data/system_info/
 
+# Generated database files
+# These are created during setup and testing and should not be in version control.
+src/data/database/*.db
+
 logs/
 allure-results/
 allure-report/
