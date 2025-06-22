@@ -14,133 +14,73 @@ from loguru import logger
 from config.loguru_setup import setup_logging
 
 # --- Configuration ---
-# Determine the JennAI project root dynamically.
-# Assumes this script is in 'JennAI/admin/'.
-# SCRIPT_DIR = Path(__file__).resolve().parent  # This will be .../JennAI/admin
-# JENNAI_ROOT = SCRIPT_DIR.parent              # This will be .../JennAI
-JENNAI_ROOT = jennai_root_for_path # Use the globally defined root
-
-# logger.info(f"JennAI Project Root determined as: {JENNAI_ROOT}") # Logged by setup_logging
+PROJECT_ROOT = jennai_root_for_path
 
 # --- Directory Structure Definition ---
-# List of all directories to create relative to JENNAI_ROOT.
-# Using a set for quick lookups if needed, though a list is fine for iteration.
 DIRECTORIES_TO_CREATE = [
-    "admin",  # The script itself is here, but good to ensure it's listed
-    "config",
-    "core",
-    "logs",
-    "src",
-    "src/business",
-    "src/business/ai",
-    "src/business/prp_workflow", # For the new workflow service (PRP naming)
-    "src/business/sys", # New folder for general system utilities
-    "src/business/ai/tests", # Tests for AI components
-    "src/business/ai/prompt_templates", # New folder for prompt templates
-    "src/business/interfaces",
-    "src/business/sys/tests", # Tests for sys components
-    "src/business/notebooks",
-    "src/business/tests",
-    "src/data",
-    "src/data/implementations/tests", # Tests for data implementation components
-    "src/data/implementations",
-    "src/data/interfaces",
-    "src/data/generated_prompts", # New folder for storing generated prompts
-    "src/data/min_sys_reqs", # New folder for minimum system requirement files
-    "src/data/notebooks",
-    "src/data/obj",
-    "src/data/sample", # New folder for sample data files
-    "src/data/system_info", # New folder for system hardware details
-    "src/data/tests",
-    "src/presentation",
-    "src/presentation/api_server", # For backend API logic
-    "src/presentation/api_server/controllers",
-    "src/presentation/api_server/schemas",
-    "src/presentation/api_server/flask_app", # Example for Flask
-    "src/presentation/api_server/flask_app/routes",
-    "src/presentation/api_server/flask_app/static", # Static files for Flask app
-    "src/presentation/api_server/flask_app/static/css", # For CSS files
-    "src/presentation/api_server/flask_app/static/img",  # For Flask app specific images
-    "src/presentation/api_server/flask_app/static/js",   # For JavaScript files
-    "src/presentation/api_server/flask_app/templates", # Templates for Flask app
-    "src/presentation/img", # For general presentation layer images
-    "src/presentation/web_clients", # For frontend client projects
-    # "src/presentation/web_clients/react_app", # You'd init React project here
-    # "src/presentation/web_clients/angular_app", # You'd init Angular project here
-    "src/presentation/tests", # Tests for the presentation layer (e.g., API tests)
-    "tests", # Top-level tests directory
-    "tests/sample_repos", # For sample repository data for testing
-    "tests/sample_repos/proofconcept", # A specific sample repo for the PoC
-    "tests/sample_repos/dev_sample",   # A clean sample for general dev and testing
+    "admin", "config", "core", "logs", "src", "tests",
+    "src/business", "src/data", "src/presentation",
+    "src/business/ai", "src/business/interfaces", "src/business/notebooks",
+    "src/business/prp_workflow", "src/business/sys", "src/business/tests",
+    "src/business/ai/prompt_templates", "src/business/ai/tests",
+    "src/business/sys/tests",
+    "src/data/database", "src/data/generated_prompts", "src/data/implementations",
+    "src/data/interfaces", "src/data/min_sys_reqs", "src/data/notebooks", "src/data/obj",
+    "src/data/sample", "src/data/scripts", "src/data/system_info", "src/data/tests",
+    "src/data/implementations/tests",
+    "src/data/scripts/sql",
+    "src/presentation/api_server", "src/presentation/img", "src/presentation/tests", "src/presentation/web_clients",
+    "src/presentation/api_server/controllers", "src/presentation/api_server/flask_app", "src/presentation/api_server/schemas",
+    "src/presentation/api_server/flask_app/routes", "src/presentation/api_server/flask_app/static", "src/presentation/api_server/flask_app/templates",
+    "src/presentation/api_server/flask_app/static/css", "src/presentation/api_server/flask_app/static/img", "src/presentation/api_server/flask_app/static/js",
+    "tests/integration", "tests/presentation", "tests/sample_repos",
+    "tests/sample_repos/dev_sample", "tests/sample_repos/proofconcept",
 ]
 
 # Directories that should be Python packages (i.e., need an __init__.py)
 PACKAGES_TO_INITIALIZE = [
-    "admin", # Initialize as package
-    "config",
-    "core",
-    "src",
-    "src/business",
-    "src/business/ai",
-    "src/business/prp_workflow", # Initialize as package (PRP naming)
-    "src/business/ai/tests", # Initialize as package
-    "src/business/sys", # Initialize as package
-    "src/business/sys/tests", # Initialize as package
-    "src/business/interfaces",
-    "src/business/tests",
-    "src/data/implementations/tests", # Initialize as package
-    "src/data",
-    "src/data/implementations",
-    "src/data/interfaces",
-    "src/data/obj",
-    "src/data/scripts", # Initialize as package
+    "admin", "config", "core", "src", "tests",
+    "src/business", "src/data", "src/presentation", 
+    "src/business/ai", "src/business/interfaces", "src/business/prp_workflow", "src/business/sys", "src/business/tests",
+    "src/business/ai/tests",
+    "src/business/sys/tests",
+    "src/data/implementations", "src/data/interfaces", "src/data/obj", "src/data/scripts", "src/data/tests",
+    "src/data/implementations/tests",
     "src/data/scripts/sql",
-    "src/data/tests",
-    "src/presentation",
-    "src/presentation/api_server",
-    "src/presentation/api_server/controllers",
-    "src/presentation/api_server/schemas",
-    "src/presentation/api_server/flask_app",
+    "src/presentation/api_server", "src/presentation/tests",
+    "src/presentation/api_server/controllers", "src/presentation/api_server/flask_app", "src/presentation/api_server/schemas",
     "src/presentation/api_server/flask_app/routes",
-    "src/presentation/tests", # For presentation layer tests
-    "tests", # Top-level tests directory
-    "tests/sample_repos", # Initialize as a package for potential future test utilities
+    "tests/integration", "tests/presentation", "tests/sample_repos",
 ]
 
 def create_folders_and_inits():
     """
     Creates the defined directory structure and adds __init__.py files
-    to specified package directories.
+    to specified package directories, logging only the changes made.
     """
-    logger.info("Starting project folder creation...")
+    logger.info("Verifying project folder structure...")
+    dirs_created = 0
+    inits_created = 0
 
     # Create directories
-    for dir_path_str in DIRECTORIES_TO_CREATE:
-        path = JENNAI_ROOT / dir_path_str
+    for dir_path_str in sorted(list(set(DIRECTORIES_TO_CREATE))):
+        path = PROJECT_ROOT / dir_path_str
         if not path.exists():
             path.mkdir(parents=True, exist_ok=True)
-            logger.success(f"Created directory: {path}")
-        else:
-            logger.info(f"Skipped, directory already exists: {path}")
+            dirs_created += 1
 
-    logger.info("Initializing Python package directories...")
     # Create __init__.py files
-    for pkg_path_str in PACKAGES_TO_INITIALIZE:
-        pkg_path = JENNAI_ROOT / pkg_path_str
-        init_file = pkg_path / "__init__.py"
+    for pkg_path_str in sorted(list(set(PACKAGES_TO_INITIALIZE))):
+        init_file = PROJECT_ROOT / pkg_path_str / "__init__.py"
         if not init_file.exists():
-            # Ensure the parent directory exists (should be true from above step)
-            if not pkg_path.exists(): # Should not happen if DIRECTORIES_TO_CREATE is comprehensive
-                pkg_path.mkdir(parents=True, exist_ok=True)
-                logger.info(f"Created parent directory for __init__.py: {pkg_path}")
+            init_file.touch()
+            init_file.write_text(f"# Initializes the {pkg_path_str.replace('/', '.')} package.\n")
+            inits_created += 1
 
-            with open(init_file, "w") as f:
-                f.write(f"# Initializes the {pkg_path_str.replace('/', '.')} package.\n")
-            logger.success(f"Created __init__.py in: {pkg_path}")
-        else:
-            logger.info(f"Skipped, __init__.py already exists in: {pkg_path}")
-
-    logger.success("Project folder structure setup complete.")
+    if dirs_created > 0 or inits_created > 0:
+        logger.success(f"Project structure updated. Created {dirs_created} director(y/ies) and {inits_created} __init__.py file(s).")
+    else:
+        logger.info("Project structure is already up to date. No changes made.")
 
 if __name__ == "__main__":
     # Setup logging for this script, similar to cleanup.py

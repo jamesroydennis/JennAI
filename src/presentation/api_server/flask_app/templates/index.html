@@ -28,11 +28,9 @@
             {% endif %}
         {% endwith %}
 
-        <p>Your PyRepo-Pal Flask application is up and running!</p>
-        <p>This page is served from <code>src/presentation/api_server/flask_app/templates/index.html</code>.</p>
-        <p>Static files like CSS and JavaScript are linked from the <code>src/presentation/api_server/flask_app/static/</code> directory.</p>
-        <div id="js-message" style="margin-top: 20px; font-style: italic;"></div>
-
+        <p class="lead-text">
+            PyRepo-Pal is more than just a tool; it's a new approach to engineering. We believe that true insight isn't found in raw data, but in the synergy between human vision and intelligent execution. This is the home of 'vibe engineering'—a project dedicated to transforming complexity into clarity, one repository at a time.
+        </p>
         <nav style="margin-top: 30px; margin-bottom: 20px; border-top: 1px solid #ccc; padding-top: 20px;">
             <h3>Reports &amp; Utilities</h3>
             <ul>
@@ -57,7 +55,7 @@
     </main>
 
     <footer>
-        <p>&copy; <span id="currentYear"></span> PyRepo-Pal Project. All rights reserved.</p>
+        <p>&copy; <span id="currentYear"></span> PyRepo-Pal Project. Crafted with vibe engineering by James R Dennis. All rights reserved.</p>
     </footer>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>

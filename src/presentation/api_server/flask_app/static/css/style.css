@@ -2,17 +2,28 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #eef1f5;
   color: #333;
   line-height: 1.6;
   display: flex;
   flex-direction: column;
-  min-height: 100vh; }
+  min-height: 100vh;
+  /* --- Background Image Setup --- */
+  background-image: url("../img/background.png");
+  background-size: cover;
+  /* Scales the image to cover the entire area */
+  background-position: center center;
+  /* Centers the image */
+  background-repeat: no-repeat;
+  /* Prevents the image from tiling */
+  background-attachment: fixed;
+  /* Keeps the background fixed when scrolling */
+  background-color: #92a5bf;
+  /* Fallback color if the image fails to load */ }
 
 header {
   background: #35424a;
   color: #ffffff;
-  padding: 1rem 20px;
+  padding: 0.5rem 20px;
   text-align: center;
   border-bottom: #77aaff 3px solid;
   display: flex;
@@ -20,16 +31,27 @@ header {
   justify-content: center;
   gap: 20px; }
   header img {
-    max-width: 180px;
-    max-height: 180px; }
+    max-width: 90px;
+    max-height: 90px; }
   header h1 {
     margin: 0;
-    font-size: 2.2rem; }
+    font-size: 1.8rem; }
 
 main {
   flex-grow: 1;
   padding: 25px;
-  text-align: center; }
+  text-align: center;
+  color: #D0D1D2;
+  /* A light gray from the palette, two shades closer to gray */
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+  /* Add a subtle shadow to make text pop */ }
+  main .lead-text {
+    font-size: 1.2rem;
+    /* This color is now inherited from main, or we can make it pure white */
+    color: #ffffff;
+    max-width: 800px;
+    margin: 0 auto 2rem auto;
+    /* Center it and add bottom margin */ }
 
 footer {
   text-align: center;
@@ -110,7 +132,7 @@ footer {
 .scrollable-content-box {
   max-height: 60vh;
   overflow-y: auto;
-  border: 1px solid #bec9d9;
+  border: 1px solid #627da3;
   padding: 15px;
   background-color: #ffffff;
   text-align: left;

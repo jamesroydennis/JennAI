@@ -9,7 +9,7 @@ Information is everywhere, but insight is rare. To bridge this gap, we harness a
 Here’s how we do it:  
 
 1. **Ingest & Persist:** We gather scattered, poorly structured information and distill it into clean, stored data.  
-2. **Parse & Prepare:** We refine and shape this data into a format AI can understand and trust.  
+2. **Prepare:** We refine and shape this data into a format AI can understand and trust.  
 3. **Deep Research:** We craft targeted, high-context AI prompts that extract meaningful, requirement-driven insights.  
 4. **Deliver Clarity:** We turn those insights into actionable, customized instructions that align perfectly with real-world constraints and goals.
 
