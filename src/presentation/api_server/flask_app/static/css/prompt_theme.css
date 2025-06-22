@@ -1,0 +1,41 @@
+/* /home/jdennis/Projects/JennAI/src/presentation/api_server/flask_app/static/css/prompt_theme.css */
+
+/*
+--- User's Original Prompt & Notes ---
+
+wait, im not ready to code. I built a malformed prompt but the colors are exactly what I need
+
+Intent: "Minimalist and modern tech logo for 'PyRepo-Pal', an AI-Github assistant.
+
+Design Elements: Consider a stylized letter 'P' subtly integrated or intertwined with abstract neural network patterns, subtle circuit lines, or a clean, abstract representation of a thought process or data flow. The 'AI' part could be represented through these tech elements or a modern, clean typeface.
+
+Style: Clean vector art, sleek, professional, and innovative. The logo should feel intelligent and approachable, not overly complex or intimidating.
+
+Color Palette: [
+
+"#34495E",
+
+"#D0D1D2",
+
+"#848D93"
+
+]
+
+primary font color:rgb(100, 113, 126)
+
+Overall Feel: The logo should be suitable for a sophisticated software project, conveying trust, intelligence, and cutting-edge technology."
+*/
+
+:root {
+  /* --- PyRepo-Pal Theme Colors --- */
+  
+  /* Based on the logo prompt color palette */
+  --prp-color-dark-slate: #34495E;
+  --prp-color-light-gray: #D0D1D2;
+  --prp-color-mid-gray: #848D93;
+
+  /* Primary font color derived from rgb(100, 113, 126) */
+  --prp-color-primary-font: #64717E;
+
+  /* You can add more theme variables here as needed */
+}
