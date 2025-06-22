@@ -1,4 +1,5 @@
-# create_project_folders.py
+#!/usr/bin/env python
+# /home/jdennis/Projects/JennAI/admin/create_project_folders.py
 
 import os
 import sys
@@ -32,6 +33,7 @@ DIRECTORIES_TO_CREATE = [
     "src",
     "src/business",
     "src/business/ai",
+    "src/business/data_source", # For different data source implementations
     "src/business/prp_workflow", # For the new workflow service (PRP naming)
     "src/business/sys", # New folder for general system utilities
     "src/business/ai/tests", # Tests for AI components
@@ -81,6 +83,7 @@ PACKAGES_TO_INITIALIZE = [
     "src",
     "src/business",
     "src/business/ai",
+    "src/business/data_source", # Initialize as package
     "src/business/prp_workflow", # Initialize as package (PRP naming)
     "src/business/ai/tests", # Initialize as package
     "src/business/sys", # Initialize as package

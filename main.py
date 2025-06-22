@@ -18,8 +18,8 @@ if str(jennai_root) not in sys.path:
 
 # --- Centralized Core Imports ---
 # These modules are now directly discoverable from the JennAI root
-from config.loguru_setup import setup_logging
-from config.config import DEBUG_MODE, DATABASE_FILE_PATH # Import DATABASE_FILE_PATH
+from config.loguru_setup import setup_logging, logger # Import the configured logger instance
+from config.config import DEBUG_MODE, DATABASE_FILE_PATH, ENVIRONMENT # Import ENVIRONMENT
 from core.dependency_container import DependencyContainer
 
 # --- Global Setup (Orchestrated by main.py) ---
@@ -45,6 +45,10 @@ def configure_project_business_dependencies(container: DependencyContainer):
     # --- AI Service Registration ---
     from src.business.interfaces.IAIService import IAIService
     from src.business.ai.gemini_api import AIGenerator
+    # Import new data source abstraction
+    from src.business.interfaces.IRepositoryDataSource import IRepositoryDataSource
+    from src.business.data_source.filesystem_data_source import FilesystemRepositoryDataSource
+    # from src.business.data_source.database_data_source import DatabaseRepositoryDataSource # Will be used later
     from src.business.ai.data_collect_service import DataCollectService
     from src.business.ai.ai_response_parser import AIResponseParser # Import the new parser
     # Import the new workflow service (adjust path if it's different)
@@ -62,6 +66,20 @@ def configure_project_business_dependencies(container: DependencyContainer):
     logger.info("Registered AIGenerator for IAIService.")
     
 
+    # --- Repository Data Source Registration (Conditional) ---
+    if ENVIRONMENT == "DEV":
+        # In DEV mode, we read directly from the filesystem.
+        container.register_singleton(IRepositoryDataSource, FilesystemRepositoryDataSource)
+        logger.info("Registered FilesystemRepositoryDataSource for IRepositoryDataSource (DEV environment).")
+    else:
+        # In TEST or PROD, we would read from a database snapshot.
+        # This requires a different data source implementation.
+        # For now, we'll add a placeholder that logs an error if used.
+        # container.register_singleton(IRepositoryDataSource, DatabaseRepositoryDataSource)
+        logger.warning(f"No IRepositoryDataSource configured for ENVIRONMENT '{ENVIRONMENT}'. Using Filesystem for now.")
+        container.register_singleton(IRepositoryDataSource, FilesystemRepositoryDataSource)
+    
+
     # --- User Management Service Registration (Conceptual) ---
     from src.business.interfaces.IUserManager import IUserManager
     # Assume you have a concrete implementation, e.g., InMemoryUserManager or DatabaseUserManager
@@ -75,8 +93,12 @@ def configure_project_business_dependencies(container: DependencyContainer):
     container.register_singleton(IUserManager, ConceptualUserManager)
     logger.info("Registered ConceptualUserManager for IUserManager.")
 
-    # --- Register DataCollectService (as it's a dependency for PyRepoPalWorkflowService) ---
-    container.register_singleton(DataCollectService, DataCollectService)
+    # --- Register DataCollectService ---
+    # It now depends on our specific ICrudRepository implementation for data sourcing.
+    container.register_singleton(
+        DataCollectService,
+        lambda: DataCollectService(repository_data_source=container.resolve(IRepositoryDataSource))
+    )
     logger.info("Registered DataCollectService.")
 
     # --- Register AIResponseParser ---
