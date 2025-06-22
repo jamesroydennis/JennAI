@@ -32,7 +32,7 @@ class DataCollectService:
 
         logger.debug("DataCollectService initialized.")
 
-    def _collect_system_info(self) -> Optional[Dict]:
+    def collect_system_info(self) -> Optional[Dict]:
         """
         Runs the system profiler and reads its output.
         Returns the system information as a dictionary, or None on failure.
@@ -51,7 +51,7 @@ class DataCollectService:
             logger.error(f"Failed to collect or load system information: {e}")
             return None
 
-    def _collect_repository_info(self, repo_path_str: str) -> Optional[Dict[str, Optional[str]]]:
+    def collect_repository_info(self, repo_path_str: str) -> Optional[Dict[str, Optional[str]]]:
         """
         Collects repository information using repo_data_collector.
         Returns repository data as a dictionary, or None on failure.
@@ -68,7 +68,7 @@ class DataCollectService:
             logger.warning(f"Handled failure during repository info collection for {repo_path_str}: {e}")
             return None
 
-    def _load_prompt_template(self, template_filename: str) -> Optional[str]:
+    def load_prompt_template(self, template_filename: str) -> Optional[str]:
         """Loads a prompt template file."""
         template_file_path = self.prompt_template_dir / template_filename
         logger.info(f"Loading prompt template: {template_file_path}")
@@ -83,7 +83,7 @@ class DataCollectService:
         logger.warning(f"Prompt template file not found: {template_file_path}. This may be an expected condition if the template is optional.")
         return None
 
-    def _populate_prompt_template(self, template_content: str, data_context: Dict[str, Optional[str]]) -> str:
+    def populate_prompt_template(self, template_content: str, data_context: Dict[str, Any]) -> str:
         """Populates the prompt template with collected data.
         Placeholders in the template should be like {{key_name}}.
         """
@@ -135,37 +135,6 @@ class DataCollectService:
     #         logger.error(f"Failed to save prompt to {output_file_path}: {e}")
     #         return None
 
-    def prepare_analysis_data_and_prompt(self, repo_path: str, template_filename: str) -> Optional[Dict[str, Any]]:
-        """
-        Collects system and repository data, loads a prompt template,
-        populates it, and returns all collected data and the prompt string.
-        """
-        logger.info(f"Preparing analysis data and prompt for: {repo_path} using template: {template_filename}")
-        
-        system_info = self._collect_system_info()
-        # Not returning None immediately if system_info fails, as repo analysis might still proceed.
-        # The orchestrator can decide how to handle missing system_info.
-        
-        repo_data = self._collect_repository_info(repo_path)
-        if not repo_data: 
-            logger.warning("Repository data collection returned None or an error state. Aborting prompt generation.")
-            return None
-
-        template_content = self._load_prompt_template(template_filename)
-        if not template_content: return None
-            
-        context_for_template = repo_data.copy() # Start with repo_data
-        if system_info: # Add system info if available, for templates that might use it
-            context_for_template.update({"system_info": system_info}) # e.g. {{system_info.os_info.platform}}
-            
-        populated_prompt = self._populate_prompt_template(template_content, context_for_template)
-
-        return {
-            "system_info": system_info,
-            "repo_info": repo_data,
-            "prompt_str": populated_prompt
-        }
-
 if __name__ == "__main__":
     logger.info("DataCollectService - Standalone Run Example")
     service = DataCollectService()
@@ -180,15 +149,19 @@ if __name__ == "__main__":
         logger.error(f"Sample repository path does not exist or is not a directory: {sample_repo_path}")
         logger.error("Please ensure the sample data is correctly set up in src/data/sample/")
     else:
-        analysis_data = service.prepare_analysis_data_and_prompt(
-            repo_path=sample_repo_path,
-            template_filename=target_template
-        )
+        # Example usage of new public methods
+        system_info = service.collect_system_info()
+        repo_data = service.collect_repository_info(sample_repo_path)
+        template_content = service.load_prompt_template(target_template)
+        
+        if system_info and repo_data and template_content:
+            context_for_template = repo_data.copy()
+            context_for_template["system_info"] = system_info
+            populated_prompt = service.populate_prompt_template(template_content, context_for_template)
 
-        if analysis_data and analysis_data.get("prompt_str"):
             logger.success("Successfully prepared analysis data and prompt string.")
-            logger.info(f"System Info: {str(analysis_data.get('system_info'))[:200]}...")
-            logger.info(f"Repo Info: {str(analysis_data.get('repo_info'))[:200]}...")
-            logger.info(f"Generated Prompt String:\n{analysis_data.get('prompt_str')[:500]}...")
+            logger.info(f"System Info: {str(system_info)[:200]}...")
+            logger.info(f"Repo Info: {str(repo_data)[:200]}...")
+            logger.info(f"Generated Prompt String:\n{populated_prompt[:500]}...")
         else:
             logger.error("Failed to generate and save the example prompt.")

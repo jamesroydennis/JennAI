@@ -64,19 +64,6 @@ class PyRepoPalWorkflowService:
         logger.info(f"Analysis session created with ID: {created_session.session_id}")
         return created_session
 
-    def _collect_data_and_prepare_prompt(self, current_session: AnalysisSessionDTO, repo_path: str, template_filename: str) -> Optional[Dict[str, Any]]:
-        logger.info(f"Starting data collection and prompt preparation for session {current_session.session_id}")
-        collection_result = self.data_collect_service.prepare_analysis_data_and_prompt(
-            repo_path=repo_path,
-            template_filename=template_filename
-        )
-        if not collection_result:
-            logger.error(f"Failed to collect data or prepare prompt for session {current_session.session_id}.")
-            current_session.status = "failed_data_collection"
-            self.analysis_session_repo.update(current_session)
-            return None
-        return collection_result
-
     def _save_system_profile(self, current_session: AnalysisSessionDTO, system_info_data: Optional[Dict]) -> bool:
         logger.info(f"Attempting to save system profile for session {current_session.session_id}")
         if system_info_data and current_session.session_id is not None:
@@ -200,6 +187,94 @@ class PyRepoPalWorkflowService:
             self.analysis_session_repo.update(current_session)
             return False
 
+    def _step_1_ingest_and_persist(self, session: AnalysisSessionDTO, repo_identifier: str) -> Optional[Dict[str, Any]]:
+        """
+        Corresponds to Plan Step 1: Ingest & Persist.
+        Gathers system and repository data and stores it in the database.
+        """
+        logger.info(f"PLAN STEP 1: Ingest & Persist for session {session.session_id}")
+        system_info = self.data_collect_service.collect_system_info()
+        repo_info = self.data_collect_service.collect_repository_info(repo_identifier)
+
+        if repo_info is None:
+            logger.error(f"Critical failure: Could not ingest repository data from '{repo_identifier}'.")
+            session.status = "failed_repo_ingestion"
+            self.analysis_session_repo.update(session)
+            return None
+
+        # Persist the ingested data
+        self._save_system_profile(session, system_info)
+        if not self._save_repository_snapshot(session, repo_info):
+            return None # Failure status is set within the helper
+
+        return {"system_info": system_info, "repo_info": repo_info}
+
+    def _step_2_parse_and_prepare(self, session: AnalysisSessionDTO, ingestion_data: Dict[str, Any], template_filename: str) -> Optional[GeneratedPromptDTO]:
+        """
+        Corresponds to Plan Step 2: Parse & Prepare.
+        Uses the ingested data to prepare and store a high-context AI prompt.
+        """
+        logger.info(f"PLAN STEP 2: Parse & Prepare for session {session.session_id}")
+        template_content = self.data_collect_service.load_prompt_template(template_filename)
+        if not template_content:
+            session.status = "failed_template_load"
+            self.analysis_session_repo.update(session)
+            return None
+
+        context_for_template = ingestion_data.get("repo_info", {}).copy()
+        if ingestion_data.get("system_info"):
+            context_for_template["system_info"] = ingestion_data["system_info"]
+
+        prompt_str = self.data_collect_service.populate_prompt_template(template_content, context_for_template)
+
+        saved_prompt_dto = self._save_generated_prompt(session, prompt_str, template_filename)
+        return saved_prompt_dto # Returns None on failure, status set in helper
+
+    def _step_3_deep_research(self, session: AnalysisSessionDTO, prompt_dto: GeneratedPromptDTO) -> Optional[AIAnalysisResultDTO]:
+        """
+        Corresponds to Plan Step 3: Deep Research.
+        Sends the prepared prompt to the AI and stores the raw response.
+        """
+        logger.info(f"PLAN STEP 3: Deep Research for session {session.session_id}")
+        ai_response_raw = self._call_ai_service(session, prompt_dto.prompt_content)
+        if not ai_response_raw:
+            return None # Failure status is set within the helper
+
+        saved_ai_result_dto = self._save_ai_analysis_result(session, prompt_dto.prompt_id, ai_response_raw)
+        return saved_ai_result_dto # Returns None on failure, status set in helper
+
+    def _step_4_deliver_clarity(self, session: AnalysisSessionDTO, ai_result_dto: AIAnalysisResultDTO) -> bool:
+        """
+        Corresponds to Plan Step 4: Deliver Clarity.
+        Parses the raw AI response into a structured, actionable format.
+        """
+        logger.info(f"PLAN STEP 4: Deliver Clarity for session {session.session_id}")
+        
+        try:
+            parsed_model = self.ai_response_parser.parse_response_to_model(ai_result_dto.ai_response_raw, MinSysReqsDTO)
+            ai_result_dto.parsed_system_requirements_json = parsed_model.model_dump_json(indent=4)
+        except AIResponseParsingError as e:
+            logger.error(f"Failed to parse AI response for session {session.session_id}, result ID {ai_result_dto.result_id}: {e}")
+            session.status = "failed_ai_response_parsing"
+            self.analysis_session_repo.update(session)
+            return False
+
+        try:
+            updated_dto = self.ai_analysis_result_repo.update(ai_result_dto)
+            if not updated_dto:
+                logger.error(f"Failed to update AI analysis result with parsed data for session {session.session_id}, result ID {ai_result_dto.result_id}.")
+                session.status = "failed_ai_result_update_parsed"
+                self.analysis_session_repo.update(session)
+                return False
+        except Exception as e:
+            logger.error(f"Unexpected DB error during AI result update for session {session.session_id}: {e}")
+            session.status = "failed_ai_result_update_parsed" # Still an update failure
+            self.analysis_session_repo.update(session)
+            return False
+
+        logger.success(f"Successfully parsed and stored structured data for session {session.session_id}.")
+        return True
+
     def analyze_repository(self,
                            target_repo_identifier: str,
                            prompt_template_filename: str,
@@ -214,53 +289,22 @@ class PyRepoPalWorkflowService:
             return None
 
         try:
-            # Step 2: Collect data and prepare prompt
-            collection_result = self._collect_data_and_prepare_prompt(current_session, target_repo_identifier, prompt_template_filename)
-            if not collection_result:
+            # Execute the plan, step by step.
+            ingestion_data = self._step_1_ingest_and_persist(current_session, target_repo_identifier)
+            if not ingestion_data:
                 return current_session
 
-            system_info_data: Optional[Dict] = collection_result.get("system_info")
-            repo_info_data: Optional[Dict] = collection_result.get("repo_info")
-            populated_prompt_str: Optional[str] = collection_result.get("prompt_str")
-
-            # Step 3: Persist SystemProfile
-            logger.info("Persisting collected system and repository information...")
-            self._save_system_profile(current_session, system_info_data)
-
-            # Step 4: Persist RepositorySnapshot (critical)
-            if not self._save_repository_snapshot(current_session, repo_info_data):
+            prepared_prompt = self._step_2_parse_and_prepare(current_session, ingestion_data, prompt_template_filename)
+            if not prepared_prompt:
                 return current_session
 
-            # Step 5: Persist GeneratedPrompt (critical)
-            saved_prompt_dto = self._save_generated_prompt(current_session, populated_prompt_str, prompt_template_filename)
-            if not saved_prompt_dto or saved_prompt_dto.prompt_id is None:
-                return current_session
-            prompt_id_for_ai_result = saved_prompt_dto.prompt_id
-
-            # Step 6: Interact with AI Service
-            logger.debug(f"Prompt content being sent to AI for session {current_session.session_id}:\n{populated_prompt_str}")
-            logger.info("Interacting with AI service...")
-            # Ensure populated_prompt_str is not None before calling, though _save_generated_prompt should have caught it
-            if not populated_prompt_str: # Should be redundant if _save_generated_prompt worked
-                logger.error(f"Critical error: populated_prompt_str is None before AI call for session {current_session.session_id}")
-                current_session.status = "failed_internal_no_prompt_for_ai"
-                self.analysis_session_repo.update(current_session)
-                return current_session
-            
-            ai_response_raw = self._call_ai_service(current_session, populated_prompt_str)
-            if not ai_response_raw:
+            research_result = self._step_3_deep_research(current_session, prepared_prompt)
+            if not research_result:
                 return current_session
 
-            # Step 7 (Part 1): Persist raw AIAnalysisResult
-            saved_ai_result_dto = self._save_ai_analysis_result(current_session, prompt_id_for_ai_result, ai_response_raw)
-            if not saved_ai_result_dto:
+            clarity_achieved = self._step_4_deliver_clarity(current_session, research_result)
+            if not clarity_achieved:
                 return current_session
-
-            # Step 7 (Part 2): Parse AI response and update the AIAnalysisResultDTO
-            if not self._parse_and_update_ai_result(current_session, saved_ai_result_dto, ai_response_raw):
-                return current_session
-
-            logger.info(f"Successfully processed and persisted AI analysis for session {current_session.session_id}.")
 
             current_session.status = "completed_successfully" # Or more granular status
             self.analysis_session_repo.update(current_session)
@@ -268,7 +312,7 @@ class PyRepoPalWorkflowService:
             return current_session
 
         except Exception as e:
-            logger.error(f"Unhandled exception during analysis workflow for session {current_session.session_id}: {e}")
+            logger.critical(f"Unhandled exception during analysis workflow for session {current_session.session_id}: {e}")
             if current_session and current_session.session_id:
                 current_session.status = "failed_exception"
                 self.analysis_session_repo.update(current_session)
