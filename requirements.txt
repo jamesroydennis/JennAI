@@ -1,0 +1,38 @@
+# /home/jdennis/Projects/JennAI/requirements.txt
+#
+# This file lists all Python packages to be installed by pip.
+# The --extra-index-url at the top ensures pip can find the correct PyTorch wheels.
+
+--extra-index-url https://download.pytorch.org/whl/cu118
+
+# --- Web Framework, Server & Task Queue ---
+flask
+gunicorn
+flask-cors
+python-dotenv
+celery[redis]
+
+# --- Core ML & GPU Libraries ---
+torch==2.1.2+cu118
+torchvision==0.16.2+cu118
+torchaudio==2.1.2+cu118
+
+# --- Image & Video Processing ---
+numpy
+opencv-python-headless # Headless version is best for servers
+Pillow
+
+# --- ML Model & Inference Libraries ---
+diffusers
+transformers
+accelerate
+onnxruntime-gpu
+
+# --- Google AI ---
+google-generativeai
+
+# --- Development & Testing Tools ---
+pytest>=7.0
+pytest-loguru
+allure-pytest
+ruff>=0.1.0

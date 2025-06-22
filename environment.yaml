@@ -1,44 +1,27 @@
-name: jennai-root
+# Conda environment for the VividAI project.
+#
+# This file uses a simplified approach: Conda manages the core Python environment,
+# the CUDA toolkit, and the Redis server. Pip manages all Python package
+# dependencies via the requirements.txt file. This is a robust and reliable pattern.
+#
+# --- How to use ---
+# 1. Ensure requirements.txt exists in the same directory.
+# 2. conda clean --all
+# 3. conda env remove --name vivid-ai  (To ensure a clean start)
+# 4. conda env create -f environment.yaml
+# 5. conda activate vivid-ai
+
+name: vivid-ai
+
 channels:
-  - pytorch # Keep pytorch channel even if installing via pip, for other related dependencies
   - nvidia
   - conda-forge
   - defaults
 
 dependencies:
-  - python=3.9 # Or your specific Python version
-  # Essential CUDA toolkit and cuDNN for the environment
-  - cudatoolkit=11.8
-  - cudnn=8.9.7
-  # Web framework and related
-  - flask
-  - flask-cors
-  # Data handling and scientific computing
-  - numpy
-  - pandas
-  - requests # For HTTP requests
-  - matplotlib # For plotting
-  # Add other conda-installable dependencies like onnxruntime-gpu, scikit-image, cupy if needed
-
+  - python=3.10
   - pip
+  - cudatoolkit=11.8
+  - redis # The Redis server itself, for local development
   - pip:
-    # The --index-url argument is specifically part of the pip install command.
-    # To use it in environment.yaml, you can add it as an argument after the package.
-    # The exact versions might need to be copied from the PyTorch website's Pip command output.
-    - "torch==2.7.1+cu118 --index-url https://download.pytorch.org/whl/cu118" # Example exact version
-    - "torchvision==0.22.1+cu118 --index-url https://download.pytorch.org/whl/cu118" # Example exact version
-    - "torchaudio==2.7.1+cu118 --index-url https://download.pytorch.org/whl/cu118" # Example exact version
-    # The exact version numbers (+cu118) are crucial for reproducibility with specific CUDA builds.
-    # Get these precise versions from the PyTorch website's pip command or by running `pip list` after a successful manual install.
-
-    # Your other pip dependencies:
-    - google-generativeai
-    - "loguru>=0.7.0" # Aligned with pyproject.toml
-    - "pytest>=7.0"   # Aligned with pyproject.toml
-    - numexpr
-    - pytest-loguru # For enhanced Loguru integration with Pytest
-    - allure-pytest # For Allure reporting
-    - opencv-python==4.10.0.84
-    - "ruff>=0.1.0"   # Added new dev tool
-    # Add other pip-installable dependencies like ipykernel, onnx, tqdm if needed
-    # ... any other pip dependencies
+    - -r requirements.txt
