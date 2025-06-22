@@ -116,8 +116,8 @@ def test_analyze_repository_happy_path(
     mock_session_id = 123
     mock_initial_session = AnalysisSessionDTO(session_id=mock_session_id, target_repository_identifier="test/repo", analysis_timestamp="sometime", status="session_created", user_notes=None)
     mock_analysis_session_repo.create.return_value = mock_initial_session
-
-    mock_system_info = {"os": {"mock_platform": "TestOS"}} # Use the correct key 'os' to match service logic
+    
+    mock_system_info = {"os": {"mock_platform": "TestOS"}, "cpu": "test_cpu"}
     mock_repo_info = {"readme_content": "Test README"}
     mock_prompt_str = "Test prompt content"
     mock_data_collect_service.prepare_analysis_data_and_prompt.return_value = {
@@ -126,22 +126,19 @@ def test_analyze_repository_happy_path(
         "prompt_str": mock_prompt_str
     }
 
-    mock_system_profile_repo.create.return_value = SystemProfileDTO(profile_id=1, session_id=mock_session_id, profile_timestamp="now", os_info=json.dumps(mock_system_info.get("os")))
-    mock_repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, readme_content="Test README", requirements_txt_content=None, environment_yaml_content=None, existing_min_sys_reqs_content=None)
-    
+    mock_system_profile_repo.create.return_value = SystemProfileDTO(profile_id=1, session_id=mock_session_id, profile_timestamp="now", profile_data=json.dumps(mock_system_info))
+    mock_repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, snapshot_data=json.dumps(mock_repo_info), creation_timestamp="now")
     mock_prompt_id = 99
     mock_generated_prompt_repo.create.return_value = GeneratedPromptDTO(prompt_id=mock_prompt_id, session_id=mock_session_id, prompt_content=mock_prompt_str, prompt_type="initial_analysis", creation_timestamp="now", template_name_used="template.md")
 
     mock_ai_response_raw = "```json\n{\"cpu_cores\": 2, \"ram_gb\": 4.0, \"storage_gb\": 10.0}\n```"
     mock_ai_service.generate_text.return_value = mock_ai_response_raw
-    
+    saved_ai_result_dto_before_parse = AIAnalysisResultDTO(result_id=1, prompt_id=mock_prompt_id, ai_response_raw=mock_ai_response_raw, response_timestamp="now")
+    mock_ai_analysis_result_repo.create.return_value = saved_ai_result_dto_before_parse
+
     # Mock the parser's successful return
     mock_parsed_dto = MinSysReqsDTO(cpu_cores=2, ram_gb=4.0, storage_gb=10.0)
     mock_ai_response_parser.parse_response_to_model.return_value = mock_parsed_dto
-
-    # Mock for initial save of AIAnalysisResultDTO
-    saved_ai_result_dto_before_parse = AIAnalysisResultDTO(result_id=1, prompt_id=mock_prompt_id, ai_response_raw=mock_ai_response_raw, response_timestamp="now")
-    mock_ai_analysis_result_repo.create.return_value = saved_ai_result_dto_before_parse
     
     # Mock for update after parsing
     # The service will serialize the DTO back to JSON for storage
@@ -154,18 +151,16 @@ def test_analyze_repository_happy_path(
     # --- Assertions ---
     assert result_session is not None
     assert result_session.session_id == mock_session_id
+
     mock_data_collect_service.prepare_analysis_data_and_prompt.assert_called_once_with(repo_path="test/repo", template_filename="template.md")
     
     mock_system_profile_repo.create.assert_called_once()
-    # We could add more detailed assertions on the DTO passed to create if needed
-    assert mock_system_profile_repo.create.call_args[0][0].session_id == mock_session_id
-    # Assert that the DTO's os_info field contains the JSON string of the 'os' part of our mock data
-    expected_os_info_json = json.dumps(mock_system_info.get("os"))
-    assert mock_system_profile_repo.create.call_args[0][0].os_info == expected_os_info_json
-
+    expected_profile_data_json = json.dumps(mock_system_info, indent=4)
+    assert mock_system_profile_repo.create.call_args[0][0].profile_data == expected_profile_data_json
     mock_repository_snapshot_repo.create.assert_called_once()
-    assert mock_repository_snapshot_repo.create.call_args[0][0].session_id == mock_session_id
-    assert mock_repository_snapshot_repo.create.call_args[0][0].readme_content == mock_repo_info["readme_content"]
+    snapshot_arg = mock_repository_snapshot_repo.create.call_args[0][0]
+    assert snapshot_arg.snapshot_data == json.dumps(mock_repo_info, indent=4)
+    assert isinstance(snapshot_arg.creation_timestamp, str)
 
     mock_generated_prompt_repo.create.assert_called_once()
     assert mock_generated_prompt_repo.create.call_args[0][0].session_id == mock_session_id
@@ -178,16 +173,11 @@ def test_analyze_repository_happy_path(
     assert ai_result_dto_arg.ai_response_raw == mock_ai_response_raw
     
     mock_ai_response_parser.parse_response_to_model.assert_called_once_with(mock_ai_response_raw, MinSysReqsDTO)
-
     mock_ai_analysis_result_repo.update.assert_called_once()
     updated_ai_result_dto_arg = mock_ai_analysis_result_repo.update.call_args[0][0]
     assert updated_ai_result_dto_arg.result_id == 1 # from saved_ai_result_dto_before_parse
-    # Assert that the JSON stored in the DB is the clean, serialized version of our DTO
     assert updated_ai_result_dto_arg.parsed_system_requirements_json == expected_json_in_db
     
-    # In happy path, status should be "completed_successfully" (or whatever the final success status is)
-    # For now, the method ends before AI interaction, so let's check the last status update before that.
-    # The provided code sets it to "completed_successfully" if all these steps pass.
     assert result_session.status == "completed_successfully"
     mock_analysis_session_repo.update.assert_called_with(result_session)
 
@@ -196,32 +186,28 @@ def test_analyze_repository_no_system_info(
     workflow_service: PyRepoPalWorkflowService,
     mock_data_collect_service: MagicMock,
     mock_analysis_session_repo: MagicMock,
-    mock_ai_response_parser: MagicMock,
-    mock_system_profile_repo: MagicMock # We need to assert it's NOT called
+    mock_system_profile_repo: MagicMock,
+    mock_ai_response_parser: MagicMock
 ):
     """Tests behavior when no system information is collected."""
     mock_session_id = 456
     mock_initial_session = AnalysisSessionDTO(session_id=mock_session_id, target_repository_identifier="test/repo_no_sysinfo", analysis_timestamp="sometime", status="session_created", user_notes=None)
     mock_analysis_session_repo.create.return_value = mock_initial_session
-
+    
     mock_data_collect_service.prepare_analysis_data_and_prompt.return_value = {
         "system_info": None, # Key point: system_info is None
         "repo_info": {"readme_content": "Test README"},
         "prompt_str": "Test prompt"
     }
     # Assume other saves succeed
-    workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, readme_content="Test README")
+    workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, snapshot_data='{}')
     workflow_service.generated_prompt_repo.create.return_value = GeneratedPromptDTO(prompt_id=1, session_id=mock_session_id, prompt_content="Test prompt", prompt_type="initial", creation_timestamp="now", template_name_used="template.md")
     
     mock_ai_response_raw = "{\"cpu_cores\": 2, \"ram_gb\": 4.0, \"storage_gb\": 10.0}"
     workflow_service.ai_service.generate_text.return_value = mock_ai_response_raw
-    # Mock parser success
-    mock_parsed_dto = MinSysReqsDTO(cpu_cores=2, ram_gb=4.0, storage_gb=10.0)
-    mock_ai_response_parser.parse_response_to_model.return_value = mock_parsed_dto
-    # Mock initial save of AI result
+    mock_ai_response_parser.parse_response_to_model.return_value = MinSysReqsDTO(cpu_cores=2, ram_gb=4.0, storage_gb=10.0)
     workflow_service.ai_analysis_result_repo.create.return_value = AIAnalysisResultDTO(result_id=1, prompt_id=1, ai_response_raw=mock_ai_response_raw, response_timestamp="now")
-    # Mock update after parsing
-    workflow_service.ai_analysis_result_repo.update.return_value = AIAnalysisResultDTO(result_id=1, prompt_id=1, ai_response_raw=mock_ai_response_raw, response_timestamp="now", parsed_system_requirements_json=mock_parsed_dto.model_dump_json())
+    workflow_service.ai_analysis_result_repo.update.return_value = AIAnalysisResultDTO(result_id=1, prompt_id=1, ai_response_raw=mock_ai_response_raw, response_timestamp="now", parsed_system_requirements_json="{}")
 
 
     result_session = workflow_service.analyze_repository("test/repo_no_sysinfo", "template.md")
@@ -242,14 +228,12 @@ def test_analyze_repository_snapshot_save_fails(
     mock_session_id = 789
     mock_initial_session = AnalysisSessionDTO(session_id=mock_session_id, target_repository_identifier="test/repo_fail_snapshot", analysis_timestamp="sometime", status="session_created", user_notes=None)
     mock_analysis_session_repo.create.return_value = mock_initial_session
-
+    
     mock_data_collect_service.prepare_analysis_data_and_prompt.return_value = {
-        "system_info": {"os_info": {"mock_platform": "TestOS"}}, # Corrected structure
+        "system_info": {"os": "TestOS"},
         "repo_info": {"readme_content": "Test README"},
         "prompt_str": "Test prompt"
     }
-    # System profile save succeeds (or is skipped if system_info was None)
-    workflow_service.system_profile_repo.create.return_value = SystemProfileDTO(profile_id=1, session_id=mock_session_id, profile_timestamp="now", os_info={"mock_platform": "TestOS"})
     
     mock_repository_snapshot_repo.create.return_value = None # Simulate failure
 
@@ -272,14 +256,13 @@ def test_analyze_repository_prompt_save_fails(
     mock_session_id = 101
     mock_initial_session = AnalysisSessionDTO(session_id=mock_session_id, target_repository_identifier="test/repo_fail_prompt", analysis_timestamp="sometime", status="session_created", user_notes=None)
     mock_analysis_session_repo.create.return_value = mock_initial_session
-
+    
     mock_data_collect_service.prepare_analysis_data_and_prompt.return_value = {
-        "system_info": {"os_info": {"mock_platform": "TestOS"}}, # Corrected structure
+        "system_info": {"os": "TestOS"},
         "repo_info": {"readme_content": "Test README"},
         "prompt_str": "Test prompt"
     }
-    workflow_service.system_profile_repo.create.return_value = SystemProfileDTO(profile_id=1, session_id=mock_session_id, profile_timestamp="now", os_info={"mock_platform": "TestOS"})
-    workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, readme_content="Test README")
+    workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, snapshot_data='{}')
     
     mock_generated_prompt_repo.create.return_value = None # Simulate failure
 
@@ -302,15 +285,14 @@ def test_analyze_repository_ai_interaction_empty_response(
     mock_session_id = 202
     mock_initial_session = AnalysisSessionDTO(session_id=mock_session_id, target_repository_identifier="test/repo_ai_empty", analysis_timestamp="sometime", status="session_created", user_notes=None)
     mock_analysis_session_repo.create.return_value = mock_initial_session
-
+    
     mock_data_collect_service.prepare_analysis_data_and_prompt.return_value = {
-        "system_info": {"os_info": {"mock_platform": "TestOS"}}, # Corrected structure
+        "system_info": {"os": "TestOS"},
         "repo_info": {"readme_content": "Test README"},
         "prompt_str": "Test prompt for AI"
     }
     # Assume prior saves succeed
-    workflow_service.system_profile_repo.create.return_value = SystemProfileDTO(profile_id=1, session_id=mock_session_id, profile_timestamp="now", os_info={"mock_platform": "TestOS"})
-    workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, readme_content="Test README")
+    workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, snapshot_data='{}')
     workflow_service.generated_prompt_repo.create.return_value = GeneratedPromptDTO(prompt_id=1, session_id=mock_session_id, prompt_content="Test prompt for AI", prompt_type="initial", creation_timestamp="now", template_name_used="template.md")
 
     mock_ai_service.generate_text.return_value = None # Simulate empty AI response
@@ -332,15 +314,14 @@ def test_analyze_repository_ai_interaction_exception(
     mock_session_id = 303
     mock_initial_session = AnalysisSessionDTO(session_id=mock_session_id, target_repository_identifier="test/repo_ai_exception", analysis_timestamp="sometime", status="session_created", user_notes=None)
     mock_analysis_session_repo.create.return_value = mock_initial_session
-
+    
     mock_data_collect_service.prepare_analysis_data_and_prompt.return_value = {
-        "system_info": {"os_info": {"mock_platform": "TestOS"}}, # Corrected structure
+        "system_info": {"os": "TestOS"},
         "repo_info": {"readme_content": "Test README"},
         "prompt_str": "Test prompt for AI exception"
     }
     # Assume prior saves succeed
-    workflow_service.system_profile_repo.create.return_value = SystemProfileDTO(profile_id=1, session_id=mock_session_id, profile_timestamp="now", os_info={"mock_platform": "TestOS"})
-    workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, readme_content="Test README")
+    workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, snapshot_data='{}')
     workflow_service.generated_prompt_repo.create.return_value = GeneratedPromptDTO(prompt_id=1, session_id=mock_session_id, prompt_content="Test prompt for AI exception", prompt_type="initial", creation_timestamp="now", template_name_used="template.md")
 
     mock_ai_service.generate_text.side_effect = Exception("AI API Error")
@@ -363,9 +344,9 @@ def test_analyze_repository_ai_result_save_fails(
     mock_session_id = 404
     mock_initial_session = AnalysisSessionDTO(session_id=mock_session_id, target_repository_identifier="test/repo_ai_result_fail", analysis_timestamp="sometime", status="session_created", user_notes=None)
     mock_analysis_session_repo.create.return_value = mock_initial_session
-    mock_data_collect_service.prepare_analysis_data_and_prompt.return_value = {"system_info": None, "repo_info": {}, "prompt_str": "prompt"} # system_info as None
-    workflow_service.system_profile_repo.create.return_value = SystemProfileDTO(profile_id=1, session_id=mock_session_id, profile_timestamp="now", os_info={})
-    workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, readme_content="Test README")
+    
+    mock_data_collect_service.prepare_analysis_data_and_prompt.return_value = {"system_info": None, "repo_info": {}, "prompt_str": "prompt"}
+    workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, snapshot_data='{}')
     workflow_service.generated_prompt_repo.create.return_value = GeneratedPromptDTO(prompt_id=1, session_id=mock_session_id, prompt_content="prompt", prompt_type="initial", creation_timestamp="now", template_name_used="template.md")
     mock_ai_service.generate_text.return_value = "AI Raw Response"
     mock_ai_analysis_result_repo.create.return_value = None # Simulate failure
@@ -387,8 +368,9 @@ def test_analyze_repository_ai_response_parsing_fails(
     mock_session_id = 505
     mock_initial_session = AnalysisSessionDTO(session_id=mock_session_id, target_repository_identifier="test/repo_parse_fail", analysis_timestamp="sometime", status="session_created", user_notes=None)
     mock_analysis_session_repo.create.return_value = mock_initial_session
-    mock_data_collect_service.prepare_analysis_data_and_prompt.return_value = {"system_info": None, "repo_info": {}, "prompt_str": "prompt"} # system_info as None
-    workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, readme_content="Test README")
+    
+    mock_data_collect_service.prepare_analysis_data_and_prompt.return_value = {"system_info": None, "repo_info": {}, "prompt_str": "prompt"}
+    workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, snapshot_data='{}')
     workflow_service.generated_prompt_repo.create.return_value = GeneratedPromptDTO(prompt_id=1, session_id=mock_session_id, prompt_content="prompt", prompt_type="initial", creation_timestamp="now", template_name_used="template.md")
     
     invalid_json_response = "This is not valid JSON at all."
@@ -417,8 +399,9 @@ def test_analyze_repository_ai_result_update_with_parsed_data_fails(
     mock_session_id = 606
     mock_initial_session = AnalysisSessionDTO(session_id=mock_session_id, target_repository_identifier="test/repo_update_fail", analysis_timestamp="sometime", status="session_created", user_notes=None)
     mock_analysis_session_repo.create.return_value = mock_initial_session
-    mock_data_collect_service.prepare_analysis_data_and_prompt.return_value = {"system_info": None, "repo_info": {}, "prompt_str": "prompt"} # system_info as None
-    workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, readme_content="Test README")
+    
+    mock_data_collect_service.prepare_analysis_data_and_prompt.return_value = {"system_info": None, "repo_info": {}, "prompt_str": "prompt"}
+    workflow_service.repository_snapshot_repo.create.return_value = RepositorySnapshotDTO(snapshot_id=1, session_id=mock_session_id, snapshot_data='{}')
     workflow_service.generated_prompt_repo.create.return_value = GeneratedPromptDTO(prompt_id=1, session_id=mock_session_id, prompt_content="prompt", prompt_type="initial", creation_timestamp="now", template_name_used="template.md")
     
     valid_json_response = "{\"cpu_cores\": 2, \"ram_gb\": 4.0, \"storage_gb\": 10.0}"

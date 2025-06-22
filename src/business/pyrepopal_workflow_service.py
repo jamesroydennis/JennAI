@@ -80,17 +80,10 @@ class PyRepoPalWorkflowService:
     def _save_system_profile(self, current_session: AnalysisSessionDTO, system_info_data: Optional[Dict]) -> bool:
         logger.info(f"Attempting to save system profile for session {current_session.session_id}")
         if system_info_data and current_session.session_id is not None:
-            # Construct the DTO directly to ensure correct field mapping
-            # from the profiler's output to the DTO's attributes.
             system_profile_dto = SystemProfileDTO(
                 session_id=current_session.session_id,
                 profile_timestamp=datetime.utcnow().isoformat(),
-                os_info=json.dumps(system_info_data.get("os")),
-                cpu_info=json.dumps(system_info_data.get("cpu")),
-                ram_info=json.dumps(system_info_data.get("ram")),
-                gpu_info=json.dumps(system_info_data.get("gpu_info")),
-                disk_info=json.dumps(system_info_data.get("disk")),
-                python_info=json.dumps(system_info_data.get("python"))
+                profile_data=json.dumps(system_info_data, indent=4)
             )
             saved_system_profile = self.system_profile_repo.create(system_profile_dto)
             if not saved_system_profile or saved_system_profile.profile_id is None:
@@ -107,10 +100,7 @@ class PyRepoPalWorkflowService:
         if repo_info_data is not None and current_session.session_id is not None:
             repo_snapshot_dto = RepositorySnapshotDTO(
                 session_id=current_session.session_id,
-                readme_content=repo_info_data.get("readme_content"),
-                requirements_txt_content=repo_info_data.get("requirements_txt_content"),
-                environment_yaml_content=repo_info_data.get("environment_yaml_content"),
-                existing_min_sys_reqs_content=repo_info_data.get("existing_min_sys_reqs_content")
+                snapshot_data=json.dumps(repo_info_data, indent=4) # Store the whole, unadulterated object
             )
             saved_repo_snapshot = self.repository_snapshot_repo.create(repo_snapshot_dto)
             if not saved_repo_snapshot or saved_repo_snapshot.snapshot_id is None:

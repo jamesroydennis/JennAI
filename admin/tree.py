@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # /home/jdennis/Projects/JennAI/admin/tree.py
 
 import sys

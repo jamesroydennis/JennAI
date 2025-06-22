@@ -1,4 +1,5 @@
-# admin/check_logs.py (Conceptual Example)
+#!/usr/bin/env python
+# /home/jdennis/Projects/JennAI/admin/check_logs.py
 import re
 from pathlib import Path
 import argparse

@@ -2,23 +2,16 @@
 
 from dataclasses import dataclass, field
 from typing import Optional
+from datetime import datetime
 
 @dataclass
 class RepositorySnapshotDTO:
     """
-    Data Transfer Object for a snapshot of repository files.
+    Data Transfer Object for a snapshot of repository file contents, stored as a single JSON blob.
     Maps to the 'repository_snapshots' table in the database.
+    creation_timestamp will be stored as an ISO 8601 string.
     """
     session_id: int  # Foreign key linking to AnalysisSessionDTO.session_id
-    
-    # Content of the files. Optional because a file might not exist in the repo.
-    readme_content: Optional[str] = None
-    requirements_txt_content: Optional[str] = None
-    environment_yaml_content: Optional[str] = None
-    existing_min_sys_reqs_content: Optional[str] = None
-    
-    # Primary key, will be set by the database upon creation (AUTOINCREMENT)
+    snapshot_data: str # The full JSON string of the file contents dictionary
+    creation_timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     snapshot_id: Optional[int] = None
-
-    # No __post_init__ or factory method needed for this simple DTO for now,
-    # as instances will likely be created directly with data from repo_data_collector.

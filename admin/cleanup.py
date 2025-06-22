@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # /home/jdennis/Projects/JennAI/admin/cleanup.py
 
 import sys

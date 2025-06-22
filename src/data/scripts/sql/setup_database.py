@@ -56,22 +56,15 @@ def setup_database(db_path: Path, destroy_first: bool = False):
             profile_id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id INTEGER NOT NULL,               -- Foreign key to analysis_sessions
             profile_timestamp TEXT NOT NULL,           -- ISO 8601 timestamp of profile collection
-            os_info TEXT,                              -- JSON string of OS details
-            cpu_info TEXT,                             -- JSON string of CPU details
-            ram_info TEXT,                             -- JSON string of RAM details
-            gpu_info TEXT,                             -- JSON string of GPU details
-            disk_info TEXT,                            -- JSON string of disk details
-            python_info TEXT,                          -- JSON string of Python environment details
+            profile_data TEXT NOT NULL,                -- A single JSON blob of the entire system profile
             FOREIGN KEY (session_id) REFERENCES analysis_sessions (session_id)
         );
 
         CREATE TABLE IF NOT EXISTS repository_snapshots (
             snapshot_id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id INTEGER NOT NULL,               -- Foreign key to analysis_sessions
-            readme_content TEXT,                       -- Content of README.md
-            requirements_txt_content TEXT,             -- Content of requirements.txt
-            environment_yaml_content TEXT,             -- Content of environment.yaml
-            existing_min_sys_reqs_content TEXT,        -- Content of any existing min-sys-requirements file
+            snapshot_data TEXT NOT NULL,               -- A single JSON blob of all captured file contents
+            creation_timestamp TEXT NOT NULL,          -- ISO 8601 timestamp of snapshot creation
             FOREIGN KEY (session_id) REFERENCES analysis_sessions (session_id)
         );
 

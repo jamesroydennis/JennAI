@@ -15,20 +15,19 @@ from config.loguru_setup import logger # Simply import the configured logger
 
 # Import other necessary modules from the project
 from src.business.sys import sys_profiler
-from src.business.interfaces.IRepositoryDataSource import IRepositoryDataSource
+from src.business.ai import repo_data_collector
 
 class DataCollectService:
     """
     Service to collect data from various sources (system, repository),
     populate a prompt template with this data, and persist the generated prompt.
     """
-    def __init__(self, repository_data_source: IRepositoryDataSource):
+    def __init__(self):
         # Assuming jennai_root_for_path is defined globally in this file
         self.project_root = jennai_root_for_path
         self.sys_info_dir = self.project_root / "src" / "data" / "system_info"
         self.sys_info_file = self.sys_info_dir / sys_profiler.OUTPUT_FILENAME
         self.prompt_template_dir = self.project_root / "src" / "business" / "ai" / "prompt_templates"
-        self.repository_data_source = repository_data_source
         # self.generated_prompts_dir is no longer needed here as orchestrator handles saving.
 
         logger.debug("DataCollectService initialized.")
@@ -50,6 +49,23 @@ class DataCollectService:
                 return system_data
         except Exception as e:
             logger.error(f"Failed to collect or load system information: {e}")
+            return None
+
+    def _collect_repository_info(self, repo_path_str: str) -> Optional[Dict[str, Optional[str]]]:
+        """
+        Collects repository information using repo_data_collector.
+        Returns repository data as a dictionary, or None on failure.
+        """
+        logger.info(f"Collecting repository information from: {repo_path_str}")
+        try:
+            repo_data = repo_data_collector.collect_repository_data(repo_path_str)
+            if repo_data.get("error") and "Invalid repository path" in repo_data["error"]: # Check specific error message
+                logger.warning(f"Repository data collection handled known issue: {repo_data['error']}")
+                return None
+            logger.success(f"Successfully collected repository information from: {repo_path_str}")
+            return repo_data
+        except Exception as e:
+            logger.warning(f"Handled failure during repository info collection for {repo_path_str}: {e}")
             return None
 
     def _load_prompt_template(self, template_filename: str) -> Optional[str]:
@@ -130,8 +146,8 @@ class DataCollectService:
         # Not returning None immediately if system_info fails, as repo analysis might still proceed.
         # The orchestrator can decide how to handle missing system_info.
         
-        repo_data = self.repository_data_source.get_repository_data(repo_path)
-        if not repo_data:
+        repo_data = self._collect_repository_info(repo_path)
+        if not repo_data: 
             logger.warning("Repository data collection returned None or an error state. Aborting prompt generation.")
             return None
 
