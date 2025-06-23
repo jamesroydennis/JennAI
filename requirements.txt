@@ -1,0 +1,23 @@
+# -----------------------------------------------------------------------------
+# MANUAL INSTALLATION REQUIRED FOR PYTORCH WITH CUDA
+# -----------------------------------------------------------------------------
+# After creating and activating the conda environment, install PyTorch manually
+# to ensure the correct CUDA-enabled binaries are used.
+#
+# Run this command:
+# pip install "torch==2.3.1+cu118" "torchvision==0.18.1+cu118" "torchaudio==2.3.1+cu118" --index-url https://download.pytorch.org/whl/cu118
+#
+# The packages below will be installed automatically by conda via this file.
+# -----------------------------------------------------------------------------
+
+# Core application dependencies
+google-generativeai
+loguru>=0.7.0
+numexpr
+opencv-python==4.10.0.84
+
+# Development and testing dependencies
+pytest>=7.0
+pytest-loguru
+allure-pytest
+ruff>=0.1.0
