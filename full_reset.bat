@@ -1,7 +1,7 @@
 @echo off
 echo.
 echo ======================================================================
-echo ==           JENN-AI FULL PROJECT & ENVIRONMENT RESET             ==
+echo ==           JENN-AI FULL PROJECT ^& ENVIRONMENT RESET             ==
 echo ======================================================================
 echo.
 echo DANGER: This script will delete project files (logs, reports) AND
@@ -60,5 +60,9 @@ echo ======================================================================
 echo ==  ✅ FULL RESET COMPLETE                                         ==
 echo ======================================================================
 echo You can now activate the new environment: conda activate jennai-root
+echo.
+echo IMPORTANT: If you are using an IDE (like VS Code), it is highly
+echo            recommended to RESTART it now. This ensures it detects
+echo            the new 'jennai-root' environment and interpreter correctly.
 echo.
 pause
