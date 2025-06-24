@@ -9,6 +9,10 @@ channels:
   - conda-forge
   - defaults
 
+variables:
+  # Add the 'admin' directory to the PATH for direct execution of scripts like 42.py
+  PATH: "%PATH%;%CONDA_PREFIX%\\admin"
+
 # Essential CUDA toolkit and cuDNN for the environment
 # Web framework and related
 # Data handling and scientific computing
