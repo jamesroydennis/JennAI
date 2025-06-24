@@ -32,13 +32,27 @@ def print_header(title: str):
 def run_command(command: str, cwd: Path = PROJECT_ROOT) -> int:
     try:
         process = subprocess.Popen(
-            command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            cwd=cwd, text=True, encoding='utf-8'
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            cwd=cwd,
+            text=True,
+            encoding="utf-8",
         )
-        for line in iter(process.stdout.readline, ''):
-            print(line, end='')
+        try:
+            # Stream output and wait for the process to complete.
+            for line in iter(process.stdout.readline, ""):
+                print(line, end="")
+            return_code = process.wait()
+        except KeyboardInterrupt:
+            # Handle user pressing Ctrl+C to stop a long-running process like 'allure serve'.
+            print("\nProcess interrupted by user. Terminating subprocess...")
+            process.terminate()
+            return_code = process.wait()
+            return 0  # Treat user interruption as a successful exit from the step.
         process.stdout.close()
-        return process.wait()
+        return return_code
     except FileNotFoundError:
         color_print([("red", f"Error: Command not found for '{command}'. Is it installed and in your PATH?")])
         return 1
