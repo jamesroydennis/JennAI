@@ -8,7 +8,7 @@ echo DANGER: This script will delete project files (logs, reports) AND
 echo         completely remove and recreate the 'jennai-root' environment.
 echo.
 
-set /p "confirm=Are you absolutely sure you want to continue? (y/n): "
+set /p "confirm=(ADVANCED USERS) Are you absolutely sure you want to continue? (y/n): "
 if /i not "%confirm%"=="y" (
     echo Operation cancelled.
     exit /b
