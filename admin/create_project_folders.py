@@ -33,13 +33,16 @@ DIRECTORIES_TO_CREATE = [
     "src/business",
     "src/business/ai",
     "src/business/interfaces",
+    "src/business/services",
     "src/business/notebooks",
     "src/business/tests",
     "src/data",
+    "src/data/dto",
     "src/data/implementations",
     "src/data/interfaces",
     "src/data/notebooks",
     "src/data/obj",
+    "src/data/repositories",
     "src/data/tests",
     "src/presentation",
     "src/presentation/api_server", # For backend API logic
@@ -67,11 +70,14 @@ PACKAGES_TO_INITIALIZE = [
     "src/business",
     "src/business/ai",
     "src/business/interfaces",
+    "src/business/services",
     "src/business/tests",
     "src/data",
+    "src/data/dto",
     "src/data/implementations",
     "src/data/interfaces",
     "src/data/obj",
+    "src/data/repositories",
     "src/data/tests",
     "src/presentation",
     "src/presentation/api_server",
@@ -87,35 +93,47 @@ def create_folders_and_inits():
     Creates the defined directory structure and adds __init__.py files
     to specified package directories.
     """
-    logger.info("Starting project folder creation...")
+    try:
+        logger.info("Starting project folder creation...")
 
-    # Create directories
-    for dir_path_str in DIRECTORIES_TO_CREATE:
-        path = JENNAI_ROOT / dir_path_str
-        if not path.exists():
-            path.mkdir(parents=True, exist_ok=True)
-            logger.success(f"Created directory: {path}")
+        # Create directories
+        for dir_path_str in DIRECTORIES_TO_CREATE:
+            path = JENNAI_ROOT / dir_path_str
+            if not path.exists():
+                path.mkdir(parents=True, exist_ok=True)
+                logger.success(f"Created directory: {path}")
 
-    logger.info("Initializing Python package directories...")
-    # Create __init__.py files
-    for pkg_path_str in PACKAGES_TO_INITIALIZE:
-        pkg_path = JENNAI_ROOT / pkg_path_str
-        init_file = pkg_path / "__init__.py"
-        if not init_file.exists():
-            # Ensure the parent directory exists (should be true from above step)
-            if not pkg_path.exists(): # Should not happen if DIRECTORIES_TO_CREATE is comprehensive
-                pkg_path.mkdir(parents=True, exist_ok=True)
-                logger.info(f"Created parent directory for __init__.py: {pkg_path}")
+    except Exception as e:
+        logger.error(f"Failed to create directories: {e}")
+        return False # Indicate failure
 
-            with open(init_file, "w") as f:
-                f.write(f"# Initializes the {pkg_path_str.replace('/', '.')} package.\n")
-            logger.success(f"Created __init__.py in: {pkg_path}")
+    try: # Add try block here
+        logger.info("Initializing Python package directories...")
+        # Create __init__.py files
+        for pkg_path_str in PACKAGES_TO_INITIALIZE:
+            pkg_path = JENNAI_ROOT / pkg_path_str
+            init_file = pkg_path / "__init__.py"
+            if not init_file.exists():
+                # Ensure the parent directory exists (should be true from above step)
+                if not pkg_path.exists(): # Should not happen if DIRECTORIES_TO_CREATE is comprehensive
+                    pkg_path.mkdir(parents=True, exist_ok=True)
+                    logger.info(f"Created parent directory for __init__.py: {pkg_path}")
+
+                with open(init_file, "w") as f:
+                    f.write(f"# Initializes the {pkg_path_str.replace('/', '.')} package.\n")
+                logger.success(f"Created __init__.py in: {pkg_path}")
+    except Exception as e: # This except now belongs to the new try
+        logger.error(f"Failed to create __init__.py files: {e}")
+        return False # Indicate failure
 
     logger.success("Project folder structure setup complete.")
+    return True # Indicate success
 
 if __name__ == "__main__":
     # Setup logging for this script, similar to cleanup.py
     # Assuming verbose output is desired for this utility.
     setup_logging(debug_mode=True)
     logger.info("Loguru setup complete for create_project_folders.py.")
-    create_folders_and_inits()
+    if not create_folders_and_inits():
+        sys.exit(1) # Exit with error code if creation fails
+    sys.exit(0) # Exit with success code

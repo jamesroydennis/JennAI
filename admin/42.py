@@ -19,6 +19,7 @@ except ImportError:
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ALLURE_RESULTS_DIR = PROJECT_ROOT / "allure-results"
+
 PROMPT_RETURN_TO_MENU = "\nPress Enter to return to the menu, or Ctrl-C to exit..."
 
 def print_header(title: str):
@@ -78,18 +79,31 @@ def _run_steps(action):
             return
 
     steps = action.get("steps", [])
+    all_steps_ok = True
     for i, step in enumerate(steps, 1):
         if len(steps) > 1:
             color_print([("cyan", f"\n--- Step {i} of {len(steps)}: {step['name']} ---")])
 
         return_code = run_command(step["command"])
-        if return_code != 0 and step.get("abort_on_fail", True):
-            color_print([("red", f"\n❌ Sequence failed at step '{step['name']}'. Aborting.")])
-            return
+        if return_code != 0:
+            all_steps_ok = False
+            if step.get("abort_on_fail", True):
+                color_print([("red", f"\n❌ Sequence failed at step '{step['name']}'. Aborting.")])
+                return
 
-    color_print([("green", f"\n✅ {action.get('success_message', 'Operation completed successfully!')}")])
+    if all_steps_ok:
+        color_print([("green", f"\n✅ {action.get('success_message', 'Operation completed successfully!')}")])
+    else:
+        color_print([("yellow", f"\n⚠️  Operation completed, but with non-critical errors.")])
 
 PY_EXEC = f'"{sys.executable}"'
+# Construct a robust path to the allure executable inside the current environment.
+# This avoids relying on the system's PATH, which can be unreliable in sub-processes.
+# On Windows, executables are in the 'Scripts' subdirectory of the env. On Unix-like systems, they are in 'bin'.
+SCRIPTS_DIR = Path(sys.executable).parent / "Scripts" if sys.platform == "win32" else Path(sys.executable).parent / "bin"
+ALLURE_EXEC_PATH = SCRIPTS_DIR / "allure.bat" if sys.platform == "win32" else SCRIPTS_DIR / "allure"
+ALLURE_EXEC = f'"{ALLURE_EXEC_PATH.as_posix()}"'
+
 
 MENU_ACTIONS = [
     {"key": "test", "name": "🧪    Run Tests (No Report)", "steps": [
@@ -102,7 +116,7 @@ MENU_ACTIONS = [
         {"name": "Cleanup", "command": f'{PY_EXEC} "{(PROJECT_ROOT / "admin" / "cleanup.py").as_posix()}"'}]},
     {"key": "test_and_report", "name": "📊    Run Tests & Serve Report", "pause_after": True, "steps": [
         {"name": "Run Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{ALLURE_RESULTS_DIR.as_posix()}" --clean-alluredir'},
-        {"name": "Serve Report", "command": f'allure serve "{ALLURE_RESULTS_DIR.as_posix()}"', "abort_on_fail": False}
+        {"name": "Serve Report", "command": f'{ALLURE_EXEC} serve "{ALLURE_RESULTS_DIR.as_posix()}"', "abort_on_fail": False}
     ]},
     {"key": "create_folders", "name": "🏗️    Create Project Folders", "steps": [
         {"name": "Create Folders", "command": f'{PY_EXEC} "{(PROJECT_ROOT / "admin" / "create_project_folders.py").as_posix()}"'}]},
@@ -133,6 +147,21 @@ HIDDEN_ACTIONS = {
 
 
 def main():
+    # --- Environment Sanity Check ---
+    # Ensure the script is being run from the correct conda environment.
+    # This prevents a whole class of "module not found" errors by ensuring
+    # that sys.executable points to the correct interpreter.
+    expected_env_name = "jennai-root"
+    current_env = os.getenv("CONDA_DEFAULT_ENV")
+
+    if not current_env or os.path.basename(current_env) != expected_env_name:
+        print(f"\n\033[91mFATAL ERROR: Incorrect Conda Environment\033[0m")
+        print(f"This admin console MUST be run from the '{expected_env_name}' environment.")
+        print(f"You are currently in the '{current_env or 'None'}' environment.")
+        print("\nPlease activate the correct environment and try again:")
+        print(f"  conda activate {expected_env_name}")
+        sys.exit(1)
+
     action_map = {action["key"]: action for action in MENU_ACTIONS}
     action_map.update(HIDDEN_ACTIONS)
 
@@ -171,12 +200,9 @@ def main():
                 input(PROMPT_RETURN_TO_MENU)
 
         except KeyboardInterrupt:
-            # On some terminals (especially on Windows), interrupting an interactive
-            # prompt can leave the terminal in a bad state, breaking arrow key input.
-            # The most robust way to recover and "return to the menu" is to perform
-            # a clean restart of the script itself.
             print("\n\nOperation cancelled. Restarting admin console...")
-            os.execv(sys.executable, [sys.executable] + sys.argv)
+            # Removed os.execv to allow normal script termination on Ctrl-C
+            sys.exit(1) # Exit with an error code to indicate interruption
 
 if __name__ == "__main__":
     main()

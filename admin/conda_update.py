@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import subprocess
-import sys
+import os
 from pathlib import Path
 
 # ==============================================================================
@@ -19,6 +19,7 @@ from pathlib import Path
 # ==============================================================================
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+ENV_NAME = "jennai-root"
 
 def run_update():
     """
@@ -27,7 +28,16 @@ def run_update():
     print("=" * 70)
     print("🐍 JennAI Conda Environment Updater")
     print("=" * 70)
-    print("\nINFO: This script will synchronize your 'jennai-root' environment with")
+
+    # --- Safety Check ---
+    current_env = os.getenv("CONDA_DEFAULT_ENV")
+    if current_env == ENV_NAME:
+        print(f"\n\033[91mERROR: This script should not be run from within the '{ENV_NAME}' environment.\033[0m")
+        print("       Please deactivate and run it from your 'base' environment.")
+        print("       Command: conda deactivate")
+        return
+
+    print(f"\nINFO: This script will synchronize your '{ENV_NAME}' environment with")
     print("      the 'environment.yaml' file using the '--prune' flag.")
     print("      This will add, update, and remove packages to match the file.")
     print("\nIMPORTANT: Please ensure you are running this from your 'base' conda environment.")
@@ -35,7 +45,7 @@ def run_update():
     
     try:
         # The command to execute. It targets the environment specified in the YAML file.
-        command = f"conda env update --prune -f environment.yaml"
+        command = f"conda env update --name {ENV_NAME} --prune -f environment.yaml"
         
         # Use Popen to stream output in real-time, which is better for long tasks.
         process = subprocess.Popen(
@@ -49,7 +59,7 @@ def run_update():
 
         if return_code == 0:
             print("\n✅ Environment update completed successfully!")
-            print(f"   Activate your environment with: conda activate jennai-root")
+            print(f"   Activate your environment with: conda activate {ENV_NAME}")
         else:
             print(f"\n❌ Environment update failed with exit code: {return_code}")
 
