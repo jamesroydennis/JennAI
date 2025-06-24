@@ -1,11 +1,12 @@
-# Core application dependencies
+# PyTorch and related (install with custom index after env creation)
+pydantic
 google-generativeai
 loguru>=0.7.0
-numexpr
-opencv-python==4.10.0.84
-
-# Development and testing dependencies
 pytest>=7.0
 pytest-loguru
+numexpr
+pytest-loguru
 allure-pytest
-ruff>=0.1.0 # Linter and code formatter
+opencv-python==4.10.0.84
+ruff>=0.1.0
+# Add other pip dependencies here

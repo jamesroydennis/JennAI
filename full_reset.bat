@@ -31,25 +31,17 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo [STEP 3/5] Creating Conda environment 'jennai-root'...
-call conda env create -f environment.yaml
+echo [STEP 3/4] Running full installation script...
+echo This will create the environment and install all dependencies, including PyTorch.
+python admin/install_requirements.py
 if %errorlevel% neq 0 (
-    echo [ERROR] Failed to create environment. Aborting.
+    echo [ERROR] The installation script failed. Aborting.
     pause
     exit /b
 )
 
 echo.
-echo [STEP 4/5] Creating project folders in new environment...
-call conda run -n jennai-root python admin/create_project_folders.py
-if %errorlevel% neq 0 (
-    echo [ERROR] Failed to create project folders. Aborting.
-    pause
-    exit /b
-)
-
-echo.
-echo [STEP 5/5] Running tests in new environment...
+echo [STEP 4/4] Running tests in new environment...
 call conda run -n jennai-root python -m pytest
 if %errorlevel% neq 0 (
     echo [WARNING] Tests failed. Please review the output.
