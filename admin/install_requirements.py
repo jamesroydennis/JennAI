@@ -56,20 +56,29 @@ def main():
     logger.info("==      JENN-AI ENVIRONMENT & PYTORCH INSTALLATION SCRIPT       ==")
     logger.info("=" * 70 + "\n")
 
+    # --- Step 1: Check for external system dependencies ---
+    check_deps_script = jennai_root_for_path / "admin" / "check_dependencies.py"
+    check_deps_command = [sys.executable, str(check_deps_script)] # Renamed script
+    if not run_command(check_deps_command, "Check for external system dependencies (e.g., Allure, Java)"):
+        # This check is currently non-blocking, but we could add an abort here if needed.
+        logger.warning("Dependency check finished with warnings. Continuing installation...")
+
+    logger.info("-" * 70)
+
     # --- Define paths and commands ---
     project_root = jennai_root_for_path
     env_file = project_root / "environment.yaml"
     pytorch_installer = project_root / "admin" / "install_pytorch.py"
     env_name = "jennai-root"
 
-    # --- Step 1: Create Project Folders ---
+    # --- Step 2: Create Project Folders ---
     if not create_folders_and_inits(): # This function now returns True on success, False on failure
         logger.error("Aborting due to failure in project folder creation.")
         sys.exit(1)
 
     logger.info("-" * 70)
 
-    # --- Step 2: Create Conda Environment ---
+    # --- Step 3: Create Conda Environment ---
     if not env_file.exists():
         logger.error(f"environment.yaml not found at {env_file}")
         sys.exit(1)
@@ -81,7 +90,7 @@ def main():
 
     logger.info("-" * 70)
 
-    # --- Step 3: Install PyTorch using the dedicated script ---
+    # --- Step 4: Install PyTorch using the dedicated script ---
     # We use 'conda run' to execute the command within the new environment.
     # This is the correct way to run a command without needing to 'activate' it
     # in a way that persists outside the script.

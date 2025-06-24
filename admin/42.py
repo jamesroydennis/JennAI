@@ -24,9 +24,9 @@ PROMPT_RETURN_TO_MENU = "\nPress Enter to return to the menu, or Ctrl-C to exit.
 
 def print_header(title: str):
     print()
-    color_print([("yellow", "=" * 70)])
-    color_print([("yellow", f"  {title}")])
-    color_print([("yellow", "=" * 70)])
+    color_print([("cyan", "=" * 70)])
+    color_print([("cyan", f"  {title}")])
+    color_print([("cyan", "=" * 70)])
     print()
 
 def run_command(command: str, cwd: Path = PROJECT_ROOT) -> int:
@@ -100,45 +100,43 @@ PY_EXEC = f'"{sys.executable}"'
 # Construct a robust path to the allure executable inside the current environment.
 # This avoids relying on the system's PATH, which can be unreliable in sub-processes.
 # On Windows, executables are in the 'Scripts' subdirectory of the env. On Unix-like systems, they are in 'bin'.
-SCRIPTS_DIR = Path(sys.executable).parent / "Scripts" if sys.platform == "win32" else Path(sys.executable).parent / "bin"
-ALLURE_EXEC_PATH = SCRIPTS_DIR / "allure.bat" if sys.platform == "win32" else SCRIPTS_DIR / "allure"
-ALLURE_EXEC = f'"{ALLURE_EXEC_PATH.as_posix()}"'
-
+# Use system-wide Allure CLI installed by Scoop (relies on PATH)
+ALLURE_EXEC = "allure"
 
 MENU_ACTIONS = [
-    {"key": "test", "name": "🧪    Run Tests (No Report)", "steps": [
-        {"name": "Run Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{ALLURE_RESULTS_DIR.as_posix()}" --clean-alluredir'}]},
-    {"key": "check_logs", "name": "🔎    Check Logs for Errors/Warnings", "steps": [
-        {"name": "Scan Logs", "command": f'{PY_EXEC} "{(PROJECT_ROOT / "admin" / "check_logs.py").as_posix()}"'}]},
-    {"key": "tree", "name": "🌳    Display Project Tree", "steps": [
-        {"name": "Display Tree", "command": f'{PY_EXEC} "{(PROJECT_ROOT / "admin" / "tree.py").as_posix()}"'}]},
-    {"key": "cleanup", "name": "🧹    Clean-Up Project", "steps": [
-        {"name": "Cleanup", "command": f'{PY_EXEC} "{(PROJECT_ROOT / "admin" / "cleanup.py").as_posix()}"'}]},
-    {"key": "test_and_report", "name": "📊    Run Tests & Serve Report", "pause_after": True, "steps": [
-        {"name": "Run Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{ALLURE_RESULTS_DIR.as_posix()}" --clean-alluredir'},
-        {"name": "Serve Report", "command": f'{ALLURE_EXEC} serve "{ALLURE_RESULTS_DIR.as_posix()}"', "abort_on_fail": False}
+    {"key": "test", "name": "Test", "steps": [
+        {"name": "Run Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'}]},
+    {"key": "test_and_report", "name": "Test & Report", "pause_after": True, "steps": [
+        {"name": "Run Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'},
+        {"name": "Serve Report", "command": f'"{ALLURE_EXEC}" serve "{str(ALLURE_RESULTS_DIR)}"', "abort_on_fail": False}
     ]},
-    {"key": "create_folders", "name": "🏗️    Create Project Folders", "steps": [
-        {"name": "Create Folders", "command": f'{PY_EXEC} "{(PROJECT_ROOT / "admin" / "create_project_folders.py").as_posix()}"'}]},
-    {"key": "regression", "name": "🚀    Run Full Regression", "steps": [
-        {"name": "Cleaning Project", "command": f'{PY_EXEC} "{(PROJECT_ROOT / "admin" / "cleanup.py").as_posix()}"'},
-        {"name": "Creating Project Folders", "command": f'{PY_EXEC} "{(PROJECT_ROOT / "admin" / "create_project_folders.py").as_posix()}"'},
-        {"name": "Running Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{ALLURE_RESULTS_DIR.as_posix()}" --clean-alluredir'}
+    {"key": "check_logs", "name": "Check Logs", "steps": [
+        {"name": "Scan Logs", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "check_logs.py")}"'}]}, # Already correct
+    {"key": "tree", "name": "Full-Tree", "steps": [
+        {"name": "Display Tree", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "tree.py")}"'}]},
+    {"key": "cleanup", "name": "Clean", "steps": [ # Already correct
+        {"name": "Cleanup", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'}]}, # Already correct
+    {"key": "create_folders", "name": "Initialize/Create Folders", "steps": [
+        {"name": "Create Folders", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "create_project_folders.py")}"'}]}, # Already correct
+    {"key": "regression", "name": "Run Full Regression", "steps": [
+        {"name": "Cleaning Project", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'},
+        {"name": "Creating Project Folders", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "create_project_folders.py")}"'},
+        {"name": "Running Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'}
     ]},
-    {"key": "conda_update", "name": "🐍    Update Conda Environment", "confirm": True,
+    {"key": "conda_update", "name": "Update Conda Environment", "confirm": True,
      "confirm_message": (
          "This will synchronize your Conda environment with 'environment.yaml'.\n"
          "IMPORTANT: This should be run from your 'base' environment for best results.\n\n"
          "Continue?"
      ),
-     "steps": [{"name": "Run Conda Update", "command": f'{PY_EXEC} "{(PROJECT_ROOT / "admin" / "conda_update.py").as_posix()}"'}]}
+     "steps": [{"name": "Run Conda Update", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "conda_update.py")}"'}]}
 ]
 
 HIDDEN_ACTIONS = {
-    "install": {"key": "install", "name": "⚙️    Run Project Installation (setup.py)", "confirm": True,
+    "install": {"key": "install", "name": "Run Project Installation (setup.py)", "confirm": True,
      "confirm_message": "This will execute 'setup.py', which may perform destructive actions. Continue?",
-     "steps": [{"name": "Run Setup", "command": f'{PY_EXEC} "{(PROJECT_ROOT / "admin" / "setup.py").as_posix()}"'}]},
-    "full_reset": {"key": "full_reset", "name": "💥    Full Destroy & Create", "confirm": True, "pause_after": True,
+     "steps": [{"name": "Run Setup", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "setup.py")}"'}]},
+    "full_reset": {"key": "full_reset", "name": "Full Destroy & Create", "confirm": True, "pause_after": True,
      "confirm_message": "This action performs a full destruction of data and the conda environment. You will be directed to a reset script where deletion, reset, and re-creation will begin.",
      "steps": [
          {"name": "Run Full Reset", "command": f'"{PROJECT_ROOT / "full_reset.bat"}"'}
@@ -169,7 +167,7 @@ def main():
         try:
             # Build the list of choices for the menu, handling the separator.
             choices = []
-            choices.append(Choice(None, name="🚪    Exit")) # Exit is always the first option
+            choices.append(Choice(None, name="Exit")) # Exit is always the first option
             for action in MENU_ACTIONS: # Then add all other defined menu actions
                 if action.get("key") == "separator":
                     choices.append(Separator(action["name"]))
@@ -180,6 +178,7 @@ def main():
                 message="Welcome to the JennAI Admin Console. Select a task:",
                 choices=choices,
                 default="test",
+                qmark="", # This parameter is supported in InquirerPy >= 0.5.0
             ).execute()
 
             if selected_key is None:
@@ -203,6 +202,7 @@ def main():
             print("\n\nOperation cancelled. Restarting admin console...")
             # Removed os.execv to allow normal script termination on Ctrl-C
             sys.exit(1) # Exit with an error code to indicate interruption
+
 
 if __name__ == "__main__":
     main()

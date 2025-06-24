@@ -22,45 +22,6 @@ JENNAI_ROOT = jennai_root_for_path # Use the globally defined root
 # logger.info(f"JennAI Project Root determined as: {JENNAI_ROOT}") # Logged by setup_logging
 
 # --- Directory Structure Definition ---
-# List of all directories to create relative to JENNAI_ROOT.
-# Using a set for quick lookups if needed, though a list is fine for iteration.
-DIRECTORIES_TO_CREATE = [
-    "admin",  # The script itself is here, but good to ensure it's listed
-    "config",
-    "core",
-    "logs",
-    "src",
-    "src/business",
-    "src/business/ai",
-    "src/business/interfaces",
-    "src/business/services",
-    "src/business/notebooks",
-    "src/business/tests",
-    "src/data",
-    "src/data/dto",
-    "src/data/implementations",
-    "src/data/interfaces",
-    "src/data/notebooks",
-    "src/data/obj",
-    "src/data/repositories",
-    "src/data/tests",
-    "src/presentation",
-    "src/presentation/api_server", # For backend API logic
-    "src/presentation/api_server/controllers",
-    "src/presentation/api_server/schemas",
-    "src/presentation/api_server/flask_app", # Example for Flask
-    "src/presentation/api_server/flask_app/routes",
-    "src/presentation/api_server/flask_app/static", # Static files for Flask app
-    "src/presentation/api_server/flask_app/static/css", # For CSS files
-    "src/presentation/api_server/flask_app/static/img",  # For Flask app specific images
-    "src/presentation/api_server/flask_app/static/js",   # For JavaScript files
-    "src/presentation/api_server/flask_app/templates", # Templates for Flask app
-    "src/presentation/img", # For general presentation layer images
-    "src/presentation/web_clients", # For frontend client projects
-    # "src/presentation/web_clients/react_app", # You'd init React project here
-    # "src/presentation/web_clients/angular_app", # You'd init Angular project here
-    "tests",  # Top-level tests directory
-]
 
 # Directories that should be Python packages (i.e., need an __init__.py)
 PACKAGES_TO_INITIALIZE = [
@@ -70,14 +31,11 @@ PACKAGES_TO_INITIALIZE = [
     "src/business",
     "src/business/ai",
     "src/business/interfaces",
-    "src/business/services",
     "src/business/tests",
     "src/data",
-    "src/data/dto",
     "src/data/implementations",
     "src/data/interfaces",
     "src/data/obj",
-    "src/data/repositories",
     "src/data/tests",
     "src/presentation",
     "src/presentation/api_server",
@@ -85,8 +43,27 @@ PACKAGES_TO_INITIALIZE = [
     "src/presentation/api_server/schemas",
     "src/presentation/api_server/flask_app",
     "src/presentation/api_server/flask_app/routes",
-    "tests", # Top-level tests directory
+    "tests",  # Top-level tests directory
 ]
+
+# Directories that are part of the project structure but are NOT Python packages.
+NON_PACKAGE_DIRS = [
+    "admin",
+    "logs",
+    "src/business/notebooks",
+    "src/data/notebooks",
+    "src/presentation/api_server/flask_app/static",
+    "src/presentation/api_server/flask_app/static/css",
+    "src/presentation/api_server/flask_app/static/img",
+    "src/presentation/api_server/flask_app/static/js",
+    "src/presentation/api_server/flask_app/templates",
+    "src/presentation/img",
+    "src/presentation/web_clients",
+]
+
+# Combine the two lists to get the full set of directories to create.
+# This avoids repetition and makes the configuration clearer.
+DIRECTORIES_TO_CREATE = PACKAGES_TO_INITIALIZE + NON_PACKAGE_DIRS
 
 def create_folders_and_inits():
     """

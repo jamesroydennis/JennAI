@@ -1,3 +1,25 @@
+# =============================================================================
+# SYSTEM REQUIREMENTS (manual install, not managed by conda/pip):
+#
+# - Allure CLI is required for report serving:
+#     scoop install allure      # (Recommended on Windows)
+#     choco install allure      # (Alternative on Windows)
+#     brew install allure       # (macOS)
+#     sudo apt install allure   # (Linux, if available)
+#     # NOTE: Do NOT add 'allure-cmd' to requirements.txt or environment.yaml.
+#     #       The Allure CLI is NOT a Python/pip package.
+#
+# - Java (required for Allure CLI):
+#     scoop bucket add java     # (Required before installing openjdk with Scoop)
+#     scoop install openjdk     # (Recommended on Windows)
+#     choco install openjdk     # (Alternative on Windows)
+#
+# - eza (for tree view):
+#     scoop install eza         # (Windows)
+#     brew install eza          # (macOS)
+#     sudo apt install eza      # (Linux, if available)
+# =============================================================================
+
 name: jennai-root
 channels:
   - pytorch
@@ -12,7 +34,7 @@ dependencies:
   - flask
   - flask-cors
   - flask-assets
-  - inquirerpy # For interactive admin scripts
+  - inquirerpy
   - libsass
   - numpy
   - pandas

@@ -6,7 +6,6 @@ pytest>=7.0
 pytest-loguru
 numexpr
 allure-pytest
-allure-cmd # Wrapper for the Allure command-line tool
 opencv-python==4.10.0.84
 ruff>=0.1.0
 # Add other pip dependencies here
