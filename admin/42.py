@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import subprocess
+import os
 import sys
 from pathlib import Path
 
@@ -18,6 +19,7 @@ except ImportError:
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ALLURE_RESULTS_DIR = PROJECT_ROOT / "allure-results"
+PROMPT_RETURN_TO_MENU = "\nPress Enter to return to the menu, or Ctrl-C to exit..."
 
 def print_header(title: str):
     print()
@@ -55,12 +57,22 @@ def _run_steps(action):
             confirmed = inquirer.confirm(
                 message=confirm_message, # InquirerPy can handle styled lists of tuples directly
                 default=False,
-                confirm_message="Confirmed. Starting process...",
-                reject_message="Operation cancelled by user."
             ).execute()
             if not confirmed:
                 print()
                 return
+
+            # Add a special, secondary confirmation for the most destructive actions
+            if action.get("key") == "full_reset":
+                final_confirm_message = (
+                    "FINAL WARNING: This is your last chance to back out.\n"
+                    "The 'jennai-root' environment and project data WILL BE DELETED.\n\n"
+                    "Are you absolutely sure you want to proceed with destruction?"
+                )
+                final_confirmed = inquirer.confirm(message=final_confirm_message, default=False).execute()
+                if not final_confirmed:
+                    print("\nOperation cancelled by user at final confirmation.")
+                    return
         except KeyboardInterrupt:
             print("\nOperation cancelled by user.")
             return
@@ -100,26 +112,23 @@ MENU_ACTIONS = [
         {"name": "Running Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{ALLURE_RESULTS_DIR.as_posix()}" --clean-alluredir'}
     ]},
     {"key": "conda_update", "name": "🐍    Update Conda Environment", "confirm": True,
-     "confirm_message": [
-         ("class:warning", "This will synchronize your Conda environment with 'environment.yaml'.\n"),
-         ("class:warning", "IMPORTANT: This should be run from your 'base' environment for best results.\n"),
-         ("class:default", "Continue?")
-     ],
-     "steps": [{"name": "Run Conda Update", "command": f'{PY_EXEC} "{(PROJECT_ROOT / "admin" / "conda_update.py").as_posix()}"'}]},
-    # Add a separator for more critical/destructive actions (not selectable)
-    {"key": "separator", "name": "-"*30},
-    {"key": "full_reset", "name": "💥    Full Destroy & Create", "confirm": True, "pause_after": True,
-     "confirm_message": "This action performs a full destruction of data and conda environment. You will be directed to a reset script where deletion, reset, and re-creation will begin.",
-     "steps": [
-         {"name": "Run Full Reset", "command": f'"{PROJECT_ROOT / "full_reset.bat"}"'}
-     ]
-    }
+     "confirm_message": (
+         "This will synchronize your Conda environment with 'environment.yaml'.\n"
+         "IMPORTANT: This should be run from your 'base' environment for best results.\n\n"
+         "Continue?"
+     ),
+     "steps": [{"name": "Run Conda Update", "command": f'{PY_EXEC} "{(PROJECT_ROOT / "admin" / "conda_update.py").as_posix()}"'}]}
 ]
 
 HIDDEN_ACTIONS = {
     "install": {"key": "install", "name": "⚙️    Run Project Installation (setup.py)", "confirm": True,
-     "confirm_message": [("class:warning", "This will execute 'setup.py', which may perform destructive actions. Continue?")],
-     "steps": [{"name": "Run Setup", "command": f'{PY_EXEC} "{(PROJECT_ROOT / "admin" / "setup.py").as_posix()}"'}]}
+     "confirm_message": "This will execute 'setup.py', which may perform destructive actions. Continue?",
+     "steps": [{"name": "Run Setup", "command": f'{PY_EXEC} "{(PROJECT_ROOT / "admin" / "setup.py").as_posix()}"'}]},
+    "full_reset": {"key": "full_reset", "name": "💥    Full Destroy & Create", "confirm": True, "pause_after": True,
+     "confirm_message": "This action performs a full destruction of data and the conda environment. You will be directed to a reset script where deletion, reset, and re-creation will begin.",
+     "steps": [
+         {"name": "Run Full Reset", "command": f'"{PROJECT_ROOT / "full_reset.bat"}"'}
+     ]}
 }
 
 
@@ -131,12 +140,12 @@ def main():
         try:
             # Build the list of choices for the menu, handling the separator.
             choices = []
-            for action in MENU_ACTIONS:
+            choices.append(Choice(None, name="🚪    Exit")) # Exit is always the first option
+            for action in MENU_ACTIONS: # Then add all other defined menu actions
                 if action.get("key") == "separator":
                     choices.append(Separator(action["name"]))
                 else:
                     choices.append(Choice(value=action["key"], name=action["name"]))
-            choices.append(Choice(None, name="Exit"))
 
             selected_key = inquirer.select(
                 message="Welcome to the JennAI Admin Console. Select a task:",
@@ -152,18 +161,22 @@ def main():
             if selected_action:
                 if selected_action.get("is_instruction"):
                     print_header(selected_action["name"])
-                    input("\nPress Enter to return to the menu...")
+                    input(PROMPT_RETURN_TO_MENU)
                 else:
                     _run_steps(selected_action)
                     if not selected_action.get("pause_after", False):
-                        input("\nPress Enter to return to the menu...")
+                        input(PROMPT_RETURN_TO_MENU)
             else:
                 color_print([("red", f"Error: No action found for key '{selected_key}'")])
-                input("\nPress Enter to return to the menu...")
+                input(PROMPT_RETURN_TO_MENU)
 
         except KeyboardInterrupt:
-            print("\nGoodbye!")
-            break
+            # On some terminals (especially on Windows), interrupting an interactive
+            # prompt can leave the terminal in a bad state, breaking arrow key input.
+            # The most robust way to recover and "return to the menu" is to perform
+            # a clean restart of the script itself.
+            print("\n\nOperation cancelled. Restarting admin console...")
+            os.execv(sys.executable, [sys.executable] + sys.argv)
 
 if __name__ == "__main__":
     main()
