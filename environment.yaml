@@ -1,29 +1,33 @@
+# System requirements (install manually if not present):
+#   - Chocolatey (https://chocolatey.org/) or Scoop (https://scoop.sh/)
+#   - eza (install with: scoop install eza OR choco install eza)
+
 name: jennai-root
 channels:
-  - pytorch # Keep pytorch channel even if installing via pip, for other related dependencies
+  - pytorch
   - nvidia
   - conda-forge
   - defaults
 
+# Essential CUDA toolkit and cuDNN for the environment
+# Web framework and related
+# Data handling and scientific computing
+# Add other conda-installable dependencies like onnxruntime-gpu, scikit-image, cupy if needed
+# Pip dependencies are managed in the requirements.txt file.
+# This creates a single source of truth for Python packages.
+# Note: PyTorch with CUDA support must be installed manually.
+# See the instructions in requirements.txt for details.
+
 dependencies:
-  - python=3.9 # Or your specific Python version
-  # Essential CUDA toolkit and cuDNN for the environment
+  - python=3.9
   - cudatoolkit=11.8
   - cudnn=8.9.7
-  # Web framework and related
   - flask
   - flask-cors
-  # Data handling and scientific computing
   - numpy
   - pandas
-  - requests # For HTTP requests
-  - matplotlib # For plotting
-  # Add other conda-installable dependencies like onnxruntime-gpu, scikit-image, cupy if needed
-
+  - requests
+  - matplotlib
   - pip
   - pip:
-    # Pip dependencies are managed in the requirements.txt file.
-    # This creates a single source of truth for Python packages.
-    # Note: PyTorch with CUDA support must be installed manually.
-    # See the instructions in requirements.txt for details.
-    - -r requirements.txt
+      - -r requirements.txt

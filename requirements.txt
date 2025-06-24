@@ -21,3 +21,4 @@ pytest>=7.0
 pytest-loguru
 allure-pytest
 ruff>=0.1.0
+inquirerpy>=0.3.4  # Interactive command-line interfaces
