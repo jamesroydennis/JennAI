@@ -22,11 +22,8 @@ def main():
     temporary folders within the JennAI project root.
     """
     try:
-        # Determine the JennAI project root dynamically.
-        # Assumes this script is in 'JennAI/admin/'.
-        # script_dir is already used for jennai_root_for_path, we can reuse that
-        script_dir = jennai_root_for_path / "admin" # .../JennAI/admin
-        jennai_root_path = script_dir.parent          # .../JennAI
+        # Use the globally defined project root path for simplicity and consistency.
+        jennai_root_path = jennai_root_for_path
 
         if not jennai_root_path.exists() or not jennai_root_path.is_dir():
             logger.error(f"JennAI project root not found or is not a directory at calculated path: {jennai_root_path}")
@@ -36,6 +33,14 @@ def main():
         # This print statement was likely for debugging before logger was integrated.
         # logger.info(f"JennAI Project Root determined as: {jennai_root_path}") # Already logged by setup_logging
 
+        # --- Stop logging to file before deletion ---
+        logger.info("Stopping file logging to allow deletion...")
+        logger.remove() # Removes all handlers, including the file handler.
+        # Re-add a console-only handler to see subsequent messages.
+        logger.add(sys.stderr, level="DEBUG") # Assuming we want to maintain verbose output
+        logger.info("File logger removed. Continuing cleanup with console-only logging.")
+        
+        
         # --- Delete jennai.log file ---
         logs_dir = jennai_root_path / "logs"
         
@@ -93,35 +98,7 @@ def main():
         logger.critical(f"An unexpected error occurred during cleanup: {e}")
         return 1 # Indicate an error
 
-def run_eza_tree(project_root: Path):
-    """
-    Attempts to run 'eza --tree' and prints its output using the logger.
-    """
-    logger.info("Attempting to display project tree with 'eza --tree'...")
-    try:
-        # Check if eza is installed by trying to get its version
-        subprocess.run(["eza", "--version"], check=True, capture_output=True, text=True)
-        
-        # Run eza --tree
-        result = subprocess.run(["eza", "--tree"], cwd=project_root, check=True, capture_output=True, text=True)
-        # Print eza tree output directly to console, not to the log file.
-        print("\n------------------- Project Tree (eza) -------------------")
-        print(result.stdout.strip())
-        print("--------------------------------------------------------")
-        logger.info("Successfully displayed project tree using 'eza --tree'.")
-    except FileNotFoundError:
-        logger.warning("'eza' command not found. Skipping tree view. Please install eza to use this feature.")
-    except subprocess.CalledProcessError as e:
-        logger.error(f"'eza --tree' command failed with error: {e}")
-        logger.error(f"  Stderr: {e.stderr}")
-    except Exception as e:
-        logger.error(f"An unexpected error occurred while trying to run 'eza --tree': {e}")
-
 if __name__ == "__main__":
-    # Determine project root once for both functions
-    # jennai_root_for_path is already defined globally and points to the project root
-    jennai_root_path_main = jennai_root_for_path
-
     # Setup logging first
     # Pass debug_mode=True or False based on your preference for the cleanup script
     # You might want cleanup to always be verbose, or respect the global config

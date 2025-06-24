@@ -97,8 +97,6 @@ def create_folders_and_inits():
         if not path.exists():
             path.mkdir(parents=True, exist_ok=True)
             logger.success(f"Created directory: {path}")
-        else:
-            logger.info(f"Skipped, directory already exists: {path}")
 
     logger.info("Initializing Python package directories...")
     # Create __init__.py files
@@ -114,8 +112,6 @@ def create_folders_and_inits():
             with open(init_file, "w") as f:
                 f.write(f"# Initializes the {pkg_path_str.replace('/', '.')} package.\n")
             logger.success(f"Created __init__.py in: {pkg_path}")
-        else:
-            logger.info(f"Skipped, __init__.py already exists in: {pkg_path}")
 
     logger.success("Project folder structure setup complete.")
 
