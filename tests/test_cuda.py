@@ -1,45 +1,58 @@
-# /home/jdennis/Projects/JennAI/tests/test_cuda.py
-
 import torch
-import pytest # Import pytest for test functionality
-
-from config.loguru_setup import logger 
-
-# This part runs when you execute the script directly (e.g., 'python tests/test_cuda.py')
-# It provides immediate feedback on CUDA availability.
-if __name__ == '__main__':
-    print(f"Is CUDA available: {torch.cuda.is_available()}")
-    if torch.cuda.is_available():
-        print(f"CUDA device count: {torch.cuda.device_count()}")
-        print(f"Current CUDA device: {torch.cuda.current_device()}")
-        print(f"CUDA device name: {torch.cuda.get_device_name(0)}")
-    else:
-        print("CUDA is NOT available. Tests requiring CUDA will likely fail.")
+import pytest
+import sys
+import subprocess
 
 
-# This is a pytest test function
-# pytest will discover and run any function starting with 'test_'
-def test_cuda_device_available():
+def get_nvidia_smi_output():
+    """Attempts to run nvidia-smi and returns its output for diagnostics."""
+    try:
+        result = subprocess.run(
+            "nvidia-smi", capture_output=True, text=True, shell=True, check=False
+        )
+        if result.returncode == 0:
+            return result.stdout
+        return f"Could not execute 'nvidia-smi'. Is it in your PATH?\nError:\n{result.stderr}"
+    except FileNotFoundError:
+        return "'nvidia-smi' command not found. Is the NVIDIA driver installed correctly?"
+    except Exception as e:
+        return f"An unexpected error occurred while running 'nvidia-smi': {e}"
+
+
+def test_cuda_is_core_requirement():
     """
-    Tests if a CUDA-enabled GPU device is available and can be accessed by PyTorch.
+    Validates that the system's core requirement, a CUDA-enabled GPU, is
+    available and correctly configured for PyTorch.
+
+    This test will FAIL if CUDA is not detected, providing detailed diagnostics
+    to help resolve the environment/setup issue.
     """
-    # Use an assert statement for pytest to check for success/failure
-    assert torch.cuda.is_available(), "CUDA is not available or not detected by PyTorch!"
-
-    # Optional: print more detailed info if CUDA is available, for verbose output (-v)
     if torch.cuda.is_available():
-        print(f"\n[Test] CUDA device count: {torch.cuda.device_count()}")
-        print(f"[Test] Current CUDA device: {torch.cuda.current_device()}")
-        print(f"[Test] CUDA device name: {torch.cuda.get_device_name(0)}")
+        print("\n--- CUDA Environment Details ---")
+        print(f"PyTorch Version: {torch.__version__}")
+        print(f"PyTorch CUDA Version: {torch.version.cuda}")
+        print(f"Detected CUDA Devices: {torch.cuda.device_count()}")
+        print(f"Current Device: {torch.cuda.get_device_name(torch.cuda.current_device())}")
+        print("--- Test Passed ---")
+        assert True, "SUCCESS: CUDA is available and configured."
+        return
 
-    # You can add more specific checks here, e.g.,
-    # assert torch.cuda.device_count() > 0, "No CUDA devices found!"
-    # assert "NVIDIA" in torch.cuda.get_device_name(0), "CUDA device is not an NVIDIA GPU!"
-
-# You can also add a pytest marker to easily run only CUDA tests later
-# @pytest.mark.cuda # Uncomment this line if you added 'cuda' marker in pyproject.toml
-# def test_some_gpu_specific_functionality():
-#     # Test code that specifically uses GPU tensors or operations
-#     a = torch.tensor([1, 2, 3], device='cuda')
-#     b = torch.tensor([4, 5, 6], device='cuda')
-#     assert torch.all(a + b == torch.tensor([5, 7, 9], device='cuda'))
+    # --- Diagnostics for Failure ---
+    failure_message = (
+        f"\n\n{'='*20} CUDA SETUP VALIDATION FAILED {'='*20}\n"
+        "CRITICAL: This project requires a correctly configured CUDA environment.\n"
+        "Do NOT skip this test. Use the diagnostics below to fix the system setup.\n\n"
+        "--- System & PyTorch Diagnostics ---\n"
+        f"1. Python Interpreter: {sys.executable}\n"
+        f"2. PyTorch Version: {torch.__version__}\n"
+        f"3. PyTorch Compiled with CUDA Version: {torch.version.cuda or 'Not built with CUDA support'}\n"
+        f"4. torch.cuda.is_available() returned: False\n\n"
+        "--- NVIDIA Driver Diagnostics ---\n"
+        f"5. `nvidia-smi` command output:\n"
+        f"{'-'*40}\n{get_nvidia_smi_output()}\n{'-'*40}\n\n"
+        "--- Troubleshooting Steps ---\n"
+        "A. Check `nvidia-smi`: If it fails or shows errors, your NVIDIA drivers are not installed correctly.\n"
+        "B. Check Conda Environment: Ensure 'jennai-root' is active. Run `conda list` and verify `pytorch-cuda` matches your driver's CUDA version.\n"
+        "C. Recreate Environment: A full reset via `full_reset.bat` can resolve inconsistencies.\n"
+    )
+    pytest.fail(failure_message, pytrace=False)

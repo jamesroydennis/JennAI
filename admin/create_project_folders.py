@@ -56,7 +56,6 @@ DIRECTORIES_TO_CREATE = [
     "src/presentation/web_clients", # For frontend client projects
     # "src/presentation/web_clients/react_app", # You'd init React project here
     # "src/presentation/web_clients/angular_app", # You'd init Angular project here
-    "src/presentation/tests", # Tests for the presentation layer (e.g., API tests)
     "tests",  # Top-level tests directory
 ]
 
@@ -80,7 +79,6 @@ PACKAGES_TO_INITIALIZE = [
     "src/presentation/api_server/schemas",
     "src/presentation/api_server/flask_app",
     "src/presentation/api_server/flask_app/routes",
-    "src/presentation/tests", # For presentation layer tests
     "tests", # Top-level tests directory
 ]
 
