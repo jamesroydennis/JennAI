@@ -9,7 +9,7 @@ if str(jennai_root_for_path) not in sys.path:
 
 from loguru import logger
 from config.loguru_setup import setup_logging
-from admin.create_project_folders import create_folders_and_inits
+from admin.create_directories import main as create_directories_main
 
 # Setup logging for this script
 setup_logging(debug_mode=True) # Assuming verbose output for installation script
@@ -72,7 +72,7 @@ def main():
     env_name = "jennai-root"
 
     # --- Step 2: Create Project Folders ---
-    if not create_folders_and_inits(): # This function now returns True on success, False on failure
+    if not create_directories_main():
         logger.error("Aborting due to failure in project folder creation.")
         sys.exit(1)
 

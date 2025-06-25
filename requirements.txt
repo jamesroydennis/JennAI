@@ -8,4 +8,5 @@ numexpr
 allure-pytest
 opencv-python==4.10.0.84
 ruff>=0.1.0
+rich>=10.0.0
 # Add other pip dependencies here

@@ -1,4 +1,4 @@
-# create_project_folders.py
+# c:\Users\jarde\Projects\JennAI\admin\create_directories.py
 import os
 import sys
 from pathlib import Path
@@ -80,7 +80,7 @@ def main():
 
 if __name__ == "__main__":
     setup_logging(debug_mode=True)
-    logger.info("Loguru setup complete for create_project_folders.py.")
+    logger.info("Loguru setup complete for create_directories.py.")
     if not main():
         sys.exit(1)
     sys.exit(0)
