@@ -37,6 +37,11 @@ This endeavor transcends a mere technical solution. It is the genesis of a platf
         def internal_server_error(e):
             return render_template('500.html'), 500
 
+        # Route specifically for testing 500 errors
+        @app.route('/test-500-error')
+        def test_500_error_route():
+            raise Exception("This is a simulated 500 error for testing purposes.")
+
     return app
 
 if __name__ == '__main__':

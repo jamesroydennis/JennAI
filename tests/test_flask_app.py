@@ -45,20 +45,15 @@ def test_404_page_loads_correctly(client):
     """
     response = client.get('/non-existent-page')
     assert response.status_code == 404, "Non-existent page should return a 404 Not Found status."
-    assert b"404 - Page Not Found" in response.data, "404 page should contain '404 - Page Not Found' text."
+    assert b"<title>Page Not Found - JennAI</title>" in response.data, "404 page should contain the correct title."
 
 
-def test_500_page_loads_correctly(app, client):
+def test_500_page_loads_correctly(client):
     """
     GIVEN a Flask application configured for testing
-    WHEN an internal server error occurs
+    WHEN an internal server error occurs (via a dedicated test route)
     THEN check that the response is a 500 and contains expected content.
     """
-    # Temporarily add a route that raises an exception to trigger a 500 error
-    @app.route('/trigger-500')
-    def trigger_500():
-        raise Exception("Simulated internal server error")
-
-    response = client.get('/trigger-500')
+    response = client.get('/test-500-error') # Request the route designed to trigger a 500
     assert response.status_code == 500, "Internal server error should return a 500 status."
-    assert b"500 - Internal Server Error" in response.data, "500 page should contain '500 - Internal Server Error' text."
+    assert b"<title>Internal Server Error - JennAI</title>" in response.data, "500 page should contain the correct title."
