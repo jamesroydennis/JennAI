@@ -15,7 +15,25 @@ if /i not "%confirm%"=="y" (
 )
 
 echo.
-echo [STEP 1/5] Cleaning project files...
+echo [STEP 1/5] Checking for required external tools (npm, sass)...
+where npm >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [ERROR] 'npm' is not found in your PATH.
+    echo Please install Node.js and npm (preferably using nvm) before proceeding.
+    echo See the instructions in 'environment.yaml' for details.
+    pause
+    exit /b
+)
+where sass >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [WARNING] 'sass' command not found. This is required for compiling website styles.
+    echo You can install it globally by running: npm install -g sass
+    echo Continuing with reset, but website development will be impacted.
+    pause
+)
+
+echo.
+echo [STEP 2/5] Cleaning project files...
 python admin/cleanup.py
 if %errorlevel% neq 0 (
     echo [ERROR] Failed during cleanup. Aborting.
@@ -24,24 +42,23 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo [STEP 2/5] Removing Conda environment 'jennai-root'...
+echo [STEP 3/5] Removing Conda environment 'jennai-root'...
 call conda env remove --name jennai-root -y
 if %errorlevel% neq 0 (
     echo [WARNING] Failed to remove environment. It might not have existed. Continuing...
 )
 
 echo.
-echo [STEP 3/4] Running full installation script...
-echo This will create the environment and install all dependencies, including PyTorch.
-python admin/install_requirements.py
+echo [STEP 4/5] Creating Conda environment 'jennai-root' from environment.yaml...
+call conda env create -f environment.yaml
 if %errorlevel% neq 0 (
-    echo [ERROR] The installation script failed. Aborting.
+    echo [ERROR] Conda environment creation failed. Aborting.
     pause
     exit /b
 )
 
 echo.
-echo [STEP 4/4] Running tests in new environment...
+echo [STEP 5/5] Running tests in new environment...
 call conda run -n jennai-root python -m pytest
 if %errorlevel% neq 0 (
     echo [WARNING] Tests failed. Please review the output.

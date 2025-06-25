@@ -3,12 +3,15 @@ import subprocess
 import os
 import sys
 from pathlib import Path
+from config.config import WHITELIST_ENVIRONMENTS
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 try:
     from InquirerPy import inquirer
     from InquirerPy.base.control import Choice
     from InquirerPy.separator import Separator
-    from InquirerPy.utils import color_print # Still used for headers
+    from InquirerPy.utils import color_print  # Still used for headers
     from rich.console import Console
 except ImportError:
     print("Error: InquirerPy is not installed or not found in the current environment.")
@@ -17,6 +20,7 @@ except ImportError:
     sys.exit(1)
 
 # ==============================================================================
+from config.config import WHITELIST_ENVIRONMENTS
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ALLURE_RESULTS_DIR = PROJECT_ROOT / "allure-results"
@@ -36,8 +40,6 @@ def print_formatted_help(text_block: str):
     using the 'rich' library.
     """
     console = Console()
-    # Use rich's built-in Markdown rendering. markup=False is important
-    # to prevent rich from interpreting its own markup tags inside the Markdown.
     console.print(text_block, markup=False)
 
 def run_command(command: str, cwd: Path = PROJECT_ROOT) -> int:
@@ -52,16 +54,14 @@ def run_command(command: str, cwd: Path = PROJECT_ROOT) -> int:
             encoding="utf-8",
         )
         try:
-            # Stream output and wait for the process to complete.
             for line in iter(process.stdout.readline, ""):
                 print(line, end="")
             return_code = process.wait()
         except KeyboardInterrupt:
-            # Handle user pressing Ctrl+C to stop a long-running process like 'allure serve'.
             print("\nProcess interrupted by user. Terminating subprocess...")
             process.terminate()
             return_code = process.wait()
-            return 0  # Treat user interruption as a successful exit from the step.
+            return 0
         process.stdout.close()
         return return_code
     except FileNotFoundError:
@@ -81,14 +81,13 @@ def _run_steps(action):
         try:
             confirm_message = action.get("confirm_message", "Are you sure you want to continue?")
             confirmed = inquirer.confirm(
-                message=confirm_message, # InquirerPy can handle styled lists of tuples directly
+                message=confirm_message,
                 default=False,
             ).execute()
             if not confirmed:
                 print()
                 return
 
-            # Add a special, secondary confirmation for the most destructive actions
             if action.get("key") == "full_reset":
                 final_confirm_message = (
                     "FINAL WARNING: This is your last chance to back out.\n"
@@ -122,10 +121,6 @@ def _run_steps(action):
         color_print([("yellow", f"\n⚠️  Operation completed, but with non-critical errors.")])
 
 PY_EXEC = f'"{sys.executable}"'
-# Construct a robust path to the allure executable inside the current environment.
-# This avoids relying on the system's PATH, which can be unreliable in sub-processes.
-# On Windows, executables are in the 'Scripts' subdirectory of the env. On Unix-like systems, they are in 'bin'.
-# Use system-wide Allure CLI installed by Scoop (relies on PATH)
 ALLURE_EXEC = "allure"
 
 HELP_TEXT = """
@@ -196,13 +191,13 @@ MENU_ACTIONS = [
     ]},
     {"key": "separator", "name": "──────────────────────────────────"},
     {"key": "check_logs", "name": "Check Logs", "steps": [
-        {"name": "Scan Logs", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "check_logs.py")}"'}]}, # Already correct
+        {"name": "Scan Logs", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "check_logs.py")}"'}]},
     {"key": "tree", "name": "Full-Tree", "steps": [
         {"name": "Display Tree", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "tree.py")}"'}]},
-    {"key": "cleanup", "name": "Clean", "steps": [ # Already correct
-        {"name": "Cleanup", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'}]}, # Already correct
+    {"key": "cleanup", "name": "Clean", "steps": [
+        {"name": "Cleanup", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'}]},
     {"key": "create_folders", "name": "Initialize/Create Folders", "steps": [
-        {"name": "Create Directories", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "create_directories.py")}"'}]}, # Already correct
+        {"name": "Create Directories", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "create_directories.py")}"'}]},
 ]
 
 HIDDEN_ACTIONS = {
@@ -223,21 +218,15 @@ HIDDEN_ACTIONS = {
      ]}
 }
 
-
 def main():
     # --- Environment Sanity Check ---
-    # Ensure the script is being run from the correct conda environment.
-    # This prevents a whole class of "module not found" errors by ensuring
-    # that sys.executable points to the correct interpreter.
-    expected_env_name = "jennai-root"
+    # Ensure the script is being run from an allowed conda environment.
     current_env = os.getenv("CONDA_DEFAULT_ENV")
-
-    if not current_env or os.path.basename(current_env) != expected_env_name:
+    if not current_env or os.path.basename(current_env) not in WHITELIST_ENVIRONMENTS:
         print(f"\n\033[91mFATAL ERROR: Incorrect Conda Environment\033[0m")
-        print(f"This admin console MUST be run from the '{expected_env_name}' environment.")
+        print(f"This admin console MUST be run from one of: {WHITELIST_ENVIRONMENTS}")
         print(f"You are currently in the '{current_env or 'None'}' environment.")
-        print("\nPlease activate the correct environment and try again:")
-        print(f"  conda activate {expected_env_name}")
+        print("\nPlease activate an allowed environment and try again.")
         sys.exit(1)
 
     action_map = {action["key"]: action for action in MENU_ACTIONS}
@@ -245,10 +234,9 @@ def main():
 
     while True:
         try:
-            # Build the list of choices for the menu, handling the separator.
             choices = []
-            choices.append(Choice(None, name="🔚  Exit")) # Exit is always the first option
-            for action in MENU_ACTIONS: # Then add all other defined menu actions
+            choices.append(Choice(None, name="🔚  Exit"))
+            for action in MENU_ACTIONS:
                 if action.get("key") == "separator":
                     choices.append(Separator(action["name"]))
                 else:
@@ -258,9 +246,9 @@ def main():
                 message="Welcome to the JennAI Admin Console. Select a task:",
                 choices=choices,
                 default="test",
-                qmark="", # This parameter is supported in InquirerPy >= 0.5.0
-                cycle=False, # This prevents the selection from wrapping around
-                max_height=16, # Increase the number of visible menu items
+                qmark="",
+                cycle=False,
+                max_height=16,
             ).execute()
 
             if selected_key is None:
@@ -285,9 +273,7 @@ def main():
 
         except KeyboardInterrupt:
             print("\n\nOperation cancelled. Restarting admin console...")
-            # Removed os.execv to allow normal script termination on Ctrl-C
-            sys.exit(1) # Exit with an error code to indicate interruption
-
+            sys.exit(1)
 
 if __name__ == "__main__":
     main()

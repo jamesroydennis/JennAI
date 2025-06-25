@@ -29,13 +29,11 @@ def test_system_dependencies_check_runs_successfully():
         # Assert that the script exited successfully (return code 0)
         assert process.returncode == 0, \
             f"check_dependencies.py exited with code {process.returncode}.\n" \
-            f"Stderr/Stdout:\n{process.stderr}"
+            f"Stdout:\n{process.stdout}\nStderr:\n{process.stderr}"
 
-        # Optionally, check for specific success/warning messages in the output
-        assert "CHECKING FOR EXTERNAL DEPENDENCIES" in process.stderr, "Expected header not found in check_dependencies.py output."
-        assert "All checked external dependencies were found." in process.stderr or \
-               "One or more optional external dependencies are missing." in process.stderr, \
-            "Expected success/warning message not found in check_dependencies.py output."
+        # Check that the expected headers are in the script's standard output.
+        assert "=== System Dependency Checks ===" in process.stdout, "Expected 'System Dependency Checks' header not found in output."
+        assert "=== Python Package Checks ===" in process.stdout, "Expected 'Python Package Checks' header not found in output."
 
     except FileNotFoundError:
         pytest.fail(f"Failed to find Python interpreter: {sys.executable} or check_dependencies.py script.")

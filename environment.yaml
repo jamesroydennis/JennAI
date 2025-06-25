@@ -1,6 +1,9 @@
 # =============================================================================
 # SYSTEM REQUIREMENTS (manual install, not managed by conda/pip):
 #
+# NOTE: The `full_reset.bat` script can automate much of the Python environment
+#       setup, but the external tools below must be installed manually first.
+#
 # - Allure CLI is required for report serving:
 #     scoop install allure      # (Recommended on Windows)
 #     choco install allure      # (Alternative on Windows)
@@ -18,9 +21,39 @@
 #     scoop install eza         # (Windows)
 #     brew install eza          # (macOS)
 #     sudo apt install eza      # (Linux, if available)
+#
+# - Node.js Version Management (REQUIRED for frontend tooling):
+#     nvm (Node Version Manager) is the preferred method for installing and managing Node.js versions.
+#     - nvm for Windows: https://github.com/coreybutler/nvm-windows
+#     - nvm for macOS/Linux: https://github.com/nvm-sh/nvm
+#     # NOTE: Do NOT use conda to manage Node.js for this project.
+#     #       Always use nvm for installing and switching Node.js versions.
+#
+# - Node.js (required for Sass CLI and other frontend tooling):
+#     # After installing nvm, install Node.js using nvm:
+#     nvm install lts
+#     nvm use lts
+#     node --version
+#     npm --version
+#
+# - Sass CLI (for SCSS compilation):
+#     npm install -g sass
+#     # To check if Sass CLI is installed:
+#     #     sass --version
+#     # If you see "'sass' is not recognized" or "command not found", install it with:
+#     #     npm install -g sass
+#     # Usage:
+#     #   Compile a single SCSS file to CSS:
+#     #     sass path/to/input.scss path/to/output.css
+#     #   Example:
+#     #     sass src/presentation/api_server/flask_app/static/css/main.scss src/presentation/api_server/flask_app/static/css/main.css
+#     #   Watch a folder for changes (recommended for development):
+#     #     sass --watch src/presentation/api_server/flask_app/static/css:src/presentation/api_server/flask_app/static/css
+#     # NOTE: Do NOT add 'sass' to requirements.txt or environment.yaml.
+#     #       The Sass CLI is NOT a Python/pip package.
 # =============================================================================
 
-name: lily-presents
+name: jennai-root
 channels:
   - pytorch
   - nvidia
@@ -43,5 +76,4 @@ dependencies:
   - markdown
   - pip
   - pip:
-      - libsass
       - -r requirements.txt
