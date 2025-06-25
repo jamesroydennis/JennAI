@@ -3,17 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"> {# Standard compatibility meta #}
     <title>{% block title %}JennAI{% endblock %}</title>
+    
+    {# Link to your compiled SCSS (main.css) #}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+    
+    {# Preload specific fonts for performance, mimicking ambiq.ai #}
     <link rel="preload" as="font" type="font/woff2" href="https://fonts.gstatic.com/s/inter/v13/UcCO3FZYIDFWav0x495nZAuGxpg.woff2" crossorigin>
     <link rel="preload" as="font" type="font/woff2" href="https://fonts.gstatic.com/s/opensans/v34/memvYaGs126MiZpBA-MtmW-Pihc.woff2" crossorigin>
+
     {% block head_extra %}{% endblock %}
 </head>
 <body>
+    {# Preloader - Mimics ambiq.ai's loading animation #}
+    <div class="preloader">
+        <div class="lines">
+            <div></div><div></div><div></div><div></div><div></div>
+            <div></div><div></div><div></div><div></div><div></div>
+            <div></div><div></div>
+        </div>
+        <div class="text">
+            <span data-newtext="JENNAI">LOADING</span>
+        </div>
+    </div>
+
+    {# Main Header - Mimics ambiq.ai's fixed, flex structure #}
+    <header>
+        <div class="logo-container">
+            <a href="{{ url_for('index') }}" class="site-logo">
+                <img src="{{ url_for('static', filename='img/jennai-logo.png') }}" alt="JennAI Logo">
+                <span class="sr-only">JennAI Home</span>
+            </a>
+        </div>
+        <nav class="main-navigation">
+            <ul>
+                <li><a href="#">Vision</a></li>
+                <li><a href="#">Projects</a></li>
+                <li><a href="#">Contact</a></li>
+                <li><a href="#" class="button custom">Join Us</a></li> {# Example CTA button #}
+            </ul>
+        </nav>
+        <div class="desktop-burger"><div></div><div></div><div></div></div>
+        <div class="desktop-close">{# SVG for close icon #}</div>
+        <div class="mobile-burger"><div></div><div></div><div></div></div>
+    </header>
+
+    {# Aside/Side Navigation - Mimics ambiq.ai's vertical navigation #}
+    <aside class="side-nav">
+        <nav class="nums">
+            <div class="active">01</div>
+            <span class="line"></span>
+            <div class="all"></div>
+        </nav>
+        <nav class="arrows">
+            <button class="top" title="Go up">↑</button>
+            <button class="bottom" title="Go down">↓</button>
+        </nav>
+    </aside>
+
+    {# Main Content Area - Contains all the stacked sections #}
     <main>
         {% block content %}{% endblock %}
     </main>
+
+    {# Video Pop-up Modal - Mimics ambiq.ai's video player #}
+    <div class="video-pop-up" data-hash="">
+        <div class="bg close"></div>
+        <div class="content">
+            <div class="video"></div>
+            <button class="close" title="Close pop up">X</button> {# Use your SVG cross icon #}
+        </div>
+    </div>
+
+    {# Footer - Mimics ambiq.ai's multi-column structure #}
+    <footer>
+        <div class="footer-column nav-pages">
+            <h4>Site Map</h4>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="#">Vision</a></li>
+                <li><a href="#">Projects</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </div>
+        <div class="footer-column community-links">
+            <h4>Community</h4>
+            <ul>
+                <li><a href="#">Blog</a></li>
+                <li><a href="#">Guides</a></li>
+                <li><a href="#">Forum</a></li>
+            </ul>
+        </div>
+        <div class="footer-column brand-info">
+            <h4>JennAI</h4>
+            {# Your personal portrait for a human touch #}
+            <img src="{{ url_for('static', filename='img/your-portrait.jpg') }}" alt="Your Portrait" class="footer-portrait">
+            <p class="copyright">&copy; 2025 JennAI. All rights reserved.</p>
+            <a href="#" class="privacy-link">Privacy Policy</a>
+        </div>
+        {# ambiq.ai style background lines - these might be dynamic/JS driven #}
+        <div class="bg_line l"></div>
+        <div class="bg_line c"></div>
+        <div class="bg_line r"></div>
+    </footer>
+
+    {# Your main JavaScript file #}
     <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
     {% block body_extra %}{% endblock %}
 </body>

@@ -1,8 +1,12 @@
 #!/usr/bin/env python
-import subprocess
-import os
 import sys
 from pathlib import Path
+
+# Add project root to sys.path BEFORE importing project modules
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import subprocess
+import os
 from config.config import WHITELIST_ENVIRONMENTS
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))

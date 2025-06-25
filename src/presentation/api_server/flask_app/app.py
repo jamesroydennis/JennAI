@@ -1,14 +1,17 @@
-from flask import Flask, render_template, Markup
-import markdown
+from flask import Flask, render_template, url_for, Markup
+import markdown # Make sure markdown is installed: pip install markdown
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
+# Add a markdown filter to Jinja2 for rendering the vision statement
 @app.template_filter('markdown')
 def markdown_filter(text):
     return Markup(markdown.markdown(text))
 
 @app.route('/')
 def index():
+    # Pass your mission and vision content to the template
+    # In a real app, these might come from a database or markdown files dynamically parsed
     vision_content = """
 ### Vision: Illuminating the Intelligent Frontier
 
@@ -20,6 +23,15 @@ This endeavor transcends a mere technical solution. It is the genesis of a platf
 """
     mission_statement = "To bridge the unyielding question."
     return render_template('index.html', vision=vision_content, mission=mission_statement)
+
+# Error Handlers
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('500.html'), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,35 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- Favicon (place favicon.ico in static/) -->
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-</head>
-<body>
-    <header>
-        <!-- Example Header Logo (place jennai-logo-header.png in static/img/) -->
-        <img src="{{ url_for('static', filename='img/jennai-logo.png') }}" alt="JennAI Logo" style="max-width: 180px; max-height:180px; padding: 10px; vertical-align: middle;">
-        <h1>{{ title }}</h1>
-    </header>
+{% extends "base.html" %}
 
-    <main>
-        <p>Your JennAI Flask application is up and running!</p>
-        <p>This page is served from <code>src/presentation/api_server/flask_app/templates/index.html</code>.</p>
-        <p>Static files like CSS and JavaScript are linked from the <code>src/presentation/api_server/flask_app/static/</code> directory.</p>
-        <div id="js-message" style="margin-top: 20px; font-style: italic;"></div>
+{% block title %}JennAI - Illuminating the Intelligent Frontier{% endblock %}
 
-        <!-- Under Construction Image -->
-        <img src="{{ url_for('static', filename='img/under_construction.png') }}" alt="Site Under Construction" width="512" height="512" style="margin-top: 30px;">
+{% block body_class %}home-page{% endblock %}
 
-    </main>
+{% block content %}
+    {# Section 1: Welcome / Hero Section - Mimics ambiq.ai's .welcome section #}
+    <section class="welcome-section">
+        <div class="section-content">
+            <div class="text-column" data-stagger="fadeup">
+                <h1 class="section-title" data-splitting>JennAI: Illuminating the Intelligent Frontier</h1>
+                <p class="section-description">
+                    In a universe driven by patterns, where evolution is not an option but an imperative, intelligence confronts its own fundamental flaws. Current AI, despite its super-adult capabilities, is designed to infer without wisdom, often generating plausible fallacy or operating in silos that render profound truths unreachable. This leads to a critical chasm: the absence of genuine understanding, where algorithms prioritize profit over value, and where automated systems can amplify the very human frailties of bias and ignorance.
+                </p>
+                <a href="#" class="button primary-button" title="Learn More">Learn More</a>
+            </div>
+            <div class="visual-column" data-item>
+                {# Your Adobe Stock video or main DALL-E hero image #}
+                {# This section matches your person.jpg/AdobeStock_1295578731.mov vibe #}
+                <div class="video-wrapper">
+                    <img src="{{ url_for('static', filename='img/person-interacting-ai.jpg') }}" alt="Person Interacting with AI" class="hero-visual">
+                    <span class="play-button" data-video-id="YOUR_YOUTUBE_VIDEO_ID_HERE"></span> {# Replace with actual YouTube ID for your video #}
+                </div>
+            </div>
+        </div>
+        <div class="bg_line right"></div> {# Example background line #}
+    </section>
 
-    <footer>
-        <p>&copy; <span id="currentYear"></span> JennAI Project. All rights reserved.</p>
-    </footer>
+    {# Section 2: Core Mission - Simplified from ambiq.ai sections #}
+    <section class="mission-section">
+        <div class="section-content">
+            <div class="mission-text">
+                <h2 class="section-subtitle">Our Core Mission</h2>
+                <p class="mission-statement-text">{{ mission }}</p> {# Injecting your 5-word mission #}
+            </div>
+            {# Visual element for mission - perhaps circuit-dark/light or abstract wave #}
+            <div class="mission-visual">
+                <img src="{{ url_for('static', filename='img/circuit-dark-bg.jpg') }}" alt="Abstract Circuitry" class="mission-image">
+            </div>
+        </div>
+        <div class="bg_line c"></div>
+    </section>
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-</body>
-</html>
+    {# Section 3: The Vision (Expansive Explanation) #}
+    <section class="vision-section">
+        <div class="section-content">
+            <h2 class="section-subtitle">Our Guiding Vision</h2>
+            <div class="vision-text-block">
+                {# Injecting your full vision text #}
+                {{ vision | markdown }} {# Assuming you'll add a markdown filter for rendering from app.py #}
+            </div>
+            {# Optional: add your neon-heart.jpg here #}
+            <div class="vision-visual">
+                 <img src="{{ url_for('static', filename='img/neon-heart.jpg') }}" alt="Conceptual Heart" class="vision-image">
+            </div>
+        </div>
+        <div class="bg_line l"></div>
+    </section>
+
+    {# Section 4: Call to Action / Final Statement - Mimicking ambiq.ai's newsfeed/footer transition #}
+    <section class="call-to-action-section">
+        <div class="section-content text-center">
+            <h2 class="section-title">Join the Unyielding Quest</h2>
+            <p class="section-description">Together, we will bridge knowledge, confront ignorance, and evolve intelligence.</p>
+            <a href="#" class="button action-button">Connect with JennAI</a>
+        </div>
+        <div class="bg_line r"></div>
+    </section>
+
+{% endblock %}
