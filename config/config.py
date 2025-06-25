@@ -5,3 +5,6 @@
 # Set to True for development mode (more verbose logging, dev-specific behaviors)
 # Set to False for production mode.
 DEBUG_MODE = True # Default for development
+
+# List of Conda environments that are permitted to run administrative scripts.
+ALLOWED_ENVS = ["jennai-root", "lily-presents"]

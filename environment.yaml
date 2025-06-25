@@ -41,6 +41,7 @@ dependencies:
   - requests
   - matplotlib
   - jupyter
+  - markdown
   - pip
   - pip:
       - -r requirements.txt
