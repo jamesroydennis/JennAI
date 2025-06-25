@@ -20,7 +20,7 @@
 #     sudo apt install eza      # (Linux, if available)
 # =============================================================================
 
-name: jennai-root
+name: lily-presents
 channels:
   - pytorch
   - nvidia
@@ -35,7 +35,6 @@ dependencies:
   - flask-cors
   - flask-assets
   - inquirerpy
-  - libsass
   - numpy
   - pandas
   - requests
@@ -44,4 +43,5 @@ dependencies:
   - markdown
   - pip
   - pip:
+      - libsass
       - -r requirements.txt
