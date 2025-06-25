@@ -1,4 +1,5 @@
-@import 'variables';
+@use "sass:color";
+@use 'variables' as *;
 
 // --- Base HTML & Body Styles ---
 html, body {
@@ -40,16 +41,16 @@ h3 { font-size: 2em; }
     text-decoration: none; // For buttons as links
     display: inline-block; // Allow padding/margin
     transition: background-color 0.3s ease;
-    &:hover { background-color: darken($theme-accent-1, 10%); }
+    &:hover { background-color: color.adjust($theme-accent-1, $lightness: -10%); }
 
     &.primary-button { // Specific for hero/main CTAs
         background-color: $jennai-secondary-comp; // Use JennAI coral red
-        &:hover { background-color: darken($jennai-secondary-comp, 10%); }
+        &:hover { background-color: color.adjust($jennai-secondary-comp, $lightness: -10%); }
     }
     &.dark { // For buttons on light backgrounds
         background-color: $jennai-neutral-dark;
         color: white;
-        &:hover { background-color: lighten($jennai-neutral-dark, 20%); }
+        &:hover { background-color: color.adjust($jennai-neutral-dark, $lightness: 20%); }
     }
 }
 
@@ -58,7 +59,7 @@ a {
     color: $theme-accent-1; // General link style
     text-decoration: none;
     &:hover {
-        color: darken($theme-accent-1, 15%);
+        color: color.adjust($theme-accent-1, $lightness: -15%);
         text-decoration: underline;
     }
 }
@@ -189,8 +190,8 @@ aside.side-nav {
     }
     .nums .line {
         width: 1px;
-        height: 30px; // Length of line
-        background-color: lighten($theme-font, 60%); // Light grey line
+        height: 30px;
+        background-color: color.adjust($theme-font, $lightness: 60%); // Light grey line
         margin: 0.5em 0;
     }
     .arrows button {
@@ -263,7 +264,7 @@ main {
 
     // --- Section 2: Core Mission ---
     .mission-section {
-        background-color: lighten($theme-background, 5%); // Slightly different blue
+        background-color: color.adjust($theme-background, $lightness: 5%); // Slightly different blue
         color: $theme-font;
         .section-content {
             flex-direction: row;
@@ -338,7 +339,7 @@ main {
         .button.action-button {
             background-color: $jennai-secondary-comp; // Coral button
             color: white;
-            &:hover { background-color: darken($jennai-secondary-comp, 10%); }
+            &:hover { background-color: color.adjust($jennai-secondary-comp, $lightness: -10%); }
         }
     }
 }
@@ -379,9 +380,9 @@ main {
         color: white;
         border: none; border-radius: 50%;
         width: 40px; height: 40px;
-        display: flex; justify-content: center; align-items: center;
+        display: flex; justify-content: center; align-items: center; 
         cursor: pointer; font-size: 1.5em; z-index: 1001;
-        &:hover { background-color: lighten($jennai-secondary-comp, 10%); }
+        &:hover { background-color: color.adjust($jennai-secondary-comp, $lightness: 10%); }
     }
 }
 
@@ -410,7 +411,7 @@ footer {
         margin: 0;
     }
     .footer-column li a {
-        color: lighten($jennai-neutral-dark, 40%); // Lighter grey links
+        color: color.adjust($jennai-neutral-dark, $lightness: 40%); // Lighter grey links
         text-decoration: none;
         &:hover { color: $jennai-secondary-comp; } // JennAI coral red on hover
     }
@@ -423,13 +424,13 @@ footer {
         border: 2px solid $jennai-primary-comp; // Cyan border
     }
     .copyright {
-        font-size: 0.9em;
-        color: lighten($jennai-neutral-dark, 30%);
+        font-size: 0.9em; 
+        color: color.adjust($jennai-neutral-dark, $lightness: 30%);
         margin-top: 1em;
     }
     .privacy-link {
         font-size: 0.9em;
-        color: lighten($jennai-neutral-dark, 30%);
+        color: color.adjust($jennai-neutral-dark, $lightness: 30%);
         &:hover { color: $jennai-secondary-comp; }
     }
 

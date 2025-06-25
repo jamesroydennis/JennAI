@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import subprocess
 import os
+import yaml
 from pathlib import Path
 
 # ==============================================================================
@@ -19,7 +20,18 @@ from pathlib import Path
 # ==============================================================================
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-ENV_NAME = "jennai-root"
+
+def get_env_name_from_yaml(yaml_path: Path) -> str | None:
+    """Parses the environment name from a conda environment.yaml file."""
+    if not yaml_path.is_file():
+        print(f"\n\033[91mERROR: Environment file not found at '{yaml_path}'.\033[0m")
+        return None
+    try:
+        with open(yaml_path, 'r') as f:
+            return yaml.safe_load(f).get('name')
+    except (IOError, yaml.YAMLError) as e:
+        print(f"\n\033[91mERROR: Could not read or parse '{yaml_path}': {e}\033[0m")
+        return None
 
 def run_update():
     """
@@ -29,23 +41,29 @@ def run_update():
     print("🐍 JennAI Conda Environment Updater")
     print("=" * 70)
 
+    # --- Dynamically get environment name ---
+    yaml_file_path = PROJECT_ROOT / "environment.yaml"
+    env_name = get_env_name_from_yaml(yaml_file_path)
+    if not env_name:
+        return
+
     # --- Safety Check ---
     current_env = os.getenv("CONDA_DEFAULT_ENV")
-    if current_env == ENV_NAME:
-        print(f"\n\033[91mERROR: This script should not be run from within the '{ENV_NAME}' environment.\033[0m")
+    if current_env == env_name:
+        print(f"\n\033[91mERROR: This script should not be run from within the '{env_name}' environment.\033[0m")
         print("       Please deactivate and run it from your 'base' environment.")
         print("       Command: conda deactivate")
         return
 
-    print(f"\nINFO: This script will synchronize your '{ENV_NAME}' environment with")
+    print(f"\nINFO: This script will synchronize your '{env_name}' environment with")
     print("      the 'environment.yaml' file using the '--prune' flag.")
     print("      This will add, update, and remove packages to match the file.")
     print("\nIMPORTANT: Please ensure you are running this from your 'base' conda environment.")
     print("-" * 70)
     
     try:
-        # The command to execute. It targets the environment specified in the YAML file.
-        command = f"conda env update --name {ENV_NAME} --prune -f environment.yaml"
+        # The command to execute. It targets the environment name found in the YAML file.
+        command = f"conda env update --name {env_name} --prune -f {yaml_file_path.name}"
         
         # Use Popen to stream output in real-time, which is better for long tasks.
         process = subprocess.Popen(
@@ -59,7 +77,7 @@ def run_update():
 
         if return_code == 0:
             print("\n✅ Environment update completed successfully!")
-            print(f"   Activate your environment with: conda activate {ENV_NAME}")
+            print(f"   Activate your environment with: conda activate {env_name}")
         else:
             print(f"\n❌ Environment update failed with exit code: {return_code}")
 

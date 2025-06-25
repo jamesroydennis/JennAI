@@ -1,3 +1,7 @@
+# Node.js
+node_modules/
+package-lock.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -196,6 +200,19 @@ cython_debug/
 logs/
 allure-results/
 allure-report/
+
+.virtual_documents/
+anaconda_projects/
+.trash/
+.~lock.environment.yaml#
+.vscode/
+
+# Project-specific generated files and data
+src/data/database/*.db
+src/data/database/*.db-journal
+src/data/system_info/
+src/presentation/api_server/flask_app/static/css/main.css
+Brand/hide/
 
 .virtual_documents/
 anaconda_projects/
