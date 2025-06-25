@@ -1,15 +1,14 @@
 #!/usr/bin/env python
+import subprocess
+import os
 import sys
 from pathlib import Path
 
-# Add project root to sys.path BEFORE importing project modules
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-import subprocess
-import os
+# --- Root Project Path Setup (CRITICAL for Imports) ---
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 from config.config import WHITELIST_ENVIRONMENTS
-
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 try:
     from InquirerPy import inquirer
@@ -24,10 +23,14 @@ except ImportError:
     sys.exit(1)
 
 # ==============================================================================
-from config.config import WHITELIST_ENVIRONMENTS
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ALLURE_RESULTS_DIR = PROJECT_ROOT / "allure-results"
+
+# --- Website Paths ---
+FLASK_APP_DIR = PROJECT_ROOT / "src" / "presentation" / "api_server" / "flask_app"
+FLASK_APP_PATH = FLASK_APP_DIR / "app.py"
+SCSS_PATH = FLASK_APP_DIR / "static" / "css" / "main.scss"
+CSS_PATH = FLASK_APP_DIR / "static" / "css" / "main.css"
 
 PROMPT_RETURN_TO_MENU = "\nPress Enter to return to the menu, or Ctrl-C to exit..."
 
@@ -202,6 +205,13 @@ MENU_ACTIONS = [
         {"name": "Cleanup", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'}]},
     {"key": "create_folders", "name": "Initialize/Create Folders", "steps": [
         {"name": "Create Directories", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "create_directories.py")}"'}]},
+    {"key": "separator", "name": "──────────────────────────────────"},
+    # --- Web Servers ---
+    {"key": "jennai_lily", "name": "💮 JennAI-Lily", "pause_after": True, "steps": [
+        {"name": "Compile SCSS and Run Flask Server", "command": (
+            f'sass --watch "{SCSS_PATH}":"{CSS_PATH}" & '
+            f'{PY_EXEC} "{FLASK_APP_PATH}"'
+        ), "abort_on_fail": False}]},
 ]
 
 HIDDEN_ACTIONS = {
