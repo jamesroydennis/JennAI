@@ -1,147 +1,38 @@
+import subprocess
+import sys
 from pathlib import Path
-import shutil
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-BRAND = PROJECT_ROOT / "Brand"
-ANGULAR = PROJECT_ROOT / "angular-app"
-SRC = ANGULAR / "src"
-ASSETS = SRC / "assets"
-STYLES = SRC / "styles"
-
-IMAGE_MAP = {
-    "jennai-logo.png": "logo.png",
-    "favicon_io/favicon.ico": "favicon.ico",
-    "person.jpg": "person-interacting-ai.jpg",
-    "circuit-dark.jpg": "circuit-dark-bg.jpg",
-    "circuit-light.jpg": "circuit-light-bg.jpg",
-    "background.jpg": "abstract-wave-bg.jpg",
-    "heart-blackbackground.jpg": "neon-heart.jpg",
-    "me.jpeg": "your-portrait.jpg",
-    # Add more as needed
-}
-
-def copy_images():
-    ASSETS.mkdir(parents=True, exist_ok=True)
-    for src, dest in IMAGE_MAP.items():
-        src_path = BRAND / src
-        dest_path = ASSETS / dest
-        if src_path.exists():
-            shutil.copyfile(src_path, dest_path)
-            print(f"Copied: {src_path} -> {dest_path}")
-        else:
-            print(f"Missing: {src_path}")
-
-def copy_theme_scss():
-    src = BRAND / "theme.scss"
-    dest = STYLES / "theme.scss"
-    STYLES.mkdir(parents=True, exist_ok=True)
-    if src.exists():
-        shutil.copyfile(src, dest)
-        print(f"Copied: {src} -> {dest}")
-    else:
-        print(f"Missing: {src}")
-
-def ensure_and_write(path, content):
-    path = Path(path)
-    if not path.parent.exists():
-        path.parent.mkdir(parents=True, exist_ok=True)
-    if not path.exists():
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(content)
-        print(f"Created: {path}")
-    else:
-        print(f"Exists:  {path}")
-
-STARTER_FILES = {
-    # Angular main style import
-    "angular-app/src/styles.scss": '''@import "styles/theme.scss";''',
-
-    # Example Angular component (home)
-    "angular-app/src/app/home/home.component.html": '''\
-<header>
-  <img src="assets/logo.png" alt="JennAI Logo" />
-  <h1>JennAI: Illuminating the Intelligent Frontier</h1>
-</header>
-<!-- Add more sections/components as needed -->
-''',
-
-    "angular-app/src/app/home/home.component.ts": '''\
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-home',
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
-})
-export class HomeComponent {}
-''',
-
-    "angular-app/src/app/home/home.component.scss": '''\
-@import "../../styles/theme.scss";
-/* Add component-specific styles here */
-''',
-
-    # Example Angular app module
-    "angular-app/src/app/app.module.ts": '''\
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { AppComponent } from './app.component';
-import { HomeComponent } from './home/home.component';
-
-@NgModule({
-  declarations: [
-    AppComponent,
-    HomeComponent
-  ],
-  imports: [
-    BrowserModule
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
-})
-export class AppModule { }
-''',
-
-    # Example Angular app component
-    "angular-app/src/app/app.component.ts": '''\
-import { Component } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  template: '<app-home></app-home>',
-  styleUrls: ['./app.component.scss']
-})
-export class AppComponent {}
-''',
-
-    "angular-app/src/app/app.component.scss": '''\
-/* Global app styles can go here */
-''',
-
-    # Example Angular index.html
-    "angular-app/src/index.html": '''\
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>JennAI Angular</title>
-  <base href="/" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
-</head>
-<body>
-  <app-root></app-root>
-</body>
-</html>
-''',
-}
+ANGULAR_APP_DIR = PROJECT_ROOT / "src" / "presentation" / "angular_app"
 
 def main():
-    copy_images()
-    copy_theme_scss()
-    for file_path, content in STARTER_FILES.items():
-        ensure_and_write(PROJECT_ROOT / file_path, content)
-    print("\n✅ Presentation Angular starter files and assets are in place.")
+    """Orchestrates the scaffolding of the Angular presentation layer."""
+    print("--- Angular Presentation Layer Scaffolder ---")
+
+    # 1. Check for Angular CLI
+    try:
+        subprocess.run(["ng", "--version"], check=True, capture_output=True, text=True)
+        print("\n✅ Angular CLI ('ng' command) found.")
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print("\n❌ Angular CLI ('ng' command) not found.")
+        print("   Please install it globally: npm install -g @angular/cli")
+        print("   Then try again.")
+        sys.exit(1)
+
+    # 2. Guide user to run ng new if project doesn't exist
+    if not ANGULAR_APP_DIR.exists() or not (ANGULAR_APP_DIR / "angular.json").exists():
+        print(f"\nINFO: Angular project not found at '{ANGULAR_APP_DIR}'.")
+        print("      You need to scaffold the Angular project first using the Angular CLI.")
+        print("\n--- MANUAL STEP REQUIRED ---")
+        print(f"1. Navigate to the parent directory: cd {ANGULAR_APP_DIR.parent}")
+        print(f"2. Run Angular CLI to create the app: ng new {ANGULAR_APP_DIR.name} --directory {ANGULAR_APP_DIR.name} --skip-git")
+        print("   (Choose 'SCSS' for stylesheet format when prompted).")
+        print("3. Once 'ng new' completes, run this admin task again to inject brand assets.")
+        print("-" * 70)
+        sys.exit(0)  # Exit gracefully, as the next step (asset injection) will be done on the next run.
+
+    print(f"\n✅ Angular project already exists at '{ANGULAR_APP_DIR}'.")
+    print("   The asset injection step will run next if called from the main console.")
 
 if __name__ == "__main__":
     main()

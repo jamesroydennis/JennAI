@@ -18,6 +18,12 @@ PROJECT_ROOT = jennai_root_for_path
 DIRECTORIES = {
     # Top-level directories
     "admin": {"is_package": False},
+    "admin/templates": {"is_package": False},
+    "admin/templates/flask": {"is_package": False},
+    "admin/templates/flask/templates": {"is_package": False},
+    "admin/templates/flask/static": {"is_package": False},
+    "admin/templates/flask/static/css": {"is_package": False},
+    "admin/templates/flask/static/js": {"is_package": False},
     "config": {"is_package": True},
     "core": {"is_package": True},
     "logs": {"is_package": False},
@@ -39,6 +45,12 @@ DIRECTORIES = {
     "src/data/tests": {"is_package": True},
     # Presentation layer
     "src/presentation": {"is_package": True},
+    "src/presentation/tests": {"is_package": True},
+    "src/presentation/angular_app": {"is_package": False},
+    "src/presentation/angular_app/src": {"is_package": False},
+    "src/presentation/angular_app/src/app": {"is_package": False},
+    "src/presentation/angular_app/src/assets": {"is_package": False},
+    "src/presentation/angular_app/src/environments": {"is_package": False},
     "src/presentation/api_server": {"is_package": True},
     "src/presentation/api_server/controllers": {"is_package": True},
     "src/presentation/api_server/flask_app": {"is_package": True},
@@ -50,6 +62,10 @@ DIRECTORIES = {
     "src/presentation/api_server/flask_app/templates": {"is_package": False},
     "src/presentation/api_server/schemas": {"is_package": True},
     "src/presentation/img": {"is_package": False},
+    "src/presentation/react_app": {"is_package": False},
+    "src/presentation/react_app/public": {"is_package": False},
+    "src/presentation/react_app/src": {"is_package": False},
+    "src/presentation/react_app/node_modules": {"is_package": False},
     "src/presentation/web_clients": {"is_package": False},
 }
 

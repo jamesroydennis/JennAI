@@ -1,0 +1,3 @@
+@import 'variables';
+// Add your main styles here
+body { font-family: 'Open Sans', sans-serif; }

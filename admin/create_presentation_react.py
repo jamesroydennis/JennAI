@@ -1,102 +1,36 @@
-import os
+import subprocess
+import sys
 from pathlib import Path
-import shutil
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-BRAND = PROJECT_ROOT / "Brand"
-PUBLIC = PROJECT_ROOT / "react-app/public"
-SRC = PROJECT_ROOT / "react-app/src"
-ASSETS = SRC / "assets"
-STYLES = SRC / "styles"
-
-IMAGE_MAP = {
-    "jennai-logo.png": "logo.png",
-    "favicon_io/favicon.ico": "favicon.ico",
-    "person.jpg": "person-interacting-ai.jpg",
-    "circuit-dark.jpg": "circuit-dark-bg.jpg",
-    "circuit-light.jpg": "circuit-light-bg.jpg",
-    "background.jpg": "abstract-wave-bg.jpg",
-    "heart-blackbackground.jpg": "neon-heart.jpg",
-    "me.jpeg": "your-portrait.jpg",
-    # Add more as needed
-}
-
-def copy_images():
-    ASSETS.mkdir(parents=True, exist_ok=True)
-    for src, dest in IMAGE_MAP.items():
-        src_path = BRAND / src
-        dest_path = ASSETS / dest
-        if src_path.exists():
-            shutil.copyfile(src_path, dest_path)
-            print(f"Copied: {src_path} -> {dest_path}")
-        else:
-            print(f"Missing: {src_path}")
-
-def copy_theme_scss():
-    src = BRAND / "theme.scss"
-    dest = STYLES / "theme.scss"
-    STYLES.mkdir(parents=True, exist_ok=True)
-    if src.exists():
-        shutil.copyfile(src, dest)
-        print(f"Copied: {src} -> {dest}")
-    else:
-        print(f"Missing: {src}")
-
-def ensure_and_write(path, content):
-    path = Path(path)
-    if not path.parent.exists():
-        path.parent.mkdir(parents=True, exist_ok=True)
-    if not path.exists():
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(content)
-        print(f"Created: {path}")
-    else:
-        print(f"Exists:  {path}")
-
-STARTER_FILES = {
-    # Example: App.js
-    "react-app/src/App.js": '''\
-import React from "react";
-import "./styles/theme.scss";
-import logo from "./assets/logo.png";
-
-function App() {
-  return (
-    <div className="App">
-      <header>
-        <img src={logo} alt="JennAI Logo" />
-        <h1>JennAI: Illuminating the Intelligent Frontier</h1>
-      </header>
-      {/* Add more sections/components as needed */}
-    </div>
-  );
-}
-
-export default App;
-''',
-    # Example: index.html
-    "react-app/public/index.html": '''\
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JennAI React</title>
-</head>
-<body>
-  <div id="root"></div>
-</body>
-</html>
-''',
-}
+REACT_APP_DIR = PROJECT_ROOT / "src" / "presentation" / "react_app"
 
 def main():
-    copy_images()
-    copy_theme_scss()
-    for file_path, content in STARTER_FILES.items():
-        ensure_and_write(PROJECT_ROOT / file_path, content)
-    print("\n✅ Presentation React starter files and assets are in place.")
+    """Orchestrates the scaffolding of the React presentation layer."""
+    print("--- React Presentation Layer Scaffolder ---")
+
+    # 1. Check for Node/npm/npx
+    try:
+        subprocess.run(["npx", "--version"], check=True, capture_output=True, text=True)
+        print("\n✅ npx (Node.js) found.")
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print("\n❌ npx (Node.js) not found.")
+        print("   Please install Node.js and npm (preferably using nvm) before proceeding.")
+        sys.exit(1)
+
+    # 2. Guide user to run create-react-app if project doesn't exist
+    if not REACT_APP_DIR.exists() or not (REACT_APP_DIR / "package.json").exists():
+        print(f"\nINFO: React project not found at '{REACT_APP_DIR}'.")
+        print("      You need to scaffold the React project first using create-react-app.")
+        print("\n--- MANUAL STEP REQUIRED ---")
+        print(f"1. Navigate to the parent directory: cd {REACT_APP_DIR.parent}")
+        print(f"2. Run create-react-app: npx create-react-app {REACT_APP_DIR.name}")
+        print("3. Once complete, run this admin task again to inject brand assets.")
+        print("-" * 70)
+        sys.exit(0)  # Exit gracefully, as the next step (asset injection) will be done on the next run.
+
+    print(f"\n✅ React project already exists at '{REACT_APP_DIR}'.")
+    print("   The asset injection step will run next if called from the main console.")
 
 if __name__ == "__main__":
     main()

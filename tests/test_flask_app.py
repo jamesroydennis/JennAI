@@ -2,6 +2,7 @@ import pytest
 from flask import Flask
 
 # This import works because conftest.py adds the project root to sys.path
+from config import config
 from src.presentation.api_server.flask_app.app import create_app
 
 
@@ -31,10 +32,17 @@ def test_homepage_loads_successfully(client):
     WHEN the '/' page is requested (GET)
     THEN check that the response is valid and contains expected content.
     """
+    # --- Read the expected content from the source files ---
+    mission_content = (config.BRAND_DIR / "mission.txt").read_text(encoding="utf-8").strip()
+    # For the vision, we check for a key phrase that should be present after markdown rendering.
+    expected_vision_phrase = "seed the next evolutionary leap"
+
+    # --- Make the request and perform assertions ---
     response = client.get('/')
     assert response.status_code == 200, "Homepage should return a 200 OK status."
-    assert b"Illuminating the Intelligent Frontier" in response.data, "Homepage should contain the main vision title."
-    assert b"Our Core Mission" in response.data, "Homepage should contain the mission section."
+    # Check that the dynamically loaded content is present in the response
+    assert mission_content.encode() in response.data, "Mission statement from mission.txt should be displayed."
+    assert expected_vision_phrase.encode() in response.data, "Key phrase from vision.md should be displayed."
 
 
 def test_404_page_loads_correctly(client):

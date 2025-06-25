@@ -37,29 +37,37 @@
 #     npm --version
 #
 # - Sass CLI (for SCSS compilation):
-#   This project uses the Dart Sass command-line tool to compile .scss files into .css.
-#   The recommended approach is to install it as a local project dependency using npm.
-#   This ensures the project is self-contained and avoids system PATH issues.
-#
-#   1. Initialize a package.json (if you don't have one) and install Sass locally:
-#      # Run this from the project root directory (C:\Users\jarde\Projects\JennAI)
-#      npm install sass --save-dev
-#
-#   2. How to use it in scripts:
-#      Use `npx` to run the locally installed Sass. `npx` is a tool included with npm
-#      that automatically finds and executes the command from your local `node_modules` folder.
-#      Example command in a script (like admin/42.py):
-#          npx sass --watch path/to/input.scss:path/to/output.css
+#     npm install -g sass
+#     # To check if Sass CLI is installed:
+#     #     sass --version
+#     # If you see "'sass' is not recognized" or "command not found", install it with:
+#     #     npm install -g sass
+#     # Usage:
+#     #   Compile a single SCSS file to CSS:
+#     #     sass path/to/input.scss path/to/output.css
+#     #   Example:
+#     #     sass src/presentation/api_server/flask_app/static/css/main.scss src/presentation/api_server/flask_app/static/css/main.css
+#     #   Watch a folder for changes (recommended for development):
+#     #     sass --watch src/presentation/api_server/flask_app/static/css:src/presentation/api_server/flask_app/static/css
+#     # NOTE: Do NOT add 'sass' to requirements.txt or environment.yaml.
+#     #       The Sass CLI is NOT a Python/pip package.
 #
 # - Python Sass (for programmatic SCSS compilation, NOT for command-line use):
 #     conda install -c conda-forge sass
+#     # NOTE: This package is NOT available for Windows via conda-forge.
+#     # It is only available for Linux and macOS.
 #     # This installs the 'python-sass' package, which allows you to compile SCSS from within Python code.
 #     # It does NOT provide the 'sass' command-line tool for frontend workflows.
-#     # Only use this if you need to compile SCSS in Python scripts or Flask extensions.
+#     # Only use this if you need to compile SCSS in Python scripts or Flask extensions, and you are NOT on Windows.
 #     # For most frontend development, use the Dart Sass CLI via npm (see above).
+#
+# - JavaScript Frontend Testing (for Angular/React/Vue, etc.):
+#     # For JS frontend testing (Jasmine, Karma, Cypress, etc.), use npm in your frontend directory:
+#     #   npm install --save-dev jasmine karma karma-chrome-launcher karma-jasmine karma-jasmine-html-reporter
+#     #   npm install --save-dev cypress
+#     # Do NOT add these to environment.yaml or requirements.txt; they are Node.js tools.
 # =============================================================================
-
-name: lily-presents
+name: jennai-root
 channels:
   - pytorch
   - nvidia
@@ -74,6 +82,7 @@ dependencies:
   - torchvision
   - torchaudio
   - pytorch-cuda=11.8
+  - nodejs
   - flask
   - flask-cors
   - flask-assets

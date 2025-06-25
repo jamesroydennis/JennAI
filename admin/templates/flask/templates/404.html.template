@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found - JennAI{% endblock %}
+{% block content %}
+<div style="text-align: center; padding: 50px; color: #333;">
+    <h1 style="font-size: 8em; margin: 0;">404</h1>
+    <h2 style="font-size: 2em;">Page Not Found</h2>
+    <p>The page you are looking for does not exist or has been moved.</p>
+    <a href="{{ url_for('index') }}" class="button">Go to Homepage</a>
+</div>
+{% endblock %}

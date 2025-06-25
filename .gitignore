@@ -1,6 +1,8 @@
 # Node.js
 node_modules/
 package-lock.json
+src/presentation/react_app/node_modules/
+src/presentation/angular_app/node_modules/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
