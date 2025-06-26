@@ -26,12 +26,6 @@ except ImportError:
 
 ALLURE_RESULTS_DIR = PROJECT_ROOT / "allure-results"
 
-# --- Website Paths ---
-FLASK_APP_DIR = PROJECT_ROOT / "src" / "presentation" / "api_server" / "flask_app"
-FLASK_APP_PATH = FLASK_APP_DIR / "app.py"
-SCSS_PATH = FLASK_APP_DIR / "static" / "css" / "main.scss"
-CSS_PATH = FLASK_APP_DIR / "static" / "css" / "main.css"
-
 PROMPT_RETURN_TO_MENU = "\nPress Enter to return to the menu, or Ctrl-C to exit..."
 
 def print_header(title: str):
@@ -172,6 +166,15 @@ The JennAI Admin Console provides the following commands:
     Creates the standard project directory structure as defined in the
     project's configuration. Useful for initial setup or after a clean.
 
+--- Presentation Layer ---
+  Presentation Layer Console
+    Launches a dedicated sub-menu for scaffolding and managing
+    different presentation layers (Flask, Angular, React).
+
+  Mock Data install
+    Launches an interactive console to create or destroy the mock LLM
+    data and the corresponding SQLite database.
+
 --- Environment Management (Advanced) ---
   Update Conda Environment
     Synchronizes your 'jennai-root' conda environment with the 'environment.yaml' file.
@@ -179,20 +182,6 @@ The JennAI Admin Console provides the following commands:
   Reset
     DANGER: Executes a script that completely removes and reinstalls the conda environment.
 """
-
-# --- Build dynamic commands based on config ---
-sass_verbose_flag = " --verbose" if DEBUG_MODE else ""
-
-sass_build_command = f'npx sass{sass_verbose_flag} "{SCSS_PATH}":"{CSS_PATH}"'
-
-# Command to run Flask app only
-flask_run_command = f'{PY_EXEC} "{FLASK_APP_PATH}"'
-
-# Command to run Sass watch and Flask app concurrently
-lily_server_dev_command = (
-    f'npx sass --watch{sass_verbose_flag} "{SCSS_PATH}":"{CSS_PATH}" & '
-    f'{flask_run_command}'
-)
 
 MENU_ACTIONS = [
     {"key": "help", "name": "❓  Help", "is_instruction": True, "help_text": HELP_TEXT},
@@ -219,16 +208,14 @@ MENU_ACTIONS = [
         {"name": "Scan Logs", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "check_logs.py")}"'}]},
     {"key": "tree", "name": "Full-Tree", "steps": [
         {"name": "Display Tree", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "tree.py")}"'}]},
-    {"key": "cleanup", "name": "Clean", "steps": [
-        {"name": "Cleanup", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'}]},
-    {"key": "build_css", "name": "Build Website CSS", "steps": [
-        {"name": "Compile SCSS to CSS", "command": sass_build_command}]},
+    {"key": "cleanup", "name": "Clean Project", "steps": [
+        {"name": "Run Cleanup Script", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'}]},
     {"key": "create_folders", "name": "Initialize/Create Folders", "steps": [
         {"name": "Create Directories", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "create_directories.py")}"'}]},
     {"key": "separator", "name": "──────────────────────────────────"},
-    # --- Web Servers (JennAI-Lily) ---
-    {"key": "jennai_lily_dev", "name": "💮 JennAI-Lily (Dev Mode: Sass Watch & Flask)", "pause_after": True, "steps": [{"name": "Compile SCSS (Watch) and Run Flask Server", "command": lily_server_dev_command, "abort_on_fail": False}]},
-    {"key": "jennai_lily_run_only", "name": "🚀 JennAI-Lily (Run Flask Only)", "pause_after": True, "steps": [{"name": "Run Flask Server", "command": flask_run_command, "abort_on_fail": False}]},
+    # --- Presentation Layer ---
+    {"key": "presentation_console", "name": "🎨 Presentation Layer Console", "pause_after": True, "steps": [{"name": "Launch Presentation Console", "command": f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "42_present.py"}"', "abort_on_fail": False}]},
+    {"key": "mock_data_install", "name": "💾 Mock Data install", "pause_after": True, "steps": [{"name": "Run Mock Data Creation", "command": f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "create_mock_data.py"}"', "abort_on_fail": False}]},
 ]
 
 HIDDEN_ACTIONS = {
