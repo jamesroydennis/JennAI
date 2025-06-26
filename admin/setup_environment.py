@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import subprocess
 import sys
 from InquirerPy import inquirer

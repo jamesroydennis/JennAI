@@ -1,5 +1,3 @@
-# /home/jdennis/Projects/JennAI/tests/test_main_integration.py
-
 import subprocess
 import sys
 from pathlib import Path

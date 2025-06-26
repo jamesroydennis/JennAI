@@ -22,4 +22,14 @@ def create_app(container: DependencyContainer) -> Flask:
     def index():
         return render_template("index.html", app_name=config.APP_NAME)
 
+    # Register error handlers for common HTTP errors
+    @app.errorhandler(404)
+    def page_not_found(e):
+        # The 'e' argument is the error instance, which we don't need to use here.
+        return render_template('404.html', app_name=config.APP_NAME), 404
+
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        return render_template('500.html', app_name=config.APP_NAME), 500
+
     return app

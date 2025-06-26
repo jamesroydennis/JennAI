@@ -3,17 +3,18 @@ import subprocess
 import os
 import sys
 from pathlib import Path
+from typing import Optional, Dict
 from dotenv import load_dotenv # Import load_dotenv
 
 # --- Root Project Path Setup (CRITICAL for Imports) ---
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 # Load environment variables from .env file (if it exists)
-load_dotenv(dotenv_path=PROJECT_ROOT / ".env")
+load_dotenv(dotenv_path=ROOT / ".env")
 from config.config import WHITELIST_ENVIRONMENTS, DEBUG_MODE
-from config.loguru_setup import setup_logging, logger
+from config.loguru_setup import setup_logging, logger # type: ignore
 
 try:
     from InquirerPy import inquirer
@@ -29,7 +30,7 @@ except ImportError:
 
 # ==============================================================================
 
-ALLURE_RESULTS_DIR = PROJECT_ROOT / "allure-results"
+ALLURE_RESULTS_DIR = ROOT / "allure-results"
 
 PROMPT_RETURN_TO_MENU = "\nPress Enter to return to the menu, or Ctrl-C to exit..."
 
@@ -48,7 +49,7 @@ def print_formatted_help(text_block: str):
     console = Console()
     console.print(text_block, markup=False)
 
-def run_command(command: str, cwd: Path = PROJECT_ROOT) -> int:
+def run_command(command: str, cwd: Path = ROOT, env: Optional[Dict[str, str]] = None) -> int:
     try:
         process = subprocess.Popen(
             command,
@@ -58,6 +59,7 @@ def run_command(command: str, cwd: Path = PROJECT_ROOT) -> int:
             cwd=cwd,
             text=True,
             encoding="utf-8",
+            env={**os.environ, **(env or {})}, # Merge current environment with custom env_vars
         )
         try:
             for line in iter(process.stdout.readline, ""):
@@ -114,7 +116,10 @@ def _run_steps(action):
         if len(steps) > 1:
             color_print([("cyan", f"\n--- Step {i} of {len(steps)}: {step['name']} ---")])
 
-        return_code = run_command(step["command"])
+        # Extract environment variables for the current step, if any
+        step_env_vars = step.get("env_vars")
+
+        return_code = run_command(step["command"], env=step_env_vars)
         if return_code != 0:
             all_steps_ok = False
             if step.get("abort_on_fail", True):
@@ -190,21 +195,21 @@ The JennAI Admin Console provides the following commands:
 
 # --- Centralized Pytest Command ---
 # Let pytest discover paths from pytest.ini to maintain a single source of truth.
-PYTEST_COMMAND = f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'
+PYTEST_COMMAND = f'{PY_EXEC} -m pytest --alluredir="{str(ROOT / "allure-results")}" --clean-alluredir'
 
 # --- Centralized Step Definitions for DRY Principle ---
 CLEANUP_STEPS = [
-    {"name": "Cleaning Project", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'},
-    {"name": "Creating Directories", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "create_directories.py")}"'},
+    {"name": "Cleaning Project", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "cleanup.py")}"'},
+    {"name": "Creating Directories", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "create_directories.py")}"'},
 ]
 TESTING_STEPS = [
     {"name": "Run Tests", "command": PYTEST_COMMAND},
-    {"name": "Generate Allure Environment", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "generate_allure_environment.py")}"', "abort_on_fail": False},
+    {"name": "Generate Allure Environment", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "generate_allure_environment.py")}"', "abort_on_fail": False},
 ]
-REPORTING_STEP = {"name": "Serve Report", "command": f'"{ALLURE_EXEC}" serve "{str(ALLURE_RESULTS_DIR)}"', "abort_on_fail": False}
+REPORTING_STEP = {"name": "Serve Report", "command": f'"{ALLURE_EXEC}" serve "{str(ROOT / "allure-results")}"', "abort_on_fail": False}
 DIAGNOSTIC_STEPS = [
-    {"name": "Display .env Contents", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_env.py")}"', "abort_on_fail": False},
-    {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_config.py")}"', "abort_on_fail": False}
+    {"name": "Display .env Contents", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "show_env.py")}"', "abort_on_fail": False},
+    {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "show_config.py")}"', "abort_on_fail": False}
 ]
 
 MENU_ACTIONS = [
@@ -217,36 +222,38 @@ MENU_ACTIONS = [
     {"key": "regression_and_report", "name": "Regression Testing & Report", "pause_after": True, "steps": CLEANUP_STEPS + TESTING_STEPS + [REPORTING_STEP] + DIAGNOSTIC_STEPS},
     {"key": "separator", "name": "──────────────────────────────────"},
     {"key": "check_logs", "name": "Check Logs", "steps": [
-        {"name": "Scan Logs", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "check_logs.py")}"'}]},
+        {"name": "Scan Logs", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "check_logs.py")}"'}]},
     {"key": "tree", "name": "Full-Tree", "steps": [
-        {"name": "Display Tree", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "tree.py")}"'}]},
+        {"name": "Display Tree", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "tree.py")}"'}]},
     {"key": "cleanup", "name": "Clean Project", "steps": [
-        {"name": "Run Cleanup Script", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'}]},
+        {"name": "Run Cleanup Script", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "cleanup.py")}"'}]},
     {"key": "create_folders", "name": "Initialize/Create Folders", "steps": [
-        {"name": "Create Directories", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "create_directories.py")}"'}]},
+        {"name": "Create Directories", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "create_directories.py")}"'}]},
     {"key": "show_config", "name": "Show Configuration", "pause_after": True, "steps": [
-        {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_config.py")}"'}]},
+        {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "show_config.py")}"'}]},
+    {"key": "check_env", "name": "Check Env Vars", "pause_after": True, "steps": [
+        {"name": "Verify Environment Variables", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "check_env_vars.py")}"'}]},
     {"key": "separator", "name": "──────────────────────────────────"},
     # --- Presentation Layer ---
-    {"key": "presentation_console", "name": "🎨 Presentation Layer Console", "pause_after": True, "steps": [{"name": "Launch Presentation Console", "command": f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "42_present.py"}"', "abort_on_fail": False}]},
-    {"key": "mock_data_install", "name": "💾 Mock Data install", "pause_after": True, "steps": [{"name": "Run Mock Data Creation", "command": f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "create_mock_data.py"}"', "abort_on_fail": False}]},
+    {"key": "presentation_console", "name": "🎨 Presentation Layer Console", "pause_after": True, "steps": [{"name": "Launch Presentation Console", "command": f'{PY_EXEC} "{ROOT / "admin" / "42_present.py"}"', "abort_on_fail": False}]},
+    {"key": "mock_data_install", "name": "💾 Mock Data install", "pause_after": True, "steps": [{"name": "Run Mock Data Creation", "command": f'{PY_EXEC} "{ROOT / "admin" / "create_mock_data.py"}"', "abort_on_fail": False}]},
 ]
 
 HIDDEN_ACTIONS = {
     "install": {"key": "install", "name": "Run Project Installation (setup.py)", "confirm": True,
      "confirm_message": "This will execute 'setup.py', which may perform destructive actions. Continue?",
-     "steps": [{"name": "Run Setup", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "setup.py")}"'}]},
+     "steps": [{"name": "Run Setup", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "setup.py")}"'}]},
     "conda_update": {"key": "conda_update", "name": "Update Conda Environment", "confirm": True,
      "confirm_message": (
          "This will synchronize your Conda environment with 'environment.yaml'.\n"
          "IMPORTANT: This should be run from your 'base' environment for best results.\n\n"
          "Continue?"
      ),
-     "steps": [{"name": "Run Conda Update", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "conda_update.py")}"'}]},
+     "steps": [{"name": "Run Conda Update", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "conda_update.py")}"'}]},
     "full_reset": {"key": "full_reset", "name": "Reset", "confirm": True, "pause_after": True,
      "confirm_message": "This action performs a full destruction of data and the conda environment. You will be directed to a reset script where deletion, reset, and re-creation will begin.",
      "steps": [
-         {"name": "Run Full Reset", "command": f'"{PROJECT_ROOT / "full_reset.bat"}"'}
+         {"name": "Run Full Reset", "command": f'"{ROOT / "admin" / "full_reset.bat"}"', "env_vars": {"ROOT": str(ROOT)}}
      ]}
 }
 

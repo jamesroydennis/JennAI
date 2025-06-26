@@ -1,5 +1,3 @@
-# /home/jdennis/Projects/JennAI/src/business/interfaces/IUserManager.py
-
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional, List
 

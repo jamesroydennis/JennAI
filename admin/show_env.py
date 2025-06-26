@@ -1,12 +1,13 @@
+#!/usr/bin/env python
 import sys
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 
 # --- Root Project Path Setup ---
-project_root = Path(__file__).resolve().parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 def show_env_file():
     """
@@ -14,7 +15,7 @@ def show_env_file():
     Masks values for keys containing sensitive keywords for security.
     """
     console = Console()
-    env_file_path = project_root / ".env"
+    env_file_path = ROOT / ".env"
 
     table = Table(
         title="[bold yellow].env File Contents[/bold yellow]",

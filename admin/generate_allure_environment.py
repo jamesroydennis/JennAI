@@ -1,16 +1,17 @@
+#!/usr/bin/env python
 import sys
 import os
 import platform
 from pathlib import Path
 
 # --- Root Project Path Setup ---
-project_root = Path(__file__).resolve().parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 # Load environment variables first, then config
 from dotenv import load_dotenv
-load_dotenv(dotenv_path=project_root / ".env")
+load_dotenv(dotenv_path=ROOT / ".env")
 
 from config import config
 from config.loguru_setup import setup_logging, logger

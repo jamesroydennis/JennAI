@@ -1,11 +1,12 @@
+#!/usr/bin/env python
 import shutil
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-BRAND_DIR = PROJECT_ROOT / "src" / "presentation" / "brand"
-FLASK_STATIC_IMG = PROJECT_ROOT / "src" / "presentation" / "api_server" / "flask_app" / "static" / "img"
-FLASK_STATIC_CSS = PROJECT_ROOT / "src" / "presentation" / "api_server" / "flask_app" / "static" / "css"
-FLASK_TEMPLATES = PROJECT_ROOT / "src" / "presentation" / "api_server" / "flask_app" / "templates"
+ROOT = Path(__file__).resolve().parent.parent
+BRAND_DIR = ROOT / "src" / "presentation" / "brand"
+FLASK_STATIC_IMG = ROOT / "src" / "presentation" / "api_server" / "flask_app" / "static" / "img"
+FLASK_STATIC_CSS = ROOT / "src" / "presentation" / "api_server" / "flask_app" / "static" / "css"
+FLASK_TEMPLATES = ROOT / "src" / "presentation" / "api_server" / "flask_app" / "templates"
 
 # List of files to copy (add more as needed)
 FILES_TO_COPY = [

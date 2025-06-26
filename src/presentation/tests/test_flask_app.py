@@ -1,59 +1,49 @@
-import pytest
-from flask import Flask
-
-# This import works because conftest.py adds the project root to sys.path
-from src.presentation.api_server.flask_app.app import create_app
-
-
-@pytest.fixture(scope="module")
-def app():
-    """
-    Create and configure a new app instance for each test module.
-    Using 'module' scope is efficient as the app setup is needed only once.
-    """
-    # The create_app factory is used to set up the app instance.
-    flask_app = create_app()
-
-    # Establish an application context before running the tests.
-    with flask_app.app_context():
-        yield flask_app
-
-
-@pytest.fixture(scope="module")
-def client(app: Flask):
-    """A test client for the app, created once per module."""
-    return app.test_client()
-
-
 def test_homepage_loads_successfully(client):
     """
     GIVEN a Flask application configured for testing
-    WHEN the '/' page is requested (GET)
-    THEN check that the response is valid and contains expected content.
+    WHEN the '/' route is requested (GET)
+    THEN check that the response is valid and contains expected content
     """
     response = client.get('/')
-    assert response.status_code == 200, "Homepage should return a 200 OK status."
-    assert b"Illuminating the Intelligent Frontier" in response.data, "Homepage should contain the main vision title."
-    assert b"Our Core Mission" in response.data, "Homepage should contain the mission section."
-
+    assert response.status_code == 200, "The homepage should return a 200 OK status."
+    # Check for content from the index.html template
+    assert b"Welcome to JennAI" in response.data, "The welcome message should be present."
+    assert b'alt="JennAI Logo"' in response.data, "The logo's alt text should be present."
 
 def test_404_page_loads_correctly(client):
     """
     GIVEN a Flask application configured for testing
-    WHEN a non-existent page is requested (GET)
-    THEN check that the response is a 404 and contains expected content.
+    WHEN a non-existent route is requested (GET)
+    THEN check that a 404 Not Found response is returned with the correct content
     """
-    response = client.get('/non-existent-page')
-    assert response.status_code == 404, "Non-existent page should return a 404 Not Found status."
-    assert b"<title>Page Not Found - JennAI</title>" in response.data, "404 page should contain the correct title."
+    response = client.get('/this-route-does-not-exist')
+    assert response.status_code == 404, "A non-existent page should return a 404 status."
+    assert b"404 - Page Not Found" in response.data, "The 404 page title should be present."
+    assert b"The page you are looking for does not exist." in response.data, "The 404 page message should be present."
 
-
-def test_500_page_loads_correctly(client):
+def test_500_page_loads_correctly(app, client):
     """
     GIVEN a Flask application configured for testing
-    WHEN an internal server error occurs (via a dedicated test route)
-    THEN check that the response is a 500 and contains expected content.
+    WHEN a route that raises an exception is requested (GET)
+    THEN check that a 500 Internal Server Error response is returned with the correct content
     """
-    response = client.get('/test-500-error') # Request the route designed to trigger a 500
-    assert response.status_code == 500, "Internal server error should return a 500 status."
-    assert b"<title>Internal Server Error - JennAI</title>" in response.data, "500 page should contain the correct title."
+    # To test a 500 error, we need a route that reliably fails.
+    # We can add one to the app just for this test.
+    @app.route('/test-500-error')
+    def error_route():
+        raise Exception("This is a simulated internal server error for testing.")
+
+    # By default, Flask's test client propagates exceptions when TESTING is True.
+    # We must temporarily disable this to test the rendered 500 page.
+    app.config['TESTING'] = False
+
+    # Now, request the route that we know will cause an error.
+    response = client.get('/test-500-error')
+
+    # It's good practice to restore the config after the test, although the
+    # function-scoped fixture will handle this for the next test anyway.
+    app.config['TESTING'] = True
+
+    assert response.status_code == 500, "A route with an exception should return a 500 status."
+    assert b"500 - Internal Server Error" in response.data, "The 500 page title should be present."
+    assert b"Something went wrong on our end." in response.data, "The 500 page message should be present."

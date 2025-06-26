@@ -1,18 +1,20 @@
-# c/Users/jarde/Projects/JennAI/admin/tree.py
+#!/usr/bin/env python
+
 
 import sys
 import subprocess
 from pathlib import Path
+from typing import Optional, List
 
 # --- Root Project Path Setup (CRITICAL for Imports) ---
-jennai_root_for_path = Path(__file__).resolve().parent.parent
-if str(jennai_root_for_path) not in sys.path:
-    sys.path.insert(0, str(jennai_root_for_path))
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from loguru import logger
 from config.loguru_setup import setup_logging
 
-def print_basic_tree(root_dir: Path, prefix: str = "", ignore_list: list = None):
+def print_basic_tree(root_dir: Path, prefix: str = "", ignore_list: Optional[List[str]] = None):
     """
     A simple, recursive Python-based directory tree printer.
     This serves as a fallback if 'eza' is not installed.
@@ -87,8 +89,8 @@ def run_eza_tree(project_root: Path) -> bool:
 if __name__ == "__main__":
     setup_logging(debug_mode=True)
     logger.info("Loguru setup complete for tree.py.")
-    if not run_eza_tree(jennai_root_for_path):
+    if not run_eza_tree(ROOT):
         logger.warning("'eza' command not found or failed. Falling back to basic Python tree view.")
         print("\n------------------- Project Tree (Basic) -------------------")
-        print_basic_tree(jennai_root_for_path)
+        print_basic_tree(ROOT)
         print("----------------------------------------------------------")

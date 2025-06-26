@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys
 import importlib
 import shutil
@@ -7,9 +8,9 @@ from pathlib import Path
 # --- Project Root Path Setup ---
 # This allows the script to import modules from the project (e.g., config)
 # when run from any directory.
-project_root = Path(__file__).resolve().parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from config import config
 

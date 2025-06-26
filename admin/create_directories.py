@@ -1,17 +1,16 @@
-# c:\Users\jarde\Projects\JennAI\admin\create_directories.py
+#!/usr/bin/env python
+
 import os
 import sys
 from pathlib import Path
 
 # --- Root Project Path Setup (CRITICAL for Imports) ---
-jennai_root_for_path = Path(__file__).resolve().parent.parent
-if str(jennai_root_for_path) not in sys.path:
-    sys.path.insert(0, str(jennai_root_for_path))
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from loguru import logger
 from config.loguru_setup import setup_logging
-
-PROJECT_ROOT = jennai_root_for_path
 
 # Define the directory structure.
 # 'is_package': True will create an __init__.py file.
@@ -82,7 +81,7 @@ def main():
     logger.info("Creating project directories...")
     try:
         for dir_path, properties in DIRECTORIES.items():
-            full_path = PROJECT_ROOT / dir_path
+            full_path = ROOT / dir_path
             full_path.mkdir(parents=True, exist_ok=True)
             logger.success(f"Ensured directory exists: {dir_path}")
             if properties["is_package"]:

@@ -9,9 +9,9 @@ FLASK_APP_DIR = Path(__file__).resolve().parent
 API_SERVER_DIR = FLASK_APP_DIR.parent
 PRESENTATION_DIR = API_SERVER_DIR.parent
 SRC_DIR = PRESENTATION_DIR.parent
-PROJECT_ROOT = SRC_DIR.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+ROOT = SRC_DIR.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from src.presentation.api_server.flask_app import create_app
 from core.dependency_container import DependencyContainer

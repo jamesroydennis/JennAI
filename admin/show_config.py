@@ -1,15 +1,16 @@
+#!/usr/bin/env python
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
 # --- Root Project Path Setup ---
 # This must be done before importing from the project's config module.
-project_root = Path(__file__).resolve().parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 # Load environment variables from .env file (if it exists)
-load_dotenv(dotenv_path=project_root / ".env")
+load_dotenv(dotenv_path=ROOT / ".env")
 
 from config import config # Now we can import config
 from rich.console import Console

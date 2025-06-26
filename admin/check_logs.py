@@ -1,19 +1,21 @@
-# admin/check_logs.py (Conceptual Example)
+#!/usr/bin/env python
+
 import re
 from pathlib import Path
 import argparse
+from typing import Optional, List
 
 # --- Root Project Path Setup (if importing project modules like logger config) ---
 import sys
-jennai_root_for_path = Path(__file__).resolve().parent.parent
-if str(jennai_root_for_path) not in sys.path:
-    sys.path.insert(0, str(jennai_root_for_path))
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from loguru import logger # Using logger for this script's own messages
 from config.loguru_setup import setup_logging
 # from config.config import DEBUG_MODE # If you want to use global debug mode
 
-def parse_log_file(log_file_path: Path, error_patterns: list, warning_patterns: list = None):
+def parse_log_file(log_file_path: Path, error_patterns: List[str], warning_patterns: Optional[List[str]] = None):
     """
     Parses a log file for specified error and warning patterns.
     """
@@ -76,8 +78,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    project_root = Path(__file__).resolve().parent.parent
-    log_file_to_scan = project_root / args.log_file
+    # Use the standardized ROOT variable
+    log_file_to_scan = ROOT / args.log_file
 
     # Define patterns to look for.
     # These are case-insensitive regular expressions.

@@ -1,7 +1,5 @@
-# /home/jdennis/Projects/JennAI/src/business/interfaces/IAIService.py
-
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 class IAIService(ABC):
     """
@@ -11,7 +9,7 @@ class IAIService(ABC):
     """
 
     @abstractmethod
-    def generate_text(self, prompt: str, options: Dict[str, Any] = None) -> str:
+    def generate_text(self, prompt: str, options: Optional[Dict[str, Any]] = None) -> str:
         """
         Generates text based on a given prompt and optional parameters.
 
@@ -25,7 +23,7 @@ class IAIService(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def analyze_image(self, image_data: bytes, options: Dict[str, Any] = None) -> Dict[str, Any]:
+    def analyze_image(self, image_data: bytes, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Analyzes an image and returns insights.
 

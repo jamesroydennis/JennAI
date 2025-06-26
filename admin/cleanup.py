@@ -1,4 +1,5 @@
-# /home/jdennis/Projects/JennAI/admin/cleanup.py
+#!/usr/bin/env python
+
 
 import sys
 import shutil
@@ -8,9 +9,9 @@ from pathlib import Path
 # --- Root Project Path Setup (CRITICAL for Imports) ---
 # This block ensures the main /JennAI project root is always on Python's sys.path.
 # This allows centralized modules (config, core) to be imported.
-jennai_root_for_path = Path(__file__).resolve().parent.parent # Go up two levels from admin/script.py to JennAI/
-if str(jennai_root_for_path) not in sys.path:
-    sys.path.insert(0, str(jennai_root_for_path)) # Insert at the beginning for higher priority
+ROOT = Path(__file__).resolve().parent.parent # Go up two levels from admin/script.py to JennAI/
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT)) # Insert at the beginning for higher priority
 
 
 from loguru import logger # Import the logger instance
@@ -22,11 +23,11 @@ def main():
     temporary folders within the JennAI project root.
     """
     try:
-        # Use the globally defined project root path for simplicity and consistency.
-        jennai_root_path = jennai_root_for_path
+        # Use the standardized ROOT path.
+        jennai_root_path = ROOT
 
         if not jennai_root_path.exists() or not jennai_root_path.is_dir():
-            logger.error(f"JennAI project root not found or is not a directory at calculated path: {jennai_root_path}")
+            logger.error(f"Project root not found or is not a directory at calculated path: {jennai_root_path}")
             logger.error("Please ensure the script is located in the 'admin' subdirectory of your project.")
             return 1 # Indicate an error
 
@@ -67,7 +68,8 @@ def main():
             '.pytest_cache',
             '.virtual_documents',
             'allure-results', # Add Allure results directory
-            'allure-report'   # Add Allure report directory
+            'allure-report',  # Add Allure report directory
+            '.ipynb_checkpoints' # Add Jupyter Notebook checkpoints
         ]
 
         logger.info(f"Starting comprehensive cleanup under JennAI root: {jennai_root_path}")

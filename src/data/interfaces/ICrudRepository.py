@@ -1,5 +1,3 @@
-# /home/jdennis/Projects/JennAI/src/data/interfaces/ICrudRepository.py
-
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, List, Optional, Any
 

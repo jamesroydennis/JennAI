@@ -1,4 +1,3 @@
-# c:/Users/jarde/Projects/JennAI/conftest.py
 import os
 import sys
 from pathlib import Path
@@ -6,13 +5,13 @@ from dotenv import load_dotenv  # Import load_dotenv
 import pytest
 # --- Root Project Path Setup (CRITICAL for Imports) ---
 # This ensures that conftest.py can import from your project's modules (config, core, etc.)
-jennai_root_for_path = Path(__file__).resolve().parent # conftest.py is in the project root
-if str(jennai_root_for_path) not in sys.path:
-    sys.path.insert(0, str(jennai_root_for_path))
+ROOT = Path(__file__).resolve().parent # conftest.py is in the project root
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 # Load environment variables from .env file BEFORE importing config
 # This ensures DEBUG_MODE and other settings are correctly read.
-load_dotenv(dotenv_path=jennai_root_for_path / ".env")
+load_dotenv(dotenv_path=ROOT / ".env")
 
 from config import config # Import the entire config module
 from config.loguru_setup import setup_logging, logger
