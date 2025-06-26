@@ -1,6 +1,176 @@
-// Theme variables
+// Super Awesome Website Theme - Main Stylesheet
+
+// --- Google Font Imports ---
+// Inter for Headings: Modern, clean, highly legible, optimized for UI
+// Open Sans for Body: Highly readable, versatile, humanist sans-serif
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Open+Sans:wght@400;600;700&display=swap');
-$font-heading: 'Inter', sans-serif;
+
+// --- Font Variables ---
+$font-heading: 'Inter', sans-serif; // <-- UPDATED to Inter
 $font-body: 'Open Sans', sans-serif;
-$theme-background: #87CEEB;
-$theme-font: #333333;
+
+
+// --- Base Colors (from your palette) ---
+$theme-background: #87CEEB;    // NOW the Sky Blue for body background
+$theme-font: #333333;        // Dark grey for text
+
+// Header & Footer Colors (These remain as defined before, but you might re-evaluate them)
+// For example, if header is also #87CEEB, you might need a different color for the text/logo.
+// Given your original intent, I'll keep them distinct from the new body background for now.
+$theme-primary: #87CEEB;     // Original primary - currently same as body background.
+                             // You might want to pick a new 'header/footer' color if body is this!
+$theme-accent-1: rgb(197, 71, 78); // Reddish tone - for borders, active states, etc.
+$theme-accent-2: rgb(135, 206, 235); // Lighter Sky Blue - for links, hover effects
+
+// --- Intermediate/Utility Colors ---
+$theme-intermediate-dark-red: $theme-accent-1;
+$theme-intermediate-light-blue: $theme-accent-2;
+
+// --- Status Colors ---
+$status-success: #28a745; // Green for success/positive actions
+$status-warning: #ffc107; // Yellow for warnings/caution
+$status-error: #dc3545;    // Red for errors/alerts
+$status-info: #17a2b8;     // Optional: Blue for informational messages
+
+// --- Logo Specific Variables ---
+$logo-image-path: '../images/vivid-ai-jennai-logo.png'; // Example path
+$logo-height-desktop: 80px; // Adjust as needed for desktop view
+$logo-height-mobile: 50px;   // Adjust as needed for mobile view
+
+// --- General Body Styles ---
+body {
+  background-color: $theme-background; // Updated to #87CEEB
+  color: $theme-font;
+  font-family: $font-body; // Open Sans
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
+// --- Header & Footer Styles ---
+header {
+  // If your body background is now #87CEEB, you might want your header
+  // to be a different color to provide visual separation.
+  // For now, it will also be #87CEEB (your $theme-primary) as per previous.
+  // Consider changing $theme-primary to a darker blue or one of your accents.
+  background-color: $theme-primary;
+  color: $theme-font; // Using the dark font color for better contrast on a light header
+  padding: 1em 2em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+footer {
+  background-color: $theme-primary;
+  color: $theme-font; // Using the dark font color for better contrast on a light footer
+  padding: 1em 2em;
+  text-align: center;
+}
+
+// --- Logo Styles ---
+.logo {
+  display: block;
+  max-width: 100%;
+  height: $logo-height-desktop;
+  object-fit: contain;
+  background-image: url($logo-image-path);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center left;
+  text-indent: -9999px;
+  overflow: hidden;
+  width: auto;
+
+  @media (max-width: 768px) {
+    height: $logo-height-mobile;
+    width: auto;
+  }
+}
+
+// --- Navigation Styles ---
+nav {
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+  }
+  li {
+    margin-left: 20px;
+  }
+  a {
+    color: $theme-font; // Dark font color for contrast on the light background
+    text-decoration: none;
+    font-weight: bold;
+    &:hover {
+      color: $theme-accent-1; // Reddish accent on hover for navigation
+    }
+  }
+}
+
+// --- Heading Styles ---
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-heading; // <-- NOW INTER
+  color: $theme-intermediate-dark-red; // Using the reddish accent for headings to stand out
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+// --- Link Styles ---
+a {
+  color: $theme-accent-1; // Using the reddish accent for links
+  text-decoration: none;
+  &:hover {
+    color: darken($theme-accent-1, 15%); // Slightly darker red on hover
+    text-decoration: underline;
+  }
+}
+
+// --- Button Styles ---
+.button {
+  background-color: $theme-accent-1;
+  color: white;
+  border: none;
+  padding: 0.8em 1.5em;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease;
+  &:hover {
+    background-color: darken($theme-accent-1, 10%);
+  }
+}
+
+// --- Status Message Styles ---
+.message {
+  padding: 0.75em 1.25em;
+  margin-bottom: 1em;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+}
+
+.message-success {
+  color: #155724;
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+}
+
+.message-warning {
+  color: #856404;
+  background-color: #fff3cd;
+  border-color: #ffeeba;
+}
+
+.message-error {
+  color: #721c24;
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+}
+
+.message-info {
+  color: #0c5460;
+  background-color: #d1ecf1;
+  border-color: #bee5eb;
+}

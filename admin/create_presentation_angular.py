@@ -2,8 +2,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-ANGULAR_APP_DIR = PROJECT_ROOT / "src" / "presentation" / "angular_app"
+# --- Root Project Path Setup (CRITICAL for Imports) ---
+jennai_root_for_path = Path(__file__).resolve().parent.parent
+if str(jennai_root_for_path) not in sys.path:
+    sys.path.insert(0, str(jennai_root_for_path))
+from config.config import SRC_DIR
+
+ANGULAR_APP_DIR = SRC_DIR / "presentation" / "angular_app"
 
 def main():
     """Orchestrates the scaffolding of the Angular presentation layer."""

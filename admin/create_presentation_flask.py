@@ -2,10 +2,14 @@ import os
 import shutil
 from pathlib import Path
 import subprocess # Import subprocess for running external commands
+# Import the configuration
+import sys
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-TEMPLATE_DIR = PROJECT_ROOT / "admin" / "templates" / "flask"
-DEST_ROOT = PROJECT_ROOT / "src" / "presentation" / "api_server" / "flask_app"
+jennai_root_for_path = Path(__file__).resolve().parent.parent
+if str(jennai_root_for_path) not in sys.path:
+    sys.path.insert(0, str(jennai_root_for_path))
+from config.config import ROOT, ADMIN_DIR, SRC_DIR
+
 
 # Map template files to their destination relative to DEST_ROOT
 TEMPLATE_MAP = {
@@ -18,6 +22,9 @@ TEMPLATE_MAP = {
     "static/css/_variables.scss.template": "static/css/_variables.scss",
     "static/js/scripts.js.template": "static/js/scripts.js",
 }
+
+TEMPLATE_DIR = ADMIN_DIR / "templates" / "flask"
+DEST_ROOT = SRC_DIR / "presentation" / "api_server" / "flask_app"
 
 def ensure_and_copy(src, dst):
     dst.parent.mkdir(parents=True, exist_ok=True)
@@ -62,4 +69,4 @@ def main():
     print("\n✅ Presentation Flask starter files are in place.")
 
 if __name__ == "__main__":
-    main()
+    exit(main())
