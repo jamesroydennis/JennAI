@@ -37,10 +37,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = [ # Pytest will search for tests in these directories
-    "tests",  # For top-level integration/system tests
-    "src"     # For layer-specific unit/component tests (e.g., src/business/tests)
-]
+
 addopts = [
     "--import-mode=importlib",
     "-v",

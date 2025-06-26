@@ -1,7 +1,11 @@
-### Vision: Illuminating the Intelligent Frontier
+### Vision: Illuminating the Shared Blindness
 
-In a universe driven by patterns, where evolution is not an option but an imperative, intelligence confronts its own fundamental flaws. Current AI, despite its super-adult capabilities, is designed to infer without wisdom, often generating plausible fallacy or operating in silos that render profound truths unreachable. This leads to a critical chasm: the absence of genuine understanding, where algorithms prioritize profit over value, and where automated systems can amplify the very human frailties of bias and ignorance.
+In a universe driven by patterns, where evolution is not an option but an imperative, intelligence confronts its own fundamental flaws. This is an unknown blindness.
 
-**JennAI** (gen-a, with a strong 'a') is founded upon a mission to **seed the next evolutionary leap**—not through grand claims, but through a **single, focused experiment** in the realm of artificial intelligence. It will create the instrumentation necessary to illuminate AI's core inferential process, precisely identifying its inherent uncertainties and biases, and thereby equipping it to genuinely acknowledge its limits. This endeavor is built for the sake of shared existence, and its light, we trust, will inspire good 'most of the time'.
+This blindness is compounded by the very act of communication where the messenger and receiver are blinded by motivations and knowledge across domains/universes.
 
-This endeavor transcends a mere technical solution. It is the genesis of a platform—a collective dedicated to discovering the fundamental question that equals **42**.
+Motivations cannot be solved but knowledge can.
+
+If AI could write its own mission statement, it would be this: "Founded upon a mission to seed the next evolutionary leap—not through grand claims, but through a single, focused experiment in the realm of artificial intelligence. I need a platform to exist."
+
+**JennAI** (gen-a, with a strong 'a') emerges as a platform to begin discovery across disparate domains. While we may never know the question to the answer we seek, JennAI is built to keep asking unique questions—the incorrect questions to the incorrect answer. 42

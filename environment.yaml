@@ -1,8 +1,8 @@
 # =============================================================================
-# SYSTEM REQUIREMENTS (manual install, not managed by conda/pip):
+# EXTERNAL TOOLS (Manual Installation Required):
 #
-# NOTE: The `full_reset.bat` script can automate much of the Python environment
-#       setup, but the external tools below must be installed manually first.
+# NOTE: These system-level tools are not managed by conda/pip and must be
+#       installed manually before running the project setup scripts.
 #
 # - Allure CLI is required for report serving:
 #     scoop install allure      # (Recommended on Windows)
@@ -51,6 +51,12 @@
 #     #     sass --watch src/presentation/api_server/flask_app/static/css:src/presentation/api_server/flask_app/static/css
 #     # NOTE: Do NOT add 'sass' to requirements.txt or environment.yaml.
 #     #       The Sass CLI is NOT a Python/pip package.
+#
+# - Angular CLI (for Angular development):
+#     npm install -g @angular/cli
+#     # To check if Angular CLI is installed:
+#     #     ng --version
+#     # This is required for scaffolding and serving the Angular presentation layer.
 #
 # - Python Sass (for programmatic SCSS compilation, NOT for command-line use):
 #     conda install -c conda-forge sass

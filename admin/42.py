@@ -187,20 +187,21 @@ MENU_ACTIONS = [
     {"key": "help", "name": "❓  Help", "is_instruction": True, "help_text": HELP_TEXT},
     {"key": "separator", "name": "──────────────────────────────────"},
     {"key": "test", "name": "Test", "steps": [
-        {"name": "Run Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'}]},
+        {"name": "Run Tests", "command": f'{PY_EXEC} -m pytest src/business/tests src/data/tests tests/test_00_system_dependencies.py tests/test_cuda.py tests/test_main_integration.py --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'}
+    ]},
     {"key": "test_and_report", "name": "Test & Report", "pause_after": True, "steps": [
-        {"name": "Run Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'},
-        {"name": "Serve Report", "command": f'"{ALLURE_EXEC}" serve "{str(ALLURE_RESULTS_DIR)}"', "abort_on_fail": False}
+        {"name": "Run Tests", "command": f'{PY_EXEC} -m pytest src/business/tests src/data/tests tests/test_00_system_dependencies.py tests/test_cuda.py tests/test_main_integration.py --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'},
+        {"name": "Serve Report", "command": f'"{ALLURE_EXEC}" serve "{str(ALLURE_RESULTS_DIR)}"', "abort_on_fail": False} 
     ]},
     {"key": "regression", "name": "Regression Testing", "steps": [
         {"name": "Cleaning Project", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'},
         {"name": "Creating Directories", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "create_directories.py")}"'},
-        {"name": "Running Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'}
+        {"name": "Running Tests", "command": f'{PY_EXEC} -m pytest src/business/tests src/data/tests tests/test_00_system_dependencies.py tests/test_cuda.py tests/test_main_integration.py --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'}
     ]},
     {"key": "regression_and_report", "name": "Regression Testing & Report", "pause_after": True, "steps": [
         {"name": "Cleaning Project", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'},
         {"name": "Creating Directories", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "create_directories.py")}"'},
-        {"name": "Running Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'},
+        {"name": "Running Tests", "command": f'{PY_EXEC} -m pytest src/business/tests src/data/tests tests/test_00_system_dependencies.py tests/test_cuda.py tests/test_main_integration.py --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'},
         {"name": "Serve Report", "command": f'"{ALLURE_EXEC}" serve "{str(ALLURE_RESULTS_DIR)}"', "abort_on_fail": False}
     ]},
     {"key": "separator", "name": "──────────────────────────────────"},
