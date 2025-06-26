@@ -19,7 +19,7 @@ try:
     from InquirerPy import inquirer
     from InquirerPy.base.control import Choice
     from InquirerPy.separator import Separator
-    from InquirerPy.utils import color_print  # Still used for headers
+    from InquirerPy.utils import color_print
     from rich.console import Console
 except ImportError:
     print("Error: InquirerPy is not installed or not found in the current environment.")
@@ -36,7 +36,7 @@ PROMPT_RETURN_TO_MENU = "\nPress Enter to return to the menu, or Ctrl-C to exit.
 def print_header(title: str):
     print()
     color_print([("cyan", "=" * 70)])
-    color_print([("cyan", f"  {title}")])
+    color_print([("cyan", f"  {title.strip()}")])
     color_print([("cyan", "=" * 70)])
     print()
 
@@ -188,39 +188,33 @@ The JennAI Admin Console provides the following commands:
     DANGER: Executes a script that completely removes and reinstalls the conda environment.
 """
 
+# --- Centralized Pytest Command ---
+# Let pytest discover paths from pytest.ini to maintain a single source of truth.
+PYTEST_COMMAND = f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'
+
+# --- Centralized Step Definitions for DRY Principle ---
+CLEANUP_STEPS = [
+    {"name": "Cleaning Project", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'},
+    {"name": "Creating Directories", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "create_directories.py")}"'},
+]
+TESTING_STEPS = [
+    {"name": "Run Tests", "command": PYTEST_COMMAND},
+    {"name": "Generate Allure Environment", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "generate_allure_environment.py")}"', "abort_on_fail": False},
+]
+REPORTING_STEP = {"name": "Serve Report", "command": f'"{ALLURE_EXEC}" serve "{str(ALLURE_RESULTS_DIR)}"', "abort_on_fail": False}
+DIAGNOSTIC_STEPS = [
+    {"name": "Display .env Contents", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_env.py")}"', "abort_on_fail": False},
+    {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_config.py")}"', "abort_on_fail": False}
+]
+
 MENU_ACTIONS = [
     {"key": "help", "name": "❓  Help", "is_instruction": True, "help_text": HELP_TEXT},
     {"key": "separator", "name": "──────────────────────────────────"},
-    {"key": "test", "name": "Test", "steps": [
-        {"name": "Run Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'},
-        {"name": "Generate Allure Environment", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "generate_allure_environment.py")}"', "abort_on_fail": False},
-        {"name": "Display .env Contents", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_env.py")}"', "abort_on_fail": False},
-        {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_config.py")}"', "abort_on_fail": False}
-    ]},
-    {"key": "test_and_report", "name": "Test & Report", "pause_after": True, "steps": [
-        {"name": "Run Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'},
-        {"name": "Generate Allure Environment", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "generate_allure_environment.py")}"', "abort_on_fail": False},
-        {"name": "Serve Report", "command": f'"{ALLURE_EXEC}" serve "{str(ALLURE_RESULTS_DIR)}"', "abort_on_fail": False},
-        {"name": "Display .env Contents", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_env.py")}"', "abort_on_fail": False},
-        {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_config.py")}"', "abort_on_fail": False}
-    ]},
-    {"key": "regression", "name": "Regression Testing", "steps": [
-        {"name": "Cleaning Project", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'},
-        {"name": "Creating Directories", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "create_directories.py")}"'},
-        {"name": "Running Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'},
-        {"name": "Generate Allure Environment", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "generate_allure_environment.py")}"', "abort_on_fail": False},
-        {"name": "Display .env Contents", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_env.py")}"', "abort_on_fail": False},
-        {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_config.py")}"', "abort_on_fail": False}
-    ]},
-    {"key": "regression_and_report", "name": "Regression Testing & Report", "pause_after": True, "steps": [
-        {"name": "Cleaning Project", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'},
-        {"name": "Creating Directories", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "create_directories.py")}"'},
-        {"name": "Running Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'},
-        {"name": "Generate Allure Environment", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "generate_allure_environment.py")}"', "abort_on_fail": False},
-        {"name": "Serve Report", "command": f'"{ALLURE_EXEC}" serve "{str(ALLURE_RESULTS_DIR)}"', "abort_on_fail": False},
-        {"name": "Display .env Contents", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_env.py")}"', "abort_on_fail": False},
-        {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_config.py")}"', "abort_on_fail": False}
-    ]},
+    # Composing actions from the centralized step definitions
+    {"key": "test", "name": "Test", "steps": TESTING_STEPS + DIAGNOSTIC_STEPS},
+    {"key": "test_and_report", "name": "Test & Report", "pause_after": True, "steps": TESTING_STEPS + [REPORTING_STEP] + DIAGNOSTIC_STEPS},
+    {"key": "regression", "name": "Regression Testing", "steps": CLEANUP_STEPS + TESTING_STEPS + DIAGNOSTIC_STEPS},
+    {"key": "regression_and_report", "name": "Regression Testing & Report", "pause_after": True, "steps": CLEANUP_STEPS + TESTING_STEPS + [REPORTING_STEP] + DIAGNOSTIC_STEPS},
     {"key": "separator", "name": "──────────────────────────────────"},
     {"key": "check_logs", "name": "Check Logs", "steps": [
         {"name": "Scan Logs", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "check_logs.py")}"'}]},
