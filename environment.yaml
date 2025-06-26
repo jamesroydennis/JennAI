@@ -81,7 +81,11 @@ dependencies:
   - pytorch
   - torchvision
   - torchaudio
+  - torchtext
+  - torchdata
   - pytorch-cuda=11.8
+  - torchtext
+  - torchdata
   - nodejs
   - flask
   - flask-cors

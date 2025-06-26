@@ -1,7 +1,7 @@
 """
 JennAI Project Configuration
 
-This module centralizes all key project paths, environment whitelists, and global settings.
+Centralizes all key paths, environment whitelists, and global settings.
 Import from this file in admin scripts, tests, and modules to ensure consistency and maintainability.
 
 - All paths are resolved relative to the project root.
@@ -10,25 +10,95 @@ Import from this file in admin scripts, tests, and modules to ensure consistency
 
 from pathlib import Path
 
-# Project root directory (one level above this config file)
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# ============================================================================
+# 1. PROJECT METADATA
+# ============================================================================
+APP_NAME = "JennAI"
+VERSION = "0.1.0"
 
-# Key project directories
-ADMIN_DIR = PROJECT_ROOT / "admin"
-CONFIG_DIR = PROJECT_ROOT / "config"
-ALLURE_RESULTS_DIR = PROJECT_ROOT / "allure-results"
-SRC_DIR = PROJECT_ROOT / "src"
-BRAND_DIR = PROJECT_ROOT / "Brand"
-# Add more as needed
+# ============================================================================
+# 2. ROOT & DIRECTORY STRUCTURE
+# ============================================================================
+ROOT = Path(__file__).resolve().parent.parent
 
-# List of Conda environments allowed to run admin scripts
+# Core directories
+ADMIN_DIR         = ROOT / "admin"
+CONFIG_DIR        = ROOT / "config"
+SRC_DIR           = ROOT / "src"
+NOTEBOOKS_DIR     = ROOT / "notebooks"
+BRAND_DIR         = ROOT / "Brand"
+ALLURE_RESULTS_DIR= ROOT / "allure-results"
+VALIDATION_DIR    = ROOT / "validation"
+LOGS_DIR          = ROOT / "logs"
+DATA_DIR          = SRC_DIR / "data"
+SAMPLES_DIR       = DATA_DIR / "samples"
+
+# ============================================================================
+# 3. LOGGING
+# ============================================================================
+LOG_FILE = LOGS_DIR / "jennai.log"
+
+# ============================================================================
+# 4. DATABASE CONFIGURATION
+# ============================================================================
+DB_PATH      = ROOT / "jennai_db.sqlite"
+TEST_DB_PATH = ROOT / "test_jennai_db.sqlite"
+
+# ============================================================================
+# 5. ENVIRONMENTS & EXECUTION CONTEXT
+# ============================================================================
+ENVIRONMENTS = [
+    "DEV",
+    "TEST",
+    "STAGING",
+    "PROD"
+]
+
+# Conda environments allowed to run admin scripts
 WHITELIST_ENVIRONMENTS = [
     "jennai-root",
     "lily-presents"
 ]
+# Alias for backward compatibility
+ALLOWED_ENVS = WHITELIST_ENVIRONMENTS
 
-# (Optional) Debug mode flag for development
+# ============================================================================
+# 6. APPLICATION PRESENTATION LAYER NAMES
+# ============================================================================
+ANGULAR_NAME = f"{APP_NAME}-angular"
+FLASK_NAME   = f"{APP_NAME}-flask"
+REACT_NAME   = f"{APP_NAME}-react"
+
+# ============================================================================
+# 7. USER ROLES & CROSS-CUTTING CONFIGURATION
+# ============================================================================
+ROLES = [
+    "SUPER",
+    "ADMIN",
+    "DEVELOPER",
+    "QA",
+    "TESTER",
+    "USER",
+    "VIEWER"
+]
+
+# ============================================================================
+# 8. DEBUGGING & DEVELOPMENT FLAGS
+# ============================================================================
 DEBUG_MODE = True
 
-# (Legacy/alias) List of allowed environments (use WHITELIST_ENVIRONMENTS)
-ALLOWED_ENVS = WHITELIST_ENVIRONMENTS
+# ============================================================================
+# 9. (OPTIONAL) BRANDING & ASSET PATHS
+# ============================================================================
+FAVICON_PATH = BRAND_DIR / "favicon_io" / "favicon.ico"
+LOGO_PATH    = BRAND_DIR / "jennai-logo.png"
+
+# ============================================================================
+# 10. DEFAULT ADMIN USER (for dev/testing)
+# ============================================================================
+DEFAULT_ADMIN_USER  = "admin"
+DEFAULT_ADMIN_EMAIL = "admin@jennai.local"
+
+# ============================================================================
+# END OF CONFIGURATION
+# ============================================================================

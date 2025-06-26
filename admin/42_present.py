@@ -63,22 +63,85 @@ def print_header(title: str):
         print("\n" + "=" * 70)
         print(f"{title}")
         print("=" * 70)
-
 def main():
-    # --- Always cleanup and create directories first ---
-    print_header("JennAI Presentation Admin Console")
-    print("Running cleanup and directory creation scripts...\n")
-    run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "cleanup.py"}"')
-    run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "create_directories.py"}"')
+    """Main function to present the presentation layer options."""
+
+    def handle_platform_actions(platform_key: str):
+        """Handles the sub-menu for a selected platform."""
+        PLATFORM_SUB_MENU = [
+            Choice(value="run", name="🏃 Run (Start Dev Server)"), # This is the "dev" option
+            Separator("──────────────────────────────────"),
+            Choice(value="create", name="Create (Scaffold & Brand)"),
+            Choice(value="update", name="Update (Re-brand)"),
+            Choice(value="delete", name="Delete (Remove App)"),
+            Choice(value="qa", name="QA (Run QA Checks)"), # New QA option
+            Choice(value="test", name="Test (Run Unit/Integration Tests)"),
+            Separator("──────────────────────────────────"),
+            Choice(value="back", name="⬅️ Back to Platform Selection"),
+        ]
+
+        while True:
+            print_header(f"{platform_key.capitalize()} Platform Actions")
+            if supports_interactive_console():
+                action_selection = inquirer.select(
+                    message=f"Select an action for {platform_key.capitalize()}:",
+                    choices=PLATFORM_SUB_MENU,
+                    default="run",
+                    qmark=">",
+                    cycle=False,
+                    max_height=10,
+                ).execute()
+            else:
+                print("\nRunning in simplified, non-interactive mode. Please use command-line arguments.")
+                break
+
+            if action_selection is None or action_selection == "back":
+                break # Go back to main platform selection
+
+            if action_selection == "create":
+                print_header(f"{platform_key.capitalize()}: Scaffold/Setup")
+                run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / f"create_presentation_{platform_key}.py"}"') # Step 1: Scaffold
+                run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "inject_brand_assets.py"}" --target {platform_key}') # Step 2: Inject Assets
+                print(f"\n{platform_key.capitalize()} presentation layer setup complete.")
+            elif action_selection == "update":
+                print(f"\nUpdate for {platform_key.capitalize()} not yet implemented.")
+            elif action_selection == "delete":
+                print(f"\nDelete for {platform_key.capitalize()} not yet implemented.")
+            elif action_selection == "run":
+                print_header(f"Running {platform_key.capitalize()} Dev Server")
+                if platform_key == "flask":
+                    flask_app_path = PROJECT_ROOT / "src" / "presentation" / "api_server" / "flask_app" / "app.py"
+                    run_command(f'{PY_EXEC} "{flask_app_path}"')
+                elif platform_key == "angular":
+                    angular_dir = PROJECT_ROOT / "src" / "presentation" / "angular_app"
+                    if angular_dir.exists():
+                        run_command('ng serve --open', cwd=angular_dir)
+                    else:
+                        print(f"Angular project not found at {angular_dir}. Please create it first.")
+                elif platform_key == "react":
+                    react_dir = PROJECT_ROOT / "src" / "presentation" / "react_app"
+                    if react_dir.exists():
+                        run_command('npm start', cwd=react_dir)
+                    else:
+                        print(f"React project not found at {react_dir}. Please create it first.")
+            elif action_selection == "qa":
+                print(f"\nQA for {platform_key.capitalize()} not yet implemented.")
+            elif action_selection == "test":
+                print(f"\nTest for {platform_key.capitalize()} not yet implemented.")
+            
+            if supports_interactive_console():
+                input("\nPress Enter to continue...")
+
+    """Main function to present the presentation layer options."""
 
     MENU = [
-        Choice("flask", "Flask: Scaffold/Setup Presentation Layer"),
-        Choice("angular", "Angular: Scaffold/Setup Presentation Layer"),
-        Choice("react", "React: Scaffold/Setup Presentation Layer"),
-        Separator(),
-        Choice("regression", "Regression Testing (cleanup, dirs, tests, Allure report)"),
-        Separator(),
-        Choice("exit", "Exit"),
+        Choice(value="flask", name="Flask"),
+        Choice(value="angular", name="Angular"),
+        Choice(value="react", name="React"),
+        Separator("──────────────────────────────────"),
+        Choice(value="regression", name="Regression Testing (cleanup, dirs, tests, Allure report)"),
+        Separator("──────────────────────────────────"),
+        Choice(value="exit", name="Exit"),
     ]
 
     while True:
@@ -98,29 +161,13 @@ def main():
                 break # Exit the loop if not interactive
 
             if selection is None or selection == "exit": # Handle None for Ctrl+C or 'exit' choice
-                print("\nGoodbye!")
+                print("\nExiting Presentation Console.")
                 break
 
             try:
-                if selection == "flask":
-                    print_header("Flask: Scaffold/Setup")
-                    run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "create_presentation_flask.py"}"') # Step 1: Scaffold
-                    run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "inject_brand_assets.py"}" --target flask') # Step 2: Inject Assets
-                    print("\nFlask presentation layer setup complete.")
-
-                elif selection == "angular":
-                    print_header("Angular: Scaffold/Setup")
-                    run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "create_presentation_angular.py"}"')
-                    run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "inject_brand_assets.py"}" --target angular')
-                    print("\nAngular presentation layer setup complete.")
-
-                elif selection == "react":
-                    print_header("React: Scaffold/Setup")
-                    run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "create_presentation_react.py"}"')  # Step 1: Scaffold
-                    run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "inject_brand_assets.py"}" --target react')  # Step 2: Inject Assets
-                    print("\nReact presentation layer setup complete.")
-
-                elif selection == "regression":
+                if selection in ["flask", "angular", "react"]:
+                    handle_platform_actions(selection)
+                elif selection == "regression": # This is the top-level regression for the entire project
                     print_header("Regression Testing")
                     run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "cleanup.py"}"')
                     run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "create_directories.py"}"')
@@ -131,10 +178,8 @@ def main():
                 else:
                     print("\nInvalid selection.")
             except KeyboardInterrupt:
-                print("\nCancelled presentation setup.")
-
-            if supports_interactive_console(): # Only prompt if interactive
-                input("\nPress Enter to return to the menu...")
+                print("\nOperation cancelled by user.")
+                break # Exit the loop on Ctrl+C
 
         except prompt_toolkit.output.win32.NoConsoleScreenBufferError:
             print("\nError: Incompatible console. Running in simplified mode.")

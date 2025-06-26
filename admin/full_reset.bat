@@ -15,7 +15,7 @@ if /i not "%confirm%"=="y" (
 )
 
 echo.
-echo [STEP 1/5] Checking for required external tools (npm, sass)...
+echo [STEP 1/5] Checking for required external tools (npm, sass, ng)...
 where npm >nul 2>nul
 if %errorlevel% neq 0 (
     echo [ERROR] 'npm' is not found in your PATH.
@@ -29,6 +29,13 @@ if %errorlevel% neq 0 (
     echo [WARNING] 'sass' command not found. This is required for compiling website styles.
     echo You can install it globally by running: npm install -g sass
     echo Continuing with reset, but website development will be impacted.
+    pause
+)
+where ng >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [WARNING] 'ng' (Angular CLI) not found. Angular presentation features will not work.
+    echo You can install it globally by running: npm install -g @angular/cli
+    echo Continuing with reset, but Angular development will be impacted.
     pause
 )
 
@@ -72,6 +79,4 @@ echo You can now activate the new environment: conda activate jennai-root
 echo.
 echo IMPORTANT: If you are using an IDE (like VS Code), it is highly
 echo            recommended to RESTART it now. This ensures it detects
-echo            the new 'jennai-root' environment and interpreter correctly.
-echo.
-pause
+echo            the new 'jennai-root' environment and interpreter
