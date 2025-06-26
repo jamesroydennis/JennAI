@@ -13,6 +13,7 @@ if str(PROJECT_ROOT) not in sys.path:
 # Load environment variables from .env file (if it exists)
 load_dotenv(dotenv_path=PROJECT_ROOT / ".env")
 from config.config import WHITELIST_ENVIRONMENTS, DEBUG_MODE
+from config.loguru_setup import setup_logging, logger
 
 try:
     from InquirerPy import inquirer
@@ -191,26 +192,34 @@ MENU_ACTIONS = [
     {"key": "help", "name": "❓  Help", "is_instruction": True, "help_text": HELP_TEXT},
     {"key": "separator", "name": "──────────────────────────────────"},
     {"key": "test", "name": "Test", "steps": [
-        {"name": "Run Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'}
-        ,{"name": "Display Configuration", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_config.py")}"', "abort_on_fail": False} # Added step
+        {"name": "Run Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'},
+        {"name": "Generate Allure Environment", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "generate_allure_environment.py")}"', "abort_on_fail": False},
+        {"name": "Display .env Contents", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_env.py")}"', "abort_on_fail": False},
+        {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_config.py")}"', "abort_on_fail": False}
     ]},
     {"key": "test_and_report", "name": "Test & Report", "pause_after": True, "steps": [
         {"name": "Run Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'},
+        {"name": "Generate Allure Environment", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "generate_allure_environment.py")}"', "abort_on_fail": False},
         {"name": "Serve Report", "command": f'"{ALLURE_EXEC}" serve "{str(ALLURE_RESULTS_DIR)}"', "abort_on_fail": False},
-        {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_config.py")}"', "abort_on_fail": False} # Added step
+        {"name": "Display .env Contents", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_env.py")}"', "abort_on_fail": False},
+        {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_config.py")}"', "abort_on_fail": False}
     ]},
     {"key": "regression", "name": "Regression Testing", "steps": [
         {"name": "Cleaning Project", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'},
         {"name": "Creating Directories", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "create_directories.py")}"'},
         {"name": "Running Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'},
-        {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_config.py")}"', "abort_on_fail": False} # Added step
+        {"name": "Generate Allure Environment", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "generate_allure_environment.py")}"', "abort_on_fail": False},
+        {"name": "Display .env Contents", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_env.py")}"', "abort_on_fail": False},
+        {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_config.py")}"', "abort_on_fail": False}
     ]},
     {"key": "regression_and_report", "name": "Regression Testing & Report", "pause_after": True, "steps": [
         {"name": "Cleaning Project", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "cleanup.py")}"'},
         {"name": "Creating Directories", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "create_directories.py")}"'},
         {"name": "Running Tests", "command": f'{PY_EXEC} -m pytest --alluredir="{str(ALLURE_RESULTS_DIR)}" --clean-alluredir'},
+        {"name": "Generate Allure Environment", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "generate_allure_environment.py")}"', "abort_on_fail": False},
         {"name": "Serve Report", "command": f'"{ALLURE_EXEC}" serve "{str(ALLURE_RESULTS_DIR)}"', "abort_on_fail": False},
-        {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_config.py")}"', "abort_on_fail": False} # Added step
+        {"name": "Display .env Contents", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_env.py")}"', "abort_on_fail": False},
+        {"name": "Display Configuration", "command": f'{PY_EXEC} "{str(PROJECT_ROOT / "admin" / "show_config.py")}"', "abort_on_fail": False}
     ]},
     {"key": "separator", "name": "──────────────────────────────────"},
     {"key": "check_logs", "name": "Check Logs", "steps": [
@@ -248,6 +257,12 @@ HIDDEN_ACTIONS = {
 }
 
 def main():
+    # Initialize logging for the admin console itself.
+    # The log level will be determined by the DEBUG_MODE from the loaded config.
+    # This provides immediate feedback on the state of the environment.
+    setup_logging(debug_mode=DEBUG_MODE)
+    logger.info(f"Admin console started. DEBUG_MODE is set to: {DEBUG_MODE}")
+
     # --- Environment Sanity Check ---
     # Ensure the script is being run from an allowed conda environment.
     current_env = os.getenv("CONDA_DEFAULT_ENV")

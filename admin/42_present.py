@@ -172,6 +172,7 @@ def main():
                     run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "cleanup.py"}"')
                     run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "create_directories.py"}"')
                     run_command(f'{PY_EXEC} -m pytest --alluredir="{str(PROJECT_ROOT / "allure-results")}" --clean-alluredir')
+                    run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "generate_allure_environment.py"}"')
                     run_command(f'allure generate allure-results -o allure-report --clean')
                     print("\nRegression testing and Allure report generation complete.")
 

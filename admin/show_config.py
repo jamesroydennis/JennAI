@@ -26,8 +26,8 @@ def show_configuration():
         show_header=True,
         box=None,
     )
-    table.add_column("Configuration Key", style="green", width=30) # Changed to green
-    table.add_column("Value", style="green") # Changed to green
+    table.add_column("Configuration Key", style="grey50", width=30)
+    table.add_column("Value", style="grey50")
 
     # Iterate through the config module's attributes
     for key in dir(config):
