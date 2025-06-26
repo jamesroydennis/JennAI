@@ -18,13 +18,14 @@ def show_env_file():
     env_file_path = ROOT / ".env"
 
     table = Table(
-        title="[bold yellow].env File Contents[/bold yellow]",
+        title="[bold cyan]Environment[/bold cyan]",
         header_style="bold magenta",
         show_header=True,
         box=None,
+        title_justify="left",  # Left-align the title
     )
-    table.add_column("Variable", style="yellow", width=30)
-    table.add_column("Value", style="bright_white")
+    table.add_column("Variable", style="grey50", width=30)
+    table.add_column("Value", style="grey50")
 
     if not env_file_path.exists():
         table.add_row("[i]File not found[/i]", f"[grey50]{env_file_path}[/grey50]")

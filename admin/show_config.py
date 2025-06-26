@@ -22,10 +22,11 @@ def show_configuration():
     """
     console = Console()
     table = Table(
-        title="[bold cyan]JennAI Project Configuration[/bold cyan]",
+        title="[bold cyan]Configuration[/bold cyan]",
         header_style="bold magenta",
         show_header=True,
         box=None,
+        title_justify="left", # Left-align the title
     )
     table.add_column("Configuration Key", style="grey50", width=30)
     table.add_column("Value", style="grey50")

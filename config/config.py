@@ -9,7 +9,7 @@ Import from this file in admin scripts, tests, and modules to ensure consistency
 """
 import os # Added for os.getenv
 
-from pathlib import Path
+from pathlib import Path # Assuming this is where your config.py is located
 
 # ============================================================================
 # 1. PROJECT METADATA
@@ -108,9 +108,9 @@ DEFAULT_ADMIN_EMAIL = "admin@jennai.local"
 # Central list of required Python packages for the project.
 # Used by admin/check_dependencies.py to verify the environment.
 PYTHON_PACKAGES = [
-    "flask", "flask_cors", "flask_assets", "inquirerpy",
+    "flask", "flask_cors", "flask_assets", "InquirerPy",
     "numpy", "pandas", "requests", "matplotlib", "jupyter", "markdown",
-    "pytest", "loguru", "python-dotenv"
+    "pytest", "loguru","dotenv"
 ]
 # ============================================================================
 # END OF CONFIGURATION

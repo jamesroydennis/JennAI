@@ -3,6 +3,8 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv  # Import load_dotenv
 import pytest
+import subprocess # New import for running external scripts
+from rich.console import Console # Import Console for colored output
 # --- Root Project Path Setup (CRITICAL for Imports) ---
 # This ensures that conftest.py can import from your project's modules (config, core, etc.)
 ROOT = Path(__file__).resolve().parent # conftest.py is in the project root
@@ -23,6 +25,41 @@ def pytest_configure(config):
     and before the test collection process starts.
     We use this to set up our custom Loguru logging for the test session.
     """
+    console = Console() # Initialize Rich Console
+
+    # Display environment and configuration before tests start
+    console.print("\n[cyan]" + "=" * 70 + "[/cyan]")
+    console.print("[cyan]  PRE-TEST DIAGNOSTICS[/cyan]")
+    console.print("[cyan]" + "=" * 70 + "[/cyan]")
+
+    # Display .env contents
+    try:
+        env_script = ROOT / "admin" / "show_env.py"
+        if env_script.exists():
+            subprocess.run([sys.executable, str(env_script)], check=True)
+        else:
+            print(f"Warning: {env_script} not found. Skipping .env display.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error displaying .env contents: {e}")
+    except Exception as e:
+        print(f"Unexpected error displaying .env contents: {e}")
+
+    # Display configuration
+    try:
+        config_script = ROOT / "admin" / "show_config.py"
+        if config_script.exists():
+            subprocess.run([sys.executable, str(config_script)], check=True)
+        else:
+            print(f"Warning: {config_script} not found. Skipping configuration display.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error displaying configuration: {e}")
+    except Exception as e:
+        print(f"Unexpected error displaying configuration: {e}")
+
+    console.print("\n[cyan]" + "=" * 70 + "[/cyan]")
+    console.print("[cyan]  STARTING PYTEST SESSION[/cyan]")
+    console.print("[cyan]" + "=" * 70 + "[/cyan]\n")
+
     # The `config` parameter is a pytest object provided by the hook.
     # Setup logging for the test session, directing to a separate file
     # The log level (DEBUG/INFO) will be determined by DEBUG_MODE from config.py
