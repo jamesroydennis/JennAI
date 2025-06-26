@@ -45,7 +45,7 @@ DIRECTORIES = {
     "src/data/interfaces": {"is_package": True},
     "src/data/notebooks": {"is_package": False},
     "src/data/obj": {"is_package": True},
-    "src/data/samples": {"is_package": True},
+    "src/data/samples": {"is_package": False}, # Sample data directories are typically not packages
     "src/data/tests": {"is_package": True},
 
     # Presentation layer

@@ -1,10 +1,19 @@
-{% extends "base.html" %}
-{% block title %}JennAI - Illuminating the Intelligent Frontier{% endblock %}
-{% block content %}
-<section>
-    <h1>JennAI: Illuminating the Intelligent Frontier</h1>
-    <div>{{ vision|markdown }}</div>
-    <h2>Our Core Mission</h2>
-    <div>{{ mission }}</div>
-</section>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ app_name }}</title>
+    <link rel="icon" href="{{ url_for('brand.serve_favicon') }}">
+    <style>
+        body { font-family: sans-serif; background-color: #1a1a1a; color: #e0e0e0; text-align: center; padding-top: 50px; }
+        img { max-width: 300px; margin-bottom: 20px; }
+        h1 { color: #00aaff; }
+    </style>
+</head>
+<body>
+    <img src="{{ url_for('brand.serve_logo') }}" alt="{{ app_name }} Logo">
+    <h1>Welcome to {{ app_name }}</h1>
+    <p>The intelligent frontier awaits.</p>
+</body>
+</html>

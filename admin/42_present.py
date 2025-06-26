@@ -171,6 +171,7 @@ def main():
                     print_header("Regression Testing")
                     run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "cleanup.py"}"')
                     run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "create_directories.py"}"')
+                    # Let pytest discover paths from pytest.ini for consistency
                     run_command(f'{PY_EXEC} -m pytest --alluredir="{str(PROJECT_ROOT / "allure-results")}" --clean-alluredir')
                     run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "generate_allure_environment.py"}"')
                     run_command(f'allure generate allure-results -o allure-report --clean')
