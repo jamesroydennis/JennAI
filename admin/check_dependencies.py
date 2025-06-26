@@ -1,7 +1,17 @@
 import sys
 import importlib
-import subprocess
 import shutil
+
+from pathlib import Path
+
+# --- Project Root Path Setup ---
+# This allows the script to import modules from the project (e.g., config)
+# when run from any directory.
+project_root = Path(__file__).resolve().parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+from config import config
 
 def check_command(cmd, name):
     path = shutil.which(cmd)
@@ -28,11 +38,7 @@ def main():
     check_command("java", "Java")
 
     print("\n=== Python Package Checks ===")
-    python_packages = [
-        "flask", "flask_cors", "flask_assets", "inquirerpy",
-        "numpy", "pandas", "requests", "matplotlib", "jupyter", "markdown"
-    ]
-    for pkg in python_packages:
+    for pkg in config.PYTHON_PACKAGES:
         check_python_package(pkg)
 
 if __name__ == "__main__":

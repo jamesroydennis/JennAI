@@ -3,6 +3,7 @@
 import sys
 import os
 from pathlib import Path
+from dotenv import load_dotenv # Import load_dotenv
 
 # --- Root Project Path Setup (CRITICAL for Monorepo Imports) ---
 # This block ensures the main /JennAI project root is always on Python's sys.path.
@@ -11,6 +12,9 @@ from pathlib import Path
 jennai_root = Path(__file__).resolve().parent
 if str(jennai_root) not in sys.path:
     sys.path.append(str(jennai_root))
+
+# Load environment variables from .env file (if it exists)
+load_dotenv(dotenv_path=jennai_root / ".env")
 
 # --- Centralized Core Imports ---
 # These modules are now directly discoverable from the JennAI root

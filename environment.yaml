@@ -103,6 +103,7 @@ dependencies:
   - jupyter
   - markdown
   - pyyaml  # Required for the dynamic conda_update.py script
+  - python-dotenv
   - pip
   - inquirerpy>=0.3.4
   - pip:

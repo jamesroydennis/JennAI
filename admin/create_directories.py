@@ -36,13 +36,18 @@ DIRECTORIES = {
     "src/business/interfaces": {"is_package": True},
     "src/business/notebooks": {"is_package": False},
     "src/business/tests": {"is_package": True},
+    # Validation layer (moved under src)
+    "src/validation": {"is_package": True},
+    "src/validation/tests": {"is_package": True}, # New: Tests for validation module
     # Data layer
     "src/data": {"is_package": True},
     "src/data/implementations": {"is_package": True},
     "src/data/interfaces": {"is_package": True},
     "src/data/notebooks": {"is_package": False},
     "src/data/obj": {"is_package": True},
+    "src/data/samples": {"is_package": True},
     "src/data/tests": {"is_package": True},
+
     # Presentation layer
     "src/presentation": {"is_package": True},
     "src/presentation/tests": {"is_package": True},

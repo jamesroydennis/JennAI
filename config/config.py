@@ -7,6 +7,7 @@ Import from this file in admin scripts, tests, and modules to ensure consistency
 - All paths are resolved relative to the project root.
 - Update this file if your directory structure changes.
 """
+import os # Added for os.getenv
 
 from pathlib import Path
 
@@ -26,12 +27,14 @@ ADMIN_DIR         = ROOT / "admin"
 CONFIG_DIR        = ROOT / "config"
 SRC_DIR           = ROOT / "src"
 NOTEBOOKS_DIR     = ROOT / "notebooks"
-BRAND_DIR         = SRC_DIR / "presentation" / "brand" # Corrected path to user's brand folder
 ALLURE_RESULTS_DIR= ROOT / "allure-results"
-VALIDATION_DIR    = ROOT / "validation"
 LOGS_DIR          = ROOT / "logs"
+BRAND_DIR         = SRC_DIR / "presentation" / "brand" # Corrected path to user's brand folder
+VALIDATION_DIR    = SRC_DIR / "validation" # Consolidated and moved to be under src
 DATA_DIR          = SRC_DIR / "data"
-SAMPLES_DIR       = DATA_DIR / "samples"
+PRESENTATION_DIR  = SRC_DIR / "presentation"
+BUSINESS_DIR      = SRC_DIR / "business"
+SAMPLE_DATA_DIR   = DATA_DIR / "samples" # Renamed for clarity
 
 # ============================================================================
 # 3. LOGGING
@@ -85,8 +88,8 @@ ROLES = [
 # ============================================================================
 # 8. DEBUGGING & DEVELOPMENT FLAGS
 # ============================================================================
-DEBUG_MODE = True
-
+DEBUG_MODE = os.getenv("DEBUG_MODE", "False").lower() in ('true', '1', 't')
+TESTING_MODE = os.getenv("TESTING_MODE", "False").lower() in ('true', '1', 't')
 # ============================================================================
 # 9. (OPTIONAL) BRANDING & ASSET PATHS
 # ============================================================================
@@ -99,6 +102,16 @@ LOGO_PATH    = BRAND_DIR / "jennai-logo.png"
 DEFAULT_ADMIN_USER  = "admin"
 DEFAULT_ADMIN_EMAIL = "admin@jennai.local"
 
+# ============================================================================
+# 11. CORE PYTHON DEPENDENCIES
+# ============================================================================
+# Central list of required Python packages for the project.
+# Used by admin/check_dependencies.py to verify the environment.
+PYTHON_PACKAGES = [
+    "flask", "flask_cors", "flask_assets", "inquirerpy",
+    "numpy", "pandas", "requests", "matplotlib", "jupyter", "markdown",
+    "pytest", "loguru", "python-dotenv"
+]
 # ============================================================================
 # END OF CONFIGURATION
 # ============================================================================

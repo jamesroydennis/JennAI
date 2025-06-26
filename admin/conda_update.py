@@ -62,12 +62,17 @@ def run_update():
     print("-" * 70)
     
     try:
-        # The command to execute. It targets the environment name found in the YAML file.
-        command = f"conda env update --name {env_name} --prune -f {yaml_file_path.name}"
+        # The command to execute, passed as a list for better security and robustness.
+        command = [
+            "conda", "env", "update",
+            "--name", env_name,
+            "--prune",
+            "-f", str(yaml_file_path) # Use the full path for reliability
+        ]
         
         # Use Popen to stream output in real-time, which is better for long tasks.
         process = subprocess.Popen(
-            command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             cwd=PROJECT_ROOT, text=True, encoding='utf-8'
         )
         for line in iter(process.stdout.readline, ''):

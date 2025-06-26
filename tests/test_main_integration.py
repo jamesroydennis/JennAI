@@ -8,25 +8,24 @@ import pytest
 from config.loguru_setup import logger 
 
 
-# Determine the project root dynamically
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
 @pytest.mark.integration
-def test_main_py_initializes_successfully():
+def test_main_py_initializes_successfully(app_config):
     """
     Tests if main.py runs its initialization sequence without errors
     and logs expected success messages.
     """
-    main_script_path = PROJECT_ROOT / "main.py"
+    # Use the canonical ROOT path from the config fixture for consistency
+    main_script_path = app_config.ROOT / "main.py"
     assert main_script_path.exists(), "main.py not found at the expected location."
 
     # Prepare environment variables for the subprocess
     # Provide a dummy API key to prevent AIGenerator from failing if the key is required at startup.
     env = os.environ.copy()
     env["GOOGLE_API_KEY"] = "DUMMY_API_KEY_FOR_TESTING"
-    env["PYTEST_RUNNING_MAIN"] = "1" # Prevent main.py from starting the blocking Flask server
-    # You could also set DEBUG_MODE here if needed, e.g., env["DEBUG_MODE"] = "True"
-    # However, main.py reads DEBUG_MODE from config.config, so that should be respected.
+    env["PYTEST_RUNNING_MAIN"] = "1"  # Prevent main.py from starting the blocking Flask server
+    # Explicitly set DEBUG_MODE for the subprocess to ensure it logs at the correct level.
+    # This is necessary because the test asserts for "Level: DEBUG" in the log output.
+    env["DEBUG_MODE"] = "True"
 
     try:
         # Run main.py as a subprocess
@@ -36,7 +35,7 @@ def test_main_py_initializes_successfully():
             capture_output=True,
             text=True,
             check=False,  # We'll check the returncode manually
-            cwd=PROJECT_ROOT, # Run from the project root
+            cwd=app_config.ROOT, # Run from the project root
             env=env
         )
 
@@ -44,7 +43,7 @@ def test_main_py_initializes_successfully():
         assert process.returncode == 0, f"main.py exited with code {process.returncode}.\nStderr:\n{process.stderr}\nStdout:\n{process.stdout}"
 
         # Dynamically construct the expected log path to be OS-agnostic.
-        expected_log_path = PROJECT_ROOT / "logs" / "jennai.log"
+        expected_log_path = app_config.ROOT / "logs" / "jennai.log"
         expected_log_message = f"Loguru setup complete. Console logging active. File logging to: {str(expected_log_path)}. Level: DEBUG."
 
         # Check for key success messages in stderr (where Loguru console output goes)
