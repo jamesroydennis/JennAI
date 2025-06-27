@@ -20,8 +20,21 @@ if str(ROOT) not in sys.path:
 # The OBSERVER needs access to the DESIGNER's blueprint (the TARGETS dictionary).
 from admin.inject_brand_assets import TARGETS as DESIGNER_BLUEPRINT
 from admin.presentation_utils import get_platform_paths
+from config import config
 
 PLATFORM_PATHS = get_platform_paths()
+
+
+def test_designer_prerequisite_brand_directory_exists():
+    """
+    OBSERVER-DESIGNER TEST: Verifies that the core brand directory, which is the
+    source of all design assets, actually exists. This is a fundamental prerequisite
+    for any design work.
+    """
+    assert config.BRAND_DIR.exists(), \
+        f"Critique failed: The Designer's source of truth, the brand directory, is missing at '{config.BRAND_DIR}'."
+    assert config.BRAND_DIR.is_dir(), \
+        f"Critique failed: The path for the brand directory '{config.BRAND_DIR}' exists but is not a directory."
 
 # --- Test Data Generation ---
 def generate_designer_test_cases():

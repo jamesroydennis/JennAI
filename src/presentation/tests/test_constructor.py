@@ -43,20 +43,29 @@ def generate_constructor_test_cases():
         # applications that have already been constructed. This is the core of TDD.
         # Add checks for explicitly created directories
         for dir_path in directories_to_create:
-            test_id = f"CONSTRUCTOR-DIR-{platform_name}-{dir_path.relative_to(dest_root).as_posix().replace('/', '-')}"
-            cases.append(pytest.param(dir_path, id=test_id))
+            # Test that a directory was created.
+            test_id = f"CONSTRUCTOR-creates-dir-{platform_name}-{dir_path.relative_to(dest_root).as_posix().replace('/', '-')}"
+            cases.append(pytest.param(dir_path, "dir", id=test_id))
         # Add checks for copied files
         for template_rel, dest_rel in template_map.items():
+            # Test that a file was created from a template.
             dest_path = dest_root / dest_rel
-            test_id = f"CONSTRUCTOR-{platform_name}-{dest_rel.replace('/', '-')}"
-            cases.append(pytest.param(dest_path, id=test_id))
+            test_id = f"CONSTRUCTOR-creates-file-{platform_name}-{dest_rel.replace('/', '-')}"
+            cases.append(pytest.param(dest_path, "file", id=test_id))
     return cases
 
-@pytest.mark.parametrize("expected_artifact_path", generate_constructor_test_cases())
-def test_constructor_creates_required_artifacts(expected_artifact_path):
+
+@pytest.mark.parametrize("expected_artifact_path, artifact_type", generate_constructor_test_cases())
+def test_constructor_creates_required_artifacts(expected_artifact_path, artifact_type):
     """
     OBSERVER TEST: Verifies that the CONSTRUCTOR has created a specific file or directory
-    as defined in the architectural blueprint.
+    as defined in the architectural blueprint, and that the artifact is of the correct type.
     """
     assert expected_artifact_path.exists(), \
         f"Critique failed: Constructor did not create expected artifact at '{expected_artifact_path}'."
+
+    if artifact_type == "dir":
+        assert expected_artifact_path.is_dir(), f"Critique failed: Expected a directory, but found a file at '{expected_artifact_path}'."
+    elif artifact_type == "file":
+        assert expected_artifact_path.is_file(), f"Critique failed: Expected a file, but found a directory at '{expected_artifact_path}'."
+        assert expected_artifact_path.stat().st_size > 0, f"Critique failed: Constructor created an empty file at '{expected_artifact_path}'."

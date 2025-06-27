@@ -1,8 +1,16 @@
 import pytest
+import re
+from pathlib import Path
+import sys
 from src.presentation.api_server.flask_app import create_app
 from core.dependency_container import DependencyContainer
 from config import config
 
+# --- Root Project Path Setup (CRITICAL for Imports) ---
+ROOT = Path(__file__).resolve().parent.parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from admin.presentation_utils import get_platform_paths
 @pytest.fixture(scope="function")
 def app():
     """
@@ -23,3 +31,30 @@ def app():
 def client(app):
     """A test client for the app, created once for each test function."""
     return app.test_client()
+
+
+def pytest_collection_modifyitems(config, items):
+    """
+    Dynamically skips tests for presentation platforms that have not been constructed.
+
+    This hook inspects each collected test. If a test belongs to a specific
+    platform (e.g., 'test_angular_app.py'), it checks if the corresponding
+    application directory exists. If not, it marks all tests in that file
+    to be skipped, providing a clear reason. This fulfills the promise made
+    in the comments of the placeholder test files.
+    """
+    platform_paths = get_platform_paths()
+
+    for item in items:
+        # Check for concrete app tests (e.g., test_angular_app.py)
+        match = re.search(r"test_(\w+)_app\.py", str(item.fspath))
+        if match:
+            platform_name = match.group(1)
+            # The Flask app is part of the core repo, not scaffolded, so its tests should always run.
+            if platform_name == "flask":
+                continue
+
+            platform_dir = platform_paths.get(platform_name)
+            if not platform_dir or not platform_dir.exists():
+                reason = f"Skipping {platform_name} tests: application directory not found at {platform_dir}"
+                item.add_marker(pytest.mark.skip(reason=reason))

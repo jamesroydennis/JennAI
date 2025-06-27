@@ -1,41 +1,74 @@
 """
 Test suite for the CONTRACTOR persona.
 
-This file contains tests that verify the CONTRACTOR's knowledge and
-preparedness. It ensures the main orchestration tool (the admin console)
-is correctly configured to manage all known platforms and blueprints.
+This file contains tests that verify the CONTRACTOR's ability to correctly
+orchestrate and manage the various presentation platforms. It ensures that the
+CONTRACTOR's tools and configurations are in sync with the ARCHITECT's master plan.
 """
 import pytest
 from pathlib import Path
 import sys
+import re
 
 # --- Root Project Path Setup (CRITICAL for Imports) ---
 ROOT = Path(__file__).resolve().parent.parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-# The OBSERVER needs access to the CONTRACTOR's tools and the ARCHITECT's config.
+# The OBSERVER needs access to the ARCHITECT's master plan (config)
+# and the CONTRACTOR's testing configuration (conftest).
 from config import config
-from admin.presentation_utils import get_platform_paths
+from conftest import SCOPES
 
-PLATFORM_PATHS = get_platform_paths()
-
-
-def get_constructed_platforms():
+def test_contractor_has_test_scope_for_every_platform():
     """
-    Helper function to get a list of platform keys for applications that
-    have actually been constructed (i.e., their directory exists).
-    The OBSERVER uses this to know what to critique.
+    OBSERVER-CONTRACTOR TEST: Verifies that for every presentation platform
+    defined by the ARCHITECT (in config.py), the CONTRACTOR has a corresponding
+    test scope defined (in conftest.py).
+
+    This ensures that the 'Test' command in the presentation console will work
+    for every supported platform.
     """
-    return [key for key, path in PLATFORM_PATHS.items() if path.exists()]
+    missing_scopes = []
+    for platform_name in config.PRESENTATION_APPS.keys():
+        # This enforces the convention for naming platform-specific test scopes.
+        expected_scope_name = f"{platform_name.upper()}_PRESENTATION"
+        if expected_scope_name not in SCOPES:
+            missing_scopes.append(platform_name)
+
+    assert not missing_scopes, \
+        f"Critique failed: The Contractor's testing configuration (conftest.py) is missing " \
+        f"test scopes for the following platforms defined by the Architect: {missing_scopes}.\n" \
+        f"Please add a '{'<PLATFORM>'.upper()}_PRESENTATION' entry to the SCOPES dictionary in conftest.py."
 
 
-@pytest.mark.parametrize("platform_key", get_constructed_platforms())
-def test_observer_verifies_contractor_has_blueprint_for_constructed_platform(platform_key):
+def test_contractor_verifies_constructor_has_requirements():
     """
-    OBSERVER TEST: Verifies the CONTRACTOR has a construction script (blueprint)
-    for every platform that has actually been constructed.
+    OBSERVER-CONTRACTOR TEST: Verifies that for every CONSTRUCTOR script the
+    CONTRACTOR can invoke (i.e., create_presentation_*.py files), a
+    corresponding requirements test file (test_*_app.py) exists.
+
+    This ensures the Contractor doesn't offer to build an application that
+    has no defined quality contract.
     """
-    constructor_script = config.ADMIN_DIR / f"create_presentation_{platform_key}.py"
-    assert constructor_script.exists(), \
-        f"Critique failed: A constructed platform '{platform_key}' exists, but the CONTRACTOR is missing its construction blueprint at '{constructor_script}'."
+    admin_dir = config.ADMIN_DIR
+    presentation_tests_dir = config.PRESENTATION_DIR / "tests"
+    constructor_scripts = list(admin_dir.glob("create_presentation_*.py"))
+
+    assert constructor_scripts, f"Contractor has no constructor scripts in {admin_dir} to test."
+
+    missing_requirements = []
+    for script in constructor_scripts:
+        match = re.search(r"create_presentation_(.+)\.py", script.name)
+        if not match:
+            continue
+        platform_name = match.group(1)
+
+        expected_reqs_file = presentation_tests_dir / f"test_{platform_name}_app.py"
+        if not expected_reqs_file.exists():
+            missing_requirements.append(
+                f"Constructor '{script.name}' is missing its requirements file: '{expected_reqs_file.relative_to(ROOT)}'"
+            )
+
+    assert not missing_requirements, \
+        "Critique failed: The Contractor has constructor scripts that lack defined requirements (test files):\n" + "\n".join(missing_requirements)

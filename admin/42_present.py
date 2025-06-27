@@ -279,7 +279,9 @@ def handle_platform_actions(platform_key: str):
             elif platform_key == "angular":
                 angular_dir = PROJECT_ROOT / "src" / "presentation" / "angular_app"
                 if angular_dir.exists():
-                    run_command('ng serve --open', cwd=angular_dir)
+                    # Use 'npx ng serve' to directly execute the local Angular CLI,
+                    # which is more robust if the "start" script is missing from package.json.
+                    run_command('npx ng serve --open', cwd=angular_dir)
                 else:
                     print(f"Angular project not found at {angular_dir}. Please create it first.")
             elif platform_key == "react":
