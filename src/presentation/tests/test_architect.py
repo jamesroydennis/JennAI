@@ -30,17 +30,17 @@ def test_architect_ensures_contractor_is_aware_of_all_platforms():
     This ensures the primary orchestration tool is complete.
     """
     platform_paths = get_platform_paths()
-    assert set(config.WEB_APP_NAMES) == set(platform_paths.keys()), \
+    assert set(config.PRESENTATION_APPS.keys()) == set(platform_paths.keys()), \
         "Critique failed: Contractor's platform awareness (get_platform_paths) is out of sync with Architect's configuration (config.WEB_APP_NAMES)."
 
 
 def test_architect_ensures_designer_has_blueprint_for_all_platforms():
     """
     OBSERVER-ARCHITECT TEST: Verifies that every platform the ARCHITECT has defined.
-    in the master plan (config.WEB_APP_NAMES) has a corresponding entry in the
+    in the master plan (config.PRESENTATION_APPS) has a corresponding entry in the
     DESIGNER's blueprint (inject_brand_assets.py).
     """
-    missing_blueprints = [name for name in config.WEB_APP_NAMES if name not in DESIGNER_BLUEPRINT]
+    missing_blueprints = [name for name in config.PRESENTATION_APPS.keys() if name not in DESIGNER_BLUEPRINT]
     assert not missing_blueprints, \
         f"Critique failed: The Designer's blueprint is missing entries for the following platforms defined by the Architect: {missing_blueprints}"
 

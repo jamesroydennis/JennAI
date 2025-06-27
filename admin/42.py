@@ -214,9 +214,12 @@ PYTEST_BASE_COMMAND = f'{PY_EXEC} -m pytest {PYTEST_VERBOSITY_FLAG}'
 # Define pytest command with Allure flags for report generation
 PYTEST_ALLURE_COMMAND = f'{PYTEST_BASE_COMMAND} --alluredir="{str(ROOT / "allure-results")}" --clean-alluredir'
 
-# Define commands for the specific 'SYSTEM' scope
-PYTEST_SYSTEM_SCOPE_COMMAND = f'{PYTEST_BASE_COMMAND} --scope=SYSTEM'
-PYTEST_SYSTEM_SCOPE_ALLURE_COMMAND = f'{PYTEST_ALLURE_COMMAND} --scope=SYSTEM'
+
+# Define commands for the specific 'SYSTEM' scope, targeting only the top-level 'tests' directory.
+# This makes the root/admin testing agnostic to the src sub-layers (presentation, business, data).
+SYSTEM_TEST_DIR = str(ROOT / "tests")
+PYTEST_SYSTEM_SCOPE_COMMAND = f'{PYTEST_BASE_COMMAND} "{SYSTEM_TEST_DIR}" --scope=SYSTEM'
+PYTEST_SYSTEM_SCOPE_ALLURE_COMMAND = f'{PYTEST_ALLURE_COMMAND} "{SYSTEM_TEST_DIR}" --scope=SYSTEM'
 
 # --- Centralized Step Definitions for DRY Principle ---
 CLEANUP_STEPS = [

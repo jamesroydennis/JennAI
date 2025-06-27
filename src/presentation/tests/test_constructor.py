@@ -21,8 +21,9 @@ from config import config
 def generate_constructor_test_cases():
     """Dynamically generates test cases for all defined CONSTRUCTOR blueprints."""
     cases = []
-    # The Observer dynamically imports blueprints from the CONSTRUCTOR scripts.
-    for platform_name in config.WEB_APP_NAMES:
+    # The Observer dynamically imports blueprints from the CONSTRUCTOR scripts,
+    # iterating over the keys of the PRESENTATION_APPS dictionary.
+    for platform_name in config.PRESENTATION_APPS.keys():
         try:
             # Dynamically import the constructor script for the platform
             module_name = f"admin.create_presentation_{platform_name}"
