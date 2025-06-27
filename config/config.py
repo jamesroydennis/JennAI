@@ -13,7 +13,7 @@ import os # Added for os.getenv
 from pathlib import Path # Assuming this is where your config.py is located
 
 # ============================================================================
-# 1. PROJECT METADATA
+# 1. METADATA
 # ============================================================================
 APP_NAME = "JennAI"
 VERSION = "0.1.0"  # Your project's version
@@ -131,6 +131,7 @@ class ArchitecturalPersona(Enum):
     CONSTRUCTOR = auto()  # The developer scaffolding the application framework.
     DESIGNER = auto()     # The designer applying the brand and theme.
     OBSERVER = auto()     # Ensures the design matches the brand and the construction adheres to the Architect's blueprints.
+    QA_ENGINEER = auto()  # Verifies the quality and testability of all components.
 
 ROLES_PRESENTATION = [persona.name for persona in ArchitecturalPersona]
 # ============================================================================
