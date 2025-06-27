@@ -70,13 +70,13 @@ ALLOWED_ENVS = WHITELIST_ENVIRONMENTS
 # ============================================================================
 # 6. APPLICATION PRESENTATION LAYER NAMES
 # ============================================================================
-ANGULAR_NAME = f"{APP_NAME}-angular"
-FLASK_NAME   = f"{APP_NAME}-flask"
-REACT_NAME   = f"{APP_NAME}-react"
-VUE_NAME     = f"{APP_NAME}-vue" # Added for consistency
-
-# Whitelist of supported web application keys for admin scripts
-WEB_APP_NAMES = ["flask", "angular", "react", "vue"]
+# Dictionary of supported presentation applications, containing their properties.
+PRESENTATION_APPS = {
+    "flask":   {"name": f"{APP_NAME}-flask",   "display_name": "Flask"},
+    "angular": {"name": f"{APP_NAME}-angular", "display_name": "Angular"},
+    "react":   {"name": f"{APP_NAME}-react",   "display_name": "React"},
+    "vue":     {"name": f"{APP_NAME}-vue",     "display_name": "Vue"},
+}
 
 # ============================================================================
 # 7. USER ROLES & CROSS-CUTTING CONFIGURATION

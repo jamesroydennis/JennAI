@@ -50,7 +50,7 @@ def test_must_be_a_recognized_web_app():
     A concrete implementation of the presentation contract.
     Verifies that 'flask' is a recognized web application type.
     """
-    assert 'flask' in config.WEB_APP_NAMES, "The 'flask' key must be in the WEB_APP_NAMES whitelist."
+    assert 'flask' in config.PRESENTATION_APPS.keys(), "The 'flask' key must be in the PRESENTATION_APPS dictionary."
 
 # --- Presentation Contract Tests ---
 

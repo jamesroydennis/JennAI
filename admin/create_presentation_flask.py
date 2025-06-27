@@ -35,25 +35,6 @@ def ensure_and_copy(src, dst):
     else:
         logger.info(f"Exists: {dst.relative_to(ROOT)}")
 
-def compile_scss(input_path: Path, output_path: Path):
-    """Compiles an SCSS file to CSS using the 'sass' CLI."""
-    try:
-        logger.info(f"Compiling SCSS: {input_path.name} -> {output_path.name}")
-        # Use subprocess.run for simple command execution
-        subprocess.run(
-            ['sass', str(input_path), str(output_path)],
-            check=True, # Raise an exception if the command returns a non-zero exit code
-            capture_output=True, # Capture stdout and stderr
-            text=True, # Decode stdout/stderr as text
-            encoding="utf-8"
-        )
-        logger.success(f"Successfully compiled: {output_path.name}")
-    except FileNotFoundError:
-        logger.error(f"Error: 'sass' command not found. Please install Dart Sass CLI (npm install -g sass).")
-        logger.warning(f"Skipping SCSS compilation for {input_path.name}.")
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error compiling SCSS for {input_path.name}:\n{e.stderr}")
-
 def main():
     # Add a top-level check to see if the app already exists.
     # This makes the script's behavior explicit and safe.
@@ -69,12 +50,6 @@ def main():
             ensure_and_copy(src, dst)
         else:
             logger.warning(f"Template {src.relative_to(ROOT)} does not exist.")
-            
-    # After copying, compile the main SCSS file
-    main_scss_path = DEST_ROOT / "static" / "css" / "main.scss"
-    main_css_path = DEST_ROOT / "static" / "css" / "main.css"
-    if main_scss_path.exists():
-        compile_scss(main_scss_path, main_css_path)
     logger.success("Presentation Flask starter files are in place.")
 
 if __name__ == "__main__":

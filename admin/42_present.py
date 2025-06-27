@@ -93,6 +93,14 @@ def print_header(title: str):
         print(f"{title}")
         print("=" * 70)
 
+def print_formatted_help(text_block: str):
+    """
+    Parses and prints a multi-line string as formatted Markdown to the console
+    using the 'rich' library.
+    """
+    # This function is added for consistency with 42.py
+    console.print(text_block, markup=False)
+
 # --- Platform Configuration & Helpers ---
 PLATFORM_PATHS = get_platform_paths()
 
@@ -200,6 +208,7 @@ def handle_platform_actions(platform_key: str):
                 Choice(value="regression_report", name="Regression Test & Report"),
                 Separator("--- Management ---"),
                 Choice(value="inject_assets", name="🎨 Inject Brand Assets"),
+                Choice(value="compile_scss", name="🎨 Compile SCSS"),
                 Choice(value="reset", name="🔄 Reset (Delete & Re-scaffold)"),
                 Choice(value="delete", name="❌ Delete (Remove App)"),
                 Separator("──────────────────────────────────"),
@@ -242,15 +251,21 @@ def handle_platform_actions(platform_key: str):
             # Injecting assets is critical, so abort on failure
             run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "inject_brand_assets.py"}" --target {platform_key}',
                         abort_on_fail=True)
+        elif action_selection == "compile_scss":
+            # CONTRACTOR delegates to DESIGNER to compile the final styles.
+            print_header(f"{platform_key.capitalize()}: Compiling SCSS")
+            run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "compile_scss.py"}" --target {platform_key}',
+                        abort_on_fail=True)
         elif action_selection == "reset":
             # CONTRACTOR orchestrates a full reset, combining destruction, construction, and design.
             print_header(f"{platform_key.capitalize()}: Resetting Application")
             delete_platform(platform_key)
-            # Now run the scaffold and inject steps
             print_header(f"{platform_key.capitalize()}: Scaffolding Application")
             run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / f"create_presentation_{platform_key}.py"}"')
             print_header(f"{platform_key.capitalize()}: Injecting Brand Assets")
             run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "inject_brand_assets.py"}" --target {platform_key}')
+            print_header(f"{platform_key.capitalize()}: Compiling SCSS")
+            run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "compile_scss.py"}" --target {platform_key}')
         elif action_selection == "delete":
             # CONTRACTOR performs a direct destructive action.
             delete_platform(platform_key)
@@ -297,6 +312,31 @@ def handle_platform_actions(platform_key: str):
             # Restart file logging after cleanup and tests
             start_file_logging(debug_mode=config.DEBUG_MODE)
 
+HELP_TEXT_PRESENTATION = """
+The Presentation Layer Console manages the frontend applications.
+
+--- Platform-Specific Actions (Flask, Angular, etc.) ---
+  Select a platform to access its dedicated menu. From there, you can:
+  - Scaffold: Create the initial project structure.
+  - Run: Start the development server.
+  - Test: Run tests for that specific platform.
+  - Inject Assets: Apply the central brand theme.
+  - Reset: A full delete, scaffold, and asset injection cycle.
+
+--- Global Presentation Actions ---
+  Test (All Presentation)
+    Runs all tests located in 'src/presentation/tests'.
+
+  Regression Testing (All Presentation)
+    Cleans the project, creates directories, and then runs all
+    presentation layer tests.
+
+--- Utilities ---
+  Initialize/Create Folders
+    Ensures the project's directory structure is correct, creating
+    any missing folders or '__init__.py' files.
+"""
+
 def main():
     """Main function to present the presentation layer options."""
     # This entire console acts as the tool for the CONTRACTOR persona,
@@ -315,62 +355,82 @@ def main():
     # The log level will be determined by the DEBUG_MODE from the loaded config.
     setup_logging(debug_mode=config.DEBUG_MODE)
     logger.info(f"Admin console started. DEBUG_MODE is set to: {config.DEBUG_MODE}")
-    MENU = [
-        # Dynamically create choices from the config whitelist
-        *[Choice(value=app_name, name=app_name.capitalize()) for app_name in config.WEB_APP_NAMES],
-        Separator("──────────────────────────────────"),
-        Choice(value="test_all_presentation", name="Test (All Presentation)"),
-        Choice(value="test_all_presentation_report", name="Test & Report (All Presentation)"),
-        Choice(value="regression_all_presentation", name="Regression Testing (All Presentation)"),
-        Choice(value="regression_all_presentation_report", name="Regression Testing & Report (All Presentation)"),
-        Separator("--- Utilities ---"),
-        Choice(value="create_folders", name="Initialize/Create Folders"),
-        Separator("──────────────────────────────────"),
-        Choice(value="exit", name="Exit"),
+
+    # Define menu actions in a structured way, similar to 42.py
+    MENU_ACTIONS = [
+        {"key": "help", "name": "❓  Help", "is_instruction": True, "help_text": HELP_TEXT_PRESENTATION},
+        {"key": "separator", "name": "--- Platforms ---"},
+        *[{"key": key, "name": details["display_name"]} for key, details in config.PRESENTATION_APPS.items()],
+        {"key": "separator", "name": "--- Global Testing ---"},
+        {"key": "test_all_presentation", "name": "Test (All Presentation)"},
+        {"key": "test_all_presentation_report", "name": "Test & Report (All Presentation)"},
+        {"key": "regression_all_presentation", "name": "Regression Testing (All Presentation)"},
+        {"key": "regression_all_presentation_report", "name": "Regression Testing & Report (All Presentation)"},
+        {"key": "separator", "name": "--- Utilities ---"},
+        {"key": "create_folders", "name": "Initialize/Create Folders"},
     ]
+
+    action_map = {action["key"]: action for action in MENU_ACTIONS}
 
     while True:
         try:
             if supports_interactive_console():
-                selection = inquirer.select(
+                # Build choices dynamically for InquirerPy, adding Exit at the top
+                choices = [Choice(None, name="🔚  Exit")]
+                for action in MENU_ACTIONS:
+                    if action.get("key") == "separator":
+                        choices.append(Separator(action["name"]))
+                    else:
+                        choices.append(Choice(value=action["key"], name=action["name"]))
+
+                selection_key = inquirer.select(
                     message="Select a presentation task:",
-                    choices=MENU,
+                    choices=choices,
                     default="flask",
                     qmark=">",
                     cycle=False,
-                    max_height=10,
+                    max_height=16,
                 ).execute()
             else:
                 print("\nRunning in simplified, non-interactive mode due to lack of console support.")
                 print("Please use command-line arguments to run specific tasks.")
                 break # Exit the loop if not interactive
 
-            if selection is None or selection == "exit": # Handle None for Ctrl+C or 'exit' choice
+            if selection_key is None: # Handle None for Ctrl+C or 'Exit' choice
                 print("\nExiting Presentation Console.")
                 break
 
+            selected_action = action_map.get(selection_key)
+            if not selected_action:
+                print("\nInvalid selection.")
+                continue
+
             try:
-                if selection in config.WEB_APP_NAMES:
-                    handle_platform_actions(selection)
-                elif selection == "test_all_presentation":
+                if selected_action.get("is_instruction"):
+                    print_header(selected_action["name"])
+                    print_formatted_help(selected_action.get("help_text", "No help available."))
+                    input("\nPress Enter to return to the menu...")
+                elif selection_key in config.PRESENTATION_APPS.keys():
+                    handle_platform_actions(selection_key)
+                elif selection_key == "test_all_presentation":
                     _execute_test_steps(get_presentation_testing_steps(with_allure=False))
-                elif selection == "test_all_presentation_report":
+                elif selection_key == "test_all_presentation_report":
                     _execute_test_steps(get_presentation_testing_steps(with_allure=True), serve_report=True)
-                elif selection == "regression_all_presentation":
+                elif selection_key == "regression_all_presentation":
                     # Stop file logging before cleanup to avoid file lock issues
                     stop_file_logging()
                     steps = CLEANUP_STEPS + get_presentation_testing_steps(with_allure=True)
                     _execute_test_steps(steps, is_regression=True)
                     # Restart file logging after cleanup and tests
                     start_file_logging(debug_mode=config.DEBUG_MODE)
-                elif selection == "regression_all_presentation_report":
+                elif selection_key == "regression_all_presentation_report":
                     # Stop file logging before cleanup to avoid file lock issues
                     stop_file_logging()
                     steps = CLEANUP_STEPS + get_presentation_testing_steps(with_allure=True)
                     _execute_test_steps(steps, serve_report=True, is_regression=True)
                     # Restart file logging after cleanup and tests
                     start_file_logging(debug_mode=config.DEBUG_MODE)
-                elif selection == "create_folders":
+                elif selection_key == "create_folders":
                     print_header("Initializing Project Folders")
                     run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "create_directories.py"}"')
                     input("\nPress Enter to return to the menu...")
