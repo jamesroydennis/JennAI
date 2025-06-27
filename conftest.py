@@ -56,6 +56,19 @@ def pytest_configure(config):
     except Exception as e:
         print(f"Unexpected error displaying configuration: {e}")
 
+    # Display Project Tree
+    try:
+        console.print() # Add a blank line for spacing
+        tree_script = ROOT / "admin" / "tree.py"
+        if tree_script.exists():
+            subprocess.run([sys.executable, str(tree_script)], check=True)
+        else:
+            print(f"Warning: {tree_script} not found. Skipping project tree display.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error displaying project tree: {e}")
+    except Exception as e:
+        print(f"Unexpected error displaying project tree: {e}")
+
     console.print("\n[cyan]" + "=" * 70 + "[/cyan]")
     console.print("[cyan]  STARTING PYTEST SESSION[/cyan]")
     console.print("[cyan]" + "=" * 70 + "[/cyan]\n")
@@ -75,3 +88,71 @@ def app_config():
     during a test session, making it efficient to load once.
     """
     return config
+
+# --- Project Scope Configuration ---
+SCOPES = {
+    "ROOT": None,  # Special case: None means run all tests.
+    "SYSTEM": [os.path.normcase(str(ROOT / 'tests'))],
+    "PRESENTATION": [os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests'))],
+    "FLASK_PRESENTATION": [os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests' / 'test_flask_app.py'))],
+    "BUSINESS": [os.path.normcase(str(ROOT / 'src' / 'business' / 'tests'))],
+    "DATA": [os.path.normcase(str(ROOT / 'src' / 'data' / 'tests'))],
+    "VALIDATION": [os.path.normcase(str(ROOT / 'src' / 'validation' / 'tests'))],
+}
+
+def pytest_addoption(parser):
+    """Adds custom command-line options to pytest."""
+    parser.addoption(
+        "--scope", action="store", default="ROOT", help=f"Specify test scope. Available: {', '.join(SCOPES.keys())}"
+    )
+
+def pytest_collection_modifyitems(session, config, items):
+    """
+    Pytest hook to dynamically deselect tests based on the --scope option.
+    1. Filters tests based on the --scope command-line option.
+    2. Dynamically deselects test suites for presentation layers that have not been scaffolded.
+    """
+    scope = config.getoption("--scope").upper()
+    whitelisted_paths = SCOPES.get(scope)
+
+    # This map links a test file to the implementation directory that must exist for it to be run.
+    implementation_map = {
+        os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests' / 'test_angular_app.py')):
+            ROOT / 'src' / 'presentation' / 'angular_app',
+        os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests' / 'test_react_app.py')):
+            ROOT / 'src' / 'presentation' / 'react_app',
+        os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests' / 'test_vue_app.py')):
+            ROOT / 'src' / 'presentation' / 'vue_app',
+    }
+
+    selected_items = []
+    deselected_items = []
+
+    for item in items:
+        item_path_norm = os.path.normcase(str(item.path))
+
+        # New Rule: Always deselect the abstract contract tests. They are not runnable.
+        if 'test_presentation_contract.py' in item_path_norm:
+            deselected_items.append(item)
+            continue
+
+        # Condition 1: Check if the item is within the selected scope.
+        in_scope = (whitelisted_paths is None) or any(item_path_norm.startswith(p) for p in whitelisted_paths)
+
+        # Condition 2: Check if the implementation exists (if applicable).
+        implementation_exists = True
+        if item_path_norm in implementation_map:
+            implementation_dir = implementation_map[item_path_norm]
+            if not implementation_dir.exists():
+                implementation_exists = False
+
+        # A test is selected only if it's in scope AND its implementation exists.
+        if in_scope and implementation_exists:
+            selected_items.append(item)
+        else:
+            deselected_items.append(item)
+
+    # Modify the collected items list in-place and report to the user.
+    if deselected_items:
+        items[:] = selected_items
+        config.hook.pytest_deselected(items=deselected_items)

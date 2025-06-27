@@ -54,6 +54,13 @@ def compile_scss(input_path: Path, output_path: Path):
         print(f"Error compiling SCSS for {input_path.name}:\n{e.stderr}")
 
 def main():
+    # Add a top-level check to see if the app already exists.
+    # This makes the script's behavior explicit and safe.
+    if DEST_ROOT.exists():
+        print(f"\nINFO: Flask application directory already exists at '{DEST_ROOT}'.")
+        print("      No files were changed. Use the 'Reset' option in the console to delete and re-scaffold.")
+        return 0 # Exit gracefully
+
     for template_rel, dest_rel in TEMPLATE_MAP.items():
         src = TEMPLATE_DIR / template_rel
         dst = DEST_ROOT / dest_rel

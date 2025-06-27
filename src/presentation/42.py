@@ -14,7 +14,6 @@ if str(PROJECT_ROOT) not in sys.path:
 try:
     # Import config for paths and logging setup
     from config import config
-    from src.presentation.config import PresentationPersona
     from config.loguru_setup import setup_logging, logger
     from InquirerPy import inquirer
     from InquirerPy.base.control import Choice
@@ -194,16 +193,13 @@ def handle_platform_actions(platform_key: str):
         if action_selection is None or action_selection == "back":
             break # Go back to main platform selection
 
-        # --- Constructor Persona Actions ---
         if action_selection == "scaffold":
             print_header(f"{platform_key.capitalize()}: Scaffolding Application")
             run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / f"create_presentation_{platform_key}.py"}"')
-        # --- Designer Persona Actions ---
         elif action_selection == "inject_assets":
             print_header(f"{platform_key.capitalize()}: Injecting Brand Assets")
             run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "inject_brand_assets.py"}" --target {platform_key}')
         elif action_selection == "reset":
-            # This action combines Designer and Constructor responsibilities.
             print_header(f"{platform_key.capitalize()}: Resetting Application")
             delete_platform(platform_key)
             # Now run the scaffold and inject steps
@@ -250,20 +246,7 @@ def handle_platform_actions(platform_key: str):
 
 def main():
     """Main function to present the presentation layer options."""
-    # This entire console acts as the tool for the "Manager" persona.
-    # It orchestrates the actions of the Constructor and Designer.
     # Initialize logging for the admin console itself.
-
-    # --- Environment Sanity Check ---
-    # Ensure the script is being run from an allowed conda environment.
-    current_env = os.getenv("CONDA_DEFAULT_ENV")
-    if not current_env or os.path.basename(current_env) not in config.WHITELIST_ENVIRONMENTS:
-        print(f"\n\033[91mFATAL ERROR: Incorrect Conda Environment\033[0m")
-        print(f"This admin console MUST be run from one of: {config.WHITELIST_ENVIRONMENTS}")
-        print(f"You are currently in the '{current_env or 'None'}' environment.")
-        print("\nPlease activate an allowed environment and try again.")
-        sys.exit(1)
-
     # The log level will be determined by the DEBUG_MODE from the loaded config.
     setup_logging(debug_mode=config.DEBUG_MODE)
     logger.info(f"Admin console started. DEBUG_MODE is set to: {config.DEBUG_MODE}")

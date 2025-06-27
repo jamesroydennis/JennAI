@@ -6,14 +6,19 @@
     <title>{{ app_name }}</title>
     <link rel="icon" href="{{ url_for('brand.serve_favicon') }}">
     <style>
-        body { font-family: sans-serif; background-color: #1a1a1a; color: #e0e0e0; text-align: center; padding-top: 50px; }
+        body { font-family: sans-serif; background-color: #1a1a1a; color: #e0e0e0; text-align: center; padding: 20px 5%; max-width: 800px; margin: auto; }
         img { max-width: 300px; margin-bottom: 20px; }
         h1 { color: #00aaff; }
+        .content-section { text-align: left; margin-top: 40px; border-top: 1px solid #444; padding-top: 20px; }
     </style>
 </head>
 <body>
-    <img src="{{ url_for('brand.serve_logo') }}" alt="{{ app_name }} Logo">
+    <img src="{{ url_for('brand.serve_logo') }}" alt="{{ app_name }} Logo" />
     <h1>Welcome to {{ app_name }}</h1>
     <p>The intelligent frontier awaits.</p>
+
+    <div class="content-section">{{ vision_statement|safe }}</div>
+    <div class="content-section">{{ mission_statement }}</div>
+
 </body>
 </html>

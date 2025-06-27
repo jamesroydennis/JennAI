@@ -71,6 +71,10 @@ ALLOWED_ENVS = WHITELIST_ENVIRONMENTS
 ANGULAR_NAME = f"{APP_NAME}-angular"
 FLASK_NAME   = f"{APP_NAME}-flask"
 REACT_NAME   = f"{APP_NAME}-react"
+VUE_NAME     = f"{APP_NAME}-vue" # Added for consistency
+
+# Whitelist of supported web application keys for admin scripts
+WEB_APP_NAMES = ["flask", "angular", "react", "vue"]
 
 # ============================================================================
 # 7. USER ROLES & CROSS-CUTTING CONFIGURATION

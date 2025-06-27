@@ -206,11 +206,18 @@ The JennAI Admin Console provides the following commands:
     DANGER: Executes a script that completely removes and reinstalls the conda environment.
 """
 
+# --- Dynamic Pytest Verbosity Flag ---
+PYTEST_VERBOSITY_FLAG = "-v" if DEBUG_MODE else "-q -rA"
+
 # --- Centralized Pytest Commands ---
 # Define base pytest command without Allure flags
-PYTEST_BASE_COMMAND = f'{PY_EXEC} -m pytest'
+PYTEST_BASE_COMMAND = f'{PY_EXEC} -m pytest {PYTEST_VERBOSITY_FLAG}'
 # Define pytest command with Allure flags for report generation
 PYTEST_ALLURE_COMMAND = f'{PYTEST_BASE_COMMAND} --alluredir="{str(ROOT / "allure-results")}" --clean-alluredir'
+
+# Define commands for the specific 'SYSTEM' scope
+PYTEST_SYSTEM_SCOPE_COMMAND = f'{PYTEST_BASE_COMMAND} --scope=SYSTEM'
+PYTEST_SYSTEM_SCOPE_ALLURE_COMMAND = f'{PYTEST_ALLURE_COMMAND} --scope=SYSTEM'
 
 # --- Centralized Step Definitions for DRY Principle ---
 CLEANUP_STEPS = [
@@ -219,11 +226,11 @@ CLEANUP_STEPS = [
 ]
 # Steps for running tests WITHOUT generating Allure report data
 TESTING_STEPS_NO_ALLURE = [
-    {"name": "Run Tests", "command": PYTEST_BASE_COMMAND},
+    {"name": "Run Tests", "command": PYTEST_SYSTEM_SCOPE_COMMAND},
 ]
 # Steps for running tests AND generating Allure report data
 TESTING_STEPS_WITH_ALLURE = [
-    {"name": "Run Tests", "command": PYTEST_ALLURE_COMMAND},
+    {"name": "Run Tests", "command": PYTEST_SYSTEM_SCOPE_ALLURE_COMMAND},
     {"name": "Generate Allure Environment", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "generate_allure_environment.py")}"', "abort_on_fail": False},
 ]
 REPORTING_STEP = {"name": "Serve Report", "command": f'"{ALLURE_EXEC}" serve "{str(ROOT / "allure-results")}"', "abort_on_fail": False}

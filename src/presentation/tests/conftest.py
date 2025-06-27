@@ -1,6 +1,7 @@
 import pytest
 from src.presentation.api_server.flask_app import create_app
 from core.dependency_container import DependencyContainer
+from config import config
 
 @pytest.fixture(scope="function")
 def app():
