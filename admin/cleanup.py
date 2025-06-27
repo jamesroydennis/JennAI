@@ -39,7 +39,7 @@ def main():
         logger.remove() # Removes all handlers, including the file handler.
         # Re-add a console-only handler to see subsequent messages.
         logger.add(sys.stderr, level="DEBUG") # Assuming we want to maintain verbose output
-        logger.info("File logger removed. Continuing cleanup with console-only logging.")
+        logger.info("File logger for cleanup.py removed. Continuing cleanup with console-only logging.")
         
         
         # --- Delete jennai.log file ---

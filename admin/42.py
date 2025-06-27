@@ -14,7 +14,7 @@ if str(ROOT) not in sys.path:
 # Load environment variables from .env file (if it exists)
 load_dotenv(dotenv_path=ROOT / ".env")
 from config.config import WHITELIST_ENVIRONMENTS, DEBUG_MODE
-from config.loguru_setup import setup_logging, logger # type: ignore
+from config.loguru_setup import setup_logging, logger, stop_file_logging, start_file_logging # type: ignore
 
 try:
     from InquirerPy import inquirer
@@ -119,9 +119,8 @@ def _run_steps(action):
         # Special handling for the cleanup step to release the log file lock
         is_cleanup_step = "cleanup.py" in step["command"]
         if is_cleanup_step:
-            logger.info("Parent process releasing log file for cleanup...")
-            logger.remove()  # Removes all handlers, including the file handler
-            logger.add(sys.stderr, level="DEBUG" if DEBUG_MODE else "INFO") # Re-add console-only logging
+            # Use the centralized helper to stop file logging
+            stop_file_logging()
 
         # Extract environment variables for the current step, if any
         step_env_vars = step.get("env_vars")
@@ -130,8 +129,8 @@ def _run_steps(action):
 
         # Re-initialize full logging after the cleanup step has finished
         if is_cleanup_step:
-            logger.info("Parent process re-initializing full logging...")
-            setup_logging(debug_mode=DEBUG_MODE) # This will re-add both file and console handlers
+            # Use the centralized helper to restart all logging
+            start_file_logging(debug_mode=DEBUG_MODE)
 
         if return_code != 0:
             all_steps_ok = False

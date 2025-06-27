@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 
 import os
-import sys
 from pathlib import Path
 
-# --- Root Project Path Setup (CRITICAL for Imports) ---
-ROOT = Path(__file__).resolve().parent.parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+# This script is a foundational utility and should have NO dependencies on other
+# project modules (like config or loguru) to avoid circular import errors
+# during initial project setup. It uses standard `print` for output.
 
-from loguru import logger
-from config.loguru_setup import setup_logging
+# --- Root Project Path Setup ---
+ROOT = Path(__file__).resolve().parent.parent
 
 # Define the directory structure.
 # 'is_package': True will create an __init__.py file.
@@ -19,6 +17,7 @@ DIRECTORIES = {
     "admin": {"is_package": False},
     "admin/templates": {"is_package": False},
     "admin/templates/flask": {"is_package": False},
+    "admin/templates/flask/routes": {"is_package": False},
     "admin/templates/flask/templates": {"is_package": False},
     "admin/templates/flask/static": {"is_package": False},
     "admin/templates/flask/static/css": {"is_package": False},
@@ -50,10 +49,10 @@ DIRECTORIES = {
     # Presentation layer
     "src/presentation": {"is_package": True},
     "src/presentation/tests": {"is_package": True},
-    # "src/presentation/angular_app": {"is_package": False},
-    # "src/presentation/angular_app/src": {"is_package": False},
-    # "src/presentation/angular_app/src/app": {"is_package": False},
-    # "src/presentation/angular_app/src/assets": {"is_package": False},
+    "src/presentation/angular_app": {"is_package": False},
+    "src/presentation/angular_app/src": {"is_package": False},
+    "src/presentation/angular_app/src/assets": {"is_package": False},
+    "src/presentation/angular_app/src/styles": {"is_package": False},
     "src/presentation/angular_app/src/environments": {"is_package": False},
     "src/presentation/api_server": {"is_package": True},
     "src/presentation/api_server/controllers": {"is_package": True},
@@ -66,10 +65,13 @@ DIRECTORIES = {
     "src/presentation/api_server/flask_app/templates": {"is_package": False},
     "src/presentation/api_server/schemas": {"is_package": True},
     "src/presentation/img": {"is_package": False},
-    # "src/presentation/react_app": {"is_package": False},
-    # "src/presentation/react_app/public": {"is_package": False},
-    # "src/presentation/react_app/src": {"is_package": False},
-    "src/presentation/react_app/node_modules": {"is_package": False},
+    "src/presentation/react_app": {"is_package": False},
+    "src/presentation/react_app/src": {"is_package": False},
+    "src/presentation/react_app/src/assets": {"is_package": False},
+    "src/presentation/vue_app": {"is_package": False},
+    "src/presentation/vue_app/src": {"is_package": False},
+    "src/presentation/vue_app/src/assets": {"is_package": False},
+    "src/presentation/vue_app/src/styles": {"is_package": False},
     "src/presentation/web_clients": {"is_package": False},
 }
 
@@ -78,29 +80,22 @@ def main():
     Creates the defined directory structure and adds __init__.py files
     to specified package directories.
     """
-    logger.info("Creating project directories...")
+    print("Creating project directories...")
     try:
         for dir_path, properties in DIRECTORIES.items():
             full_path = ROOT / dir_path
             full_path.mkdir(parents=True, exist_ok=True)
-            logger.success(f"Ensured directory exists: {dir_path}")
             if properties["is_package"]:
                 init_file = full_path / "__init__.py"
                 if not init_file.exists():
                     with open(init_file, "w") as f:
                         f.write(f"# Initializes the {dir_path.replace('/', '.')} package.\n")
-                    logger.info(f"    -> Created __init__.py to make it a Python package.")
-                else:
-                    logger.info(f"    -> Ensured it is a Python package.")
-        logger.success("\n✅ Project directory structure is up to date.")
+                    print(f"  -> Created __init__.py in '{dir_path}'")
+        print("\n✅ Project directory structure is up to date.")
         return True
     except OSError as e:
-        logger.error(f"Error creating directories: {e}")
+        print(f"Error creating directories: {e}")
         return False
 
 if __name__ == "__main__":
-    setup_logging(debug_mode=True)
-    logger.info("Loguru setup complete for create_directories.py.")
-    if not main():
-        sys.exit(1)
-    sys.exit(0)
+    main()

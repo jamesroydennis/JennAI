@@ -7,6 +7,7 @@ Import from this file in admin scripts, tests, and modules to ensure consistency
 - All paths are resolved relative to the project root.
 - Update this file if your directory structure changes.
 """
+from enum import Enum, auto
 import os # Added for os.getenv
 
 from pathlib import Path # Assuming this is where your config.py is located
@@ -15,7 +16,8 @@ from pathlib import Path # Assuming this is where your config.py is located
 # 1. PROJECT METADATA
 # ============================================================================
 APP_NAME = "JennAI"
-VERSION = "0.1.0"
+VERSION = "0.1.0"  # Your project's version
+GEMINI_VERSION = "2025-06-27T07:00:00Z"  # A timestamp to mark the state of the codebase when Gemini assisted
 
 # ============================================================================
 # 2. ROOT & DIRECTORY STRUCTURE
@@ -116,6 +118,21 @@ PYTHON_PACKAGES = [
     "numpy", "pandas", "requests", "matplotlib", "jupyter", "markdown",
     "pytest", "loguru","dotenv"
 ]
+
+# ============================================================================
+# 12. ARCHITECTURAL PERSONAS
+# ============================================================================
+class ArchitecturalPersona(Enum):
+    """
+    Defines the roles involved in the project's development lifecycle.
+    """
+    ARCHITECT = auto()    # Designs the foundational blueprints (scaffolding, brand) and delegates execution.
+    CONTRACTOR = auto()   # Manages Constructors and Designers to ensure the Architect's blueprint is deployed to specification on a solid foundation.
+    CONSTRUCTOR = auto()  # The developer scaffolding the application framework.
+    DESIGNER = auto()     # The designer applying the brand and theme.
+    OBSERVER = auto()     # Ensures the design matches the brand and the construction adheres to the Architect's blueprints.
+
+ROLES_PRESENTATION = [persona.name for persona in ArchitecturalPersona]
 # ============================================================================
 # END OF CONFIGURATION
 # ============================================================================

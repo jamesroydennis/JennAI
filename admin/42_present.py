@@ -14,16 +14,26 @@ if str(PROJECT_ROOT) not in sys.path:
 try:
     # Import config for paths and logging setup
     from config import config
-    from src.presentation.config import PresentationPersona
-    from config.loguru_setup import setup_logging, logger
+    from admin.presentation_utils import get_platform_paths
+    from config.loguru_setup import setup_logging, logger, stop_file_logging, start_file_logging
     from InquirerPy import inquirer
     from InquirerPy.base.control import Choice
     from InquirerPy.separator import Separator
     from InquirerPy.utils import color_print
-except ImportError:
-    print("Error: InquirerPy is not installed or not found in the current environment.")
-    print("Please ensure your conda environment is active and the package is installed.")
-    print("You can try running: pip install InquirerPy")
+except ImportError as e:
+    # Differentiate between a missing external package and a broken internal import
+    if '.' in e.name: # Likely an internal module (e.g., 'config.loguru_setup')
+        print(f"\n\033[91mFATAL ERROR: A required project module is missing or cannot be imported: {e.name}\033[0m")
+        print("This usually means the project's directory structure is incomplete (e.g., missing '__init__.py' files).")
+        print("\nTo fix this, please run the directory creation script:")
+        print(f"  python admin/create_directories.py")
+        print("\nThen try running this script again.")
+    else: # Likely an external package (e.g., 'InquirerPy')
+        print(f"\n\033[91mFATAL ERROR: A required package is missing: {e.name}\033[0m")
+        print("This usually means your Conda environment is out of sync with 'environment.yaml'.")
+        print("\nTo fix this, please run the environment update script from your 'base' environment:")
+        print(f"  1. conda deactivate")
+        print(f"  2. python admin/conda_update.py")
     sys.exit(1)
 
 PY_EXEC = f'"{sys.executable}"'
@@ -34,7 +44,7 @@ def supports_interactive_console():
     """Check if the terminal supports interactive features and colors."""
     return console.is_terminal
 
-def run_command(command: str, cwd: Path = PROJECT_ROOT) -> int:
+def run_command(command: str, cwd: Path = PROJECT_ROOT, abort_on_fail: bool = True) -> bool:
     try:
         process = subprocess.Popen(
             command,
@@ -51,13 +61,27 @@ def run_command(command: str, cwd: Path = PROJECT_ROOT) -> int:
             else:
                 print(line, end="")
         process.stdout.close()
-        return process.wait()
+        return_code = process.wait()
+
+        if return_code != 0:
+            error_msg = f"Command failed with exit code {return_code}: {command}"
+            if supports_interactive_console():
+                color_print([("red", f"\n❌ {error_msg}")])
+            else:
+                print(f"\n❌ {error_msg}")
+            logger.error(error_msg) # Always log the error
+            if abort_on_fail:
+                logger.error(error_msg)
+                sys.exit(return_code) # Exit with the command's return code
+            return False
+        else:
+            return True
     except Exception as e:
         if supports_interactive_console():
             color_print([("red", f"An error occurred: {e}")])
         else:
             print(f"An error occurred: {e}")
-        return 1
+        return False
 
 def print_header(title: str):
     if supports_interactive_console():
@@ -70,12 +94,7 @@ def print_header(title: str):
         print("=" * 70)
 
 # --- Platform Configuration & Helpers ---
-PLATFORM_PATHS = {
-    "flask": config.PRESENTATION_DIR / "api_server" / "flask_app",
-    "angular": config.PRESENTATION_DIR / "angular_app",
-    "react": config.PRESENTATION_DIR / "react_app",
-    "vue": config.PRESENTATION_DIR / "vue_app",
-}
+PLATFORM_PATHS = get_platform_paths()
 
 def delete_platform(platform_key: str):
     """
@@ -148,6 +167,23 @@ def get_presentation_testing_steps(with_allure: bool = False) -> list:
         steps.append({"name": "Generate Allure Environment", "command": f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "generate_allure_environment.py"}"', "abort_on_fail": False})
     return steps
 
+def _execute_test_steps(steps: list, serve_report: bool = False, is_regression: bool = False):
+    """Helper function to execute a list of test-related steps."""
+    total_steps = len(steps)
+    if serve_report:
+        total_steps += 1 # Account for the final report serving step
+
+    for i, step in enumerate(steps, 1):
+        color_print([("cyan", f"\n--- Step {i} of {total_steps}: {step['name']} ---")])
+        # For regression, cleanup steps are critical and should abort on failure.
+        # Test steps should generally not abort the entire console, just report failure.
+        abort_on_fail = True if is_regression and step in CLEANUP_STEPS else False
+        run_command(step["command"], abort_on_fail=abort_on_fail)
+
+    if serve_report:
+        color_print([("cyan", f"\n--- Step {total_steps} of {total_steps}: {REPORTING_STEP['name']} ---")])
+        run_command(REPORTING_STEP["command"], abort_on_fail=REPORTING_STEP.get("abort_on_fail", True))
+
 def handle_platform_actions(platform_key: str):
     """Handles the sub-menu for a selected platform."""
     while True:
@@ -161,6 +197,7 @@ def handle_platform_actions(platform_key: str):
                 Separator("--- Testing ---"),
                 Choice(value="test", name="Test (Run Unit/Integration Tests)"),
                 Choice(value="test_report", name="Test & Report"),
+                Choice(value="regression_report", name="Regression Test & Report"),
                 Separator("--- Management ---"),
                 Choice(value="inject_assets", name="🎨 Inject Brand Assets"),
                 Choice(value="reset", name="🔄 Reset (Delete & Re-scaffold)"),
@@ -194,16 +231,19 @@ def handle_platform_actions(platform_key: str):
         if action_selection is None or action_selection == "back":
             break # Go back to main platform selection
 
-        # --- Constructor Persona Actions ---
         if action_selection == "scaffold":
+            # CONTRACTOR delegates to CONSTRUCTOR to build the application from a blueprint.
             print_header(f"{platform_key.capitalize()}: Scaffolding Application")
             run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / f"create_presentation_{platform_key}.py"}"')
-        # --- Designer Persona Actions ---
+
         elif action_selection == "inject_assets":
+            # CONTRACTOR delegates to DESIGNER to apply the brand theme.
             print_header(f"{platform_key.capitalize()}: Injecting Brand Assets")
-            run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "inject_brand_assets.py"}" --target {platform_key}')
+            # Injecting assets is critical, so abort on failure
+            run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "inject_brand_assets.py"}" --target {platform_key}',
+                        abort_on_fail=True)
         elif action_selection == "reset":
-            # This action combines Designer and Constructor responsibilities.
+            # CONTRACTOR orchestrates a full reset, combining destruction, construction, and design.
             print_header(f"{platform_key.capitalize()}: Resetting Application")
             delete_platform(platform_key)
             # Now run the scaffold and inject steps
@@ -212,8 +252,11 @@ def handle_platform_actions(platform_key: str):
             print_header(f"{platform_key.capitalize()}: Injecting Brand Assets")
             run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "inject_brand_assets.py"}" --target {platform_key}')
         elif action_selection == "delete":
+            # CONTRACTOR performs a direct destructive action.
             delete_platform(platform_key)
+
         elif action_selection == "run":
+            # CONTRACTOR orchestrates the execution of the development server.
             print_header(f"Running {platform_key.capitalize()} Dev Server")
             if platform_key == "flask":
                 flask_app_path = PROJECT_ROOT / "src" / "presentation" / "api_server" / "flask_app" / "app.py"
@@ -230,29 +273,34 @@ def handle_platform_actions(platform_key: str):
                     run_command('npm start', cwd=react_dir)
                 else:
                     print(f"React project not found at {react_dir}. Please create it first.")
+            elif platform_key == "vue":
+                vue_dir = PROJECT_ROOT / "src" / "presentation" / "vue_app"
+                if vue_dir.exists():
+                    run_command('npm run dev', cwd=vue_dir)
+                else:
+                    print(f"Vue project not found at {vue_dir}. Please create it first.")
         elif action_selection == "test":
+            # CONTRACTOR orchestrates the test suite for the specific platform.
             # Run platform-specific tests without Allure report generation
-            steps = get_platform_testing_steps(platform_key, with_allure=False)
-            for i, step in enumerate(steps, 1):
-                color_print([("cyan", f"\n--- Step {i} of {len(steps)}: {step['name']} ---")])
-                run_command(step["command"])
+            _execute_test_steps(get_platform_testing_steps(platform_key, with_allure=False))
         elif action_selection == "test_report":
+            # CONTRACTOR orchestrates the test suite and report generation.
             # Run platform-specific tests with Allure report generation and serve
-            steps = get_platform_testing_steps(platform_key, with_allure=True)
-            for i, step in enumerate(steps, 1):
-                color_print([("cyan", f"\n--- Step {i} of {len(steps)}: {step['name']} ---")])
-                run_command(step["command"])
-            color_print([("cyan", f"\n--- Step {len(steps) + 1} of {len(steps) + 1}: Serve Report ---")])
-            run_command(REPORTING_STEP["command"])
-
-        if supports_interactive_console():
-            input("\nPress Enter to continue...")
+            _execute_test_steps(get_platform_testing_steps(platform_key, with_allure=True), serve_report=True)
+        elif action_selection == "regression_report":
+            # CONTRACTOR orchestrates a full regression test for a specific platform.
+            print_header(f"{platform_key.capitalize()}: Regression Test & Report")
+            # Stop file logging before cleanup to avoid file lock issues
+            stop_file_logging()
+            steps = CLEANUP_STEPS + get_platform_testing_steps(platform_key, with_allure=True)
+            _execute_test_steps(steps, serve_report=True, is_regression=True)
+            # Restart file logging after cleanup and tests
+            start_file_logging(debug_mode=config.DEBUG_MODE)
 
 def main():
     """Main function to present the presentation layer options."""
-    # This entire console acts as the tool for the "Manager" persona.
-    # It orchestrates the actions of the Constructor and Designer.
-    # Initialize logging for the admin console itself.
+    # This entire console acts as the tool for the CONTRACTOR persona,
+    # orchestrating the actions of the CONSTRUCTOR and DESIGNER.
 
     # --- Environment Sanity Check ---
     # Ensure the script is being run from an allowed conda environment.
@@ -275,6 +323,8 @@ def main():
         Choice(value="test_all_presentation_report", name="Test & Report (All Presentation)"),
         Choice(value="regression_all_presentation", name="Regression Testing (All Presentation)"),
         Choice(value="regression_all_presentation_report", name="Regression Testing & Report (All Presentation)"),
+        Separator("--- Utilities ---"),
+        Choice(value="create_folders", name="Initialize/Create Folders"),
         Separator("──────────────────────────────────"),
         Choice(value="exit", name="Exit"),
     ]
@@ -303,39 +353,33 @@ def main():
                 if selection in config.WEB_APP_NAMES:
                     handle_platform_actions(selection)
                 elif selection == "test_all_presentation":
-                    steps = get_presentation_testing_steps(with_allure=False)
-                    for i, step in enumerate(steps, 1):
-                        color_print([("cyan", f"\n--- Step {i} of {len(steps)}: {step['name']} ---")])
-                        run_command(step["command"])
+                    _execute_test_steps(get_presentation_testing_steps(with_allure=False))
                 elif selection == "test_all_presentation_report":
-                    steps = get_presentation_testing_steps(with_allure=True)
-                    for i, step in enumerate(steps, 1):
-                        color_print([("cyan", f"\n--- Step {i} of {len(steps)}: {step['name']} ---")])
-                        run_command(step["command"])
-                    color_print([("cyan", f"\n--- Step {len(steps) + 1} of {len(steps) + 1}: Serve Report ---")])
-                    run_command(REPORTING_STEP["command"])
+                    _execute_test_steps(get_presentation_testing_steps(with_allure=True), serve_report=True)
                 elif selection == "regression_all_presentation":
+                    # Stop file logging before cleanup to avoid file lock issues
+                    stop_file_logging()
                     steps = CLEANUP_STEPS + get_presentation_testing_steps(with_allure=True)
-                    for i, step in enumerate(steps, 1):
-                        color_print([("cyan", f"\n--- Step {i} of {len(steps)}: {step['name']} ---")])
-                        run_command(step["command"])
+                    _execute_test_steps(steps, is_regression=True)
+                    # Restart file logging after cleanup and tests
+                    start_file_logging(debug_mode=config.DEBUG_MODE)
                 elif selection == "regression_all_presentation_report":
+                    # Stop file logging before cleanup to avoid file lock issues
+                    stop_file_logging()
                     steps = CLEANUP_STEPS + get_presentation_testing_steps(with_allure=True)
-                    for i, step in enumerate(steps, 1):
-                        color_print([("cyan", f"\n--- Step {i} of {len(steps)}: {step['name']} ---")])
-                        run_command(step["command"])
-                    color_print([("cyan", f"\n--- Step {len(steps) + 1} of {len(steps) + 1}: Serve Report ---")])
-                    run_command(REPORTING_STEP["command"])
+                    _execute_test_steps(steps, serve_report=True, is_regression=True)
+                    # Restart file logging after cleanup and tests
+                    start_file_logging(debug_mode=config.DEBUG_MODE)
+                elif selection == "create_folders":
+                    print_header("Initializing Project Folders")
+                    run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "create_directories.py"}"')
+                    input("\nPress Enter to return to the menu...")
                 else:
                     print("\nInvalid selection.")
             except KeyboardInterrupt:
                 print("\nOperation cancelled by user.")
-                break # Exit the loop on Ctrl+C
-
-        except prompt_toolkit.output.win32.NoConsoleScreenBufferError:
-            print("\nError: Incompatible console. Running in simplified mode.")
-            print("Please use command-line arguments to run specific tasks.")
-            break
+                # Do not break; allow the main loop to continue and show the menu again.
+                pass
         except KeyboardInterrupt:
             print("\nOperation cancelled by user.")
             break

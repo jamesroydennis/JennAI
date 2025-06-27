@@ -1,0 +1,16 @@
+// Main SCSS file for the Flask application.
+// The Architect has designed this file to be the entry point for all styles.
+
+// The CONSTRUCTOR places this file.
+// The DESIGNER is responsible for providing the '_variables.scss' file,
+// which contains all brand-specific colors, fonts, and theme settings.
+@import 'variables';
+
+// Example of a global style that uses a variable from the theme.
+// This will only work after the DESIGNER has injected the brand assets.
+body {
+  font-family: sans-serif;
+  // Example: Use variables that would be defined in _variables.scss
+  // background-color: $background-color;
+  // color: $text-color;
+}

@@ -5,9 +5,10 @@ from pathlib import Path # Import Path for clean path manipulation
 from loguru import logger # Loguru must be installed in the environment
 from typing import Optional # To type hint the optional debug_mode
 
-# Flag to indicate if pytest-specific logging has been initialized
-# _pytest_logging_initialized = False # No longer needed with single log file strategy
 from config.config import DEBUG_MODE as GLOBAL_DEBUG_MODE # Import global default
+
+# Global variable to hold the ID of the file handler so it can be removed later
+_file_handler_id: Optional[int] = None
 
 def setup_logging(log_file_name: str = "jennai.log", debug_mode: Optional[bool] = None):
     """
@@ -20,6 +21,7 @@ def setup_logging(log_file_name: str = "jennai.log", debug_mode: Optional[bool] 
         debug_mode (Optional[bool]): If True, sets level to DEBUG; otherwise, INFO.
                                      If None, reads from config.config.DEBUG_MODE.
     """
+    global _file_handler_id
     # Determine debug mode
     current_debug_mode = GLOBAL_DEBUG_MODE if debug_mode is None else debug_mode
     log_level = "DEBUG" if current_debug_mode else "INFO"
@@ -41,5 +43,24 @@ def setup_logging(log_file_name: str = "jennai.log", debug_mode: Optional[bool] 
     log_dir = jennai_root_path / 'logs' # Using Path object for clean joining
     os.makedirs(log_dir, exist_ok=True) # Ensure logs directory exists
     actual_log_file_path = log_dir / log_file_name
-    logger.add(str(actual_log_file_path), rotation="10 MB", level=log_level, compression="zip", retention="10 days", enqueue=True)
+    # Store the handler ID so we can remove it later to release file locks
+    _file_handler_id = logger.add(str(actual_log_file_path), rotation="10 MB", level=log_level, compression="zip", retention="10 days", enqueue=True)
     logger.info(f"Loguru setup complete. Console logging active. File logging to: {actual_log_file_path}. Level: {log_level}.")
+
+def stop_file_logging():
+    """Removes the file handler from the logger to release the file lock."""
+    global _file_handler_id
+    if _file_handler_id is not None:
+        try:
+            logger.remove(_file_handler_id)
+            _file_handler_id = None # Clear the ID
+            logger.info("File logging handler removed.")
+        except ValueError:
+            # This can happen if the handler was already removed. It's safe to ignore.
+            logger.debug("File handler already removed, nothing to do.")
+            pass
+
+def start_file_logging(debug_mode: Optional[bool] = None):
+    """A convenience function to re-initialize logging, including the file handler."""
+    logger.info("Re-initializing logging...")
+    setup_logging(debug_mode=debug_mode)

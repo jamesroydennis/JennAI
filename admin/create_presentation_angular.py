@@ -7,38 +7,45 @@ from pathlib import Path
 jennai_root_for_path = Path(__file__).resolve().parent.parent
 if str(jennai_root_for_path) not in sys.path:
     sys.path.insert(0, str(jennai_root_for_path))
+from config.loguru_setup import setup_logging, logger # Import logger
 from config.config import SRC_DIR
 
 ANGULAR_APP_DIR = SRC_DIR / "presentation" / "angular_app"
 
+# Define blueprint variables for the Observer's tests.
+DEST_ROOT = ANGULAR_APP_DIR
+TEMPLATE_MAP = {} # No files copied by this script directly
+DIRECTORIES_TO_CREATE = [] # Directory creation is now handled by the central create_directories.py
+
 def main():
     """Orchestrates the scaffolding of the Angular presentation layer."""
-    print("--- Angular Presentation Layer Scaffolder ---")
+    logger.info("--- Angular Presentation Layer Scaffolder ---")
 
     # 1. Check for Angular CLI
     try:
         subprocess.run(["ng", "--version"], check=True, capture_output=True, text=True)
-        print("\n✅ Angular CLI ('ng' command) found.")
+        logger.success("Angular CLI ('ng' command) found.")
     except (subprocess.CalledProcessError, FileNotFoundError):
-        print("\n❌ Angular CLI ('ng' command) not found.")
-        print("   Please install it globally: npm install -g @angular/cli")
-        print("   Then try again.")
+        logger.error("Angular CLI ('ng' command) not found.")
+        logger.info("Please install it globally: npm install -g @angular/cli")
+        logger.info("Then try again.")
         sys.exit(1)
 
     # 2. Guide user to run ng new if project doesn't exist
     if not ANGULAR_APP_DIR.exists() or not (ANGULAR_APP_DIR / "angular.json").exists():
-        print(f"\nINFO: Angular project not found at '{ANGULAR_APP_DIR}'.")
-        print("      You need to scaffold the Angular project first using the Angular CLI.")
-        print("\n--- MANUAL STEP REQUIRED ---")
-        print(f"1. Navigate to the parent directory: cd {ANGULAR_APP_DIR.parent}")
-        print(f"2. Run Angular CLI to create the app: ng new {ANGULAR_APP_DIR.name} --directory {ANGULAR_APP_DIR.name} --skip-git")
-        print("   (Choose 'SCSS' for stylesheet format when prompted).")
-        print("3. Once 'ng new' completes, run this admin task again to inject brand assets.")
-        print("-" * 70)
+        logger.info(f"Angular project not found at '{ANGULAR_APP_DIR.relative_to(SRC_DIR.parent)}'.")
+        logger.info("You need to scaffold the Angular project first using the Angular CLI.")
+        logger.warning("\n--- MANUAL STEP REQUIRED ---")
+        logger.warning(f"1. Navigate to the parent directory: cd {ANGULAR_APP_DIR.parent}")
+        logger.warning(f"2. Run Angular CLI to create the app: ng new {ANGULAR_APP_DIR.name} --directory {ANGULAR_APP_DIR.name} --skip-git")
+        logger.warning("   (Choose 'SCSS' for stylesheet format when prompted).")
+        logger.warning("3. Once 'ng new' completes, run this admin task again to inject brand assets.")
+        logger.warning("-" * 70)
         sys.exit(0)  # Exit gracefully, as the next step (asset injection) will be done on the next run.
 
-    print(f"\n✅ Angular project already exists at '{ANGULAR_APP_DIR}'.")
-    print("   The asset injection step will run next if called from the main console.")
+    logger.success(f"Angular project already exists at '{ANGULAR_APP_DIR.relative_to(SRC_DIR.parent)}'.")
+    logger.info("Directory structure is managed by 'create_directories.py'.")
 
 if __name__ == "__main__":
+    setup_logging(debug_mode=True) # Setup logging for this script
     main()

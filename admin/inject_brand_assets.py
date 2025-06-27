@@ -49,14 +49,28 @@ TARGETS = {
             # Add other Angular-specific assets here
         }
     },
+    "vue": {
+        "img_dir": PRESENTATION_DIR / "vue_app" / "src" / "assets",
+        "css_dir": PRESENTATION_DIR / "vue_app" / "src" / "styles",
+        "text_dir": PRESENTATION_DIR / "vue_app" / "src" / "assets",
+        "asset_map": {
+            BRAND_SRC_DIR / "jennai-logo.png": "logo.png",
+            BRAND_SRC_DIR / "favicon_io" / "favicon.ico": "favicon.ico",
+            BRAND_SRC_DIR / "theme.scss": "theme.scss",
+            BRAND_SRC_DIR / "mission.txt": "mission.txt",
+            BRAND_SRC_DIR / "vision.md": "vision.md",
+                    }
+    },
     "react": {
         "img_dir": PRESENTATION_DIR / "react_app" / "src" / "assets",
         "css_dir": PRESENTATION_DIR / "react_app" / "src",  # React often imports SCSS from src/
         "text_dir": PRESENTATION_DIR / "react_app" / "src" / "assets",
         "asset_map": {
             BRAND_SRC_DIR / "jennai-logo.png": "logo.png",
+            BRAND_SRC_DIR / "favicon_io" / "favicon.ico": "favicon.ico",
             BRAND_SRC_DIR / "theme.scss": "theme.scss",
-            # Note: React's public/favicon.ico is usually managed separately.
+            BRAND_SRC_DIR / "mission.txt": "mission.txt",
+            BRAND_SRC_DIR / "vision.md": "vision.md",
         }
     }
 }
@@ -70,16 +84,29 @@ def main(target: str):
         return
 
     target_config = TARGETS[target]
-    img_dir = target_config["img_dir"]
-    css_dir = target_config["css_dir"]
-
-    # Ensure destination directories exist
-    img_dir.mkdir(parents=True, exist_ok=True)
-    css_dir.mkdir(parents=True, exist_ok=True)
+    img_dir = target_config.get("img_dir")
+    css_dir = target_config.get("css_dir")
+    text_dir = target_config.get("text_dir")
 
     for src_path, dest_name in target_config["asset_map"].items():
-        dest_path = css_dir / dest_name if dest_name.endswith(('.scss', '.css')) else img_dir / dest_name
-        
+        # Determine the correct destination directory based on file type
+        if dest_name.endswith(('.scss', '.css')):
+            dest_dir = css_dir
+        elif dest_name.endswith(('.txt', '.md')):
+            dest_dir = text_dir
+        else: # Default to image directory for png, jpg, ico, etc.
+            dest_dir = img_dir
+
+        if not dest_dir:
+            logger.warning(f"No destination directory configured for asset '{dest_name}' in target '{target}'. Skipping.")
+            continue
+
+        # The DESIGNER now depends on the CONSTRUCTOR. It will not create directories.
+        if not dest_dir.exists():
+            logger.error(f"DESIGNER CRITIQUE: The destination directory '{dest_dir}' does not exist. The foundational structure must be created first (e.g., via 'Initialize/Create Folders').")
+            return # Abort this design task.
+
+        dest_path = dest_dir / dest_name
         if not src_path.exists():
             logger.warning(f"Source asset not found, skipping: {src_path}")
             continue

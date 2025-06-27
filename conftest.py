@@ -94,7 +94,10 @@ SCOPES = {
     "ROOT": None,  # Special case: None means run all tests.
     "SYSTEM": [os.path.normcase(str(ROOT / 'tests'))],
     "PRESENTATION": [os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests'))],
-    "FLASK_PRESENTATION": [os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests' / 'test_flask_app.py'))],
+    "FLASK_PRESENTATION": [os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests' / 'test_flask_app.py')), os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests' / 'test_brand_routes.py'))],
+    "ANGULAR_PRESENTATION": [os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests' / 'test_angular_app.py'))],
+    "REACT_PRESENTATION": [os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests' / 'test_react_app.py'))],
+    "VUE_PRESENTATION": [os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests' / 'test_vue_app.py'))],
     "BUSINESS": [os.path.normcase(str(ROOT / 'src' / 'business' / 'tests'))],
     "DATA": [os.path.normcase(str(ROOT / 'src' / 'data' / 'tests'))],
     "VALIDATION": [os.path.normcase(str(ROOT / 'src' / 'validation' / 'tests'))],
@@ -130,11 +133,6 @@ def pytest_collection_modifyitems(session, config, items):
 
     for item in items:
         item_path_norm = os.path.normcase(str(item.path))
-
-        # New Rule: Always deselect the abstract contract tests. They are not runnable.
-        if 'test_presentation_contract.py' in item_path_norm:
-            deselected_items.append(item)
-            continue
 
         # Condition 1: Check if the item is within the selected scope.
         in_scope = (whitelisted_paths is None) or any(item_path_norm.startswith(p) for p in whitelisted_paths)
