@@ -1,5 +1,9 @@
 {
+  "scripts": {
+    "test": "jest"
+  },
   "devDependencies": {
+    "jest": "^29.7.0",
     "sass": "^1.89.2"
   }
 }

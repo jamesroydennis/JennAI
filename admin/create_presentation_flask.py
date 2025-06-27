@@ -16,6 +16,7 @@ from config.config import ROOT, ADMIN_DIR, SRC_DIR
 # Map template files to their destination relative to DEST_ROOT
 TEMPLATE_MAP = {
     "app.py.template": "app.py",
+    "routes/brand_routes.py.template": "routes/brand_routes.py",
     "templates/base.html.template": "templates/base.html",
     "templates/index.html.template": "templates/index.html",
     "templates/404.html.template": "templates/404.html",
