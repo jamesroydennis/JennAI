@@ -246,6 +246,8 @@ MENU_ACTIONS = [
     {"key": "regression", "name": "Regression Testing", "steps": CLEANUP_STEPS + TESTING_STEPS_WITH_ALLURE},
     {"key": "regression_and_report", "name": "Regression Testing & Report", "pause_after": True, "steps": CLEANUP_STEPS + TESTING_STEPS_WITH_ALLURE + [REPORTING_STEP]},
     {"key": "separator", "name": "──────────────────────────────────"},
+    {"key": "cleanup_dry_run", "name": "Preview Cleanup (Dry Run)", "steps": [
+        {"name": "Run Cleanup Dry Run", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "cleanup.py")}" --dry-run'}]},
     {"key": "check_logs", "name": "Check Logs", "steps": [
         {"name": "Scan Logs", "command": f'{PY_EXEC} "{str(ROOT / "admin" / "check_logs.py")}"'}]},
     {"key": "tree", "name": "Full-Tree", "steps": [

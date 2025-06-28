@@ -30,6 +30,7 @@ CONFIG_DIR        = ROOT / "config"
 SRC_DIR           = ROOT / "src"
 NOTEBOOKS_DIR     = ROOT / "notebooks"
 ALLURE_RESULTS_DIR= ROOT / "allure-results"
+ALLURE_REPORT_DIR = ROOT / "allure-report"
 LOGS_DIR          = ROOT / "logs"
 BRAND_DIR         = SRC_DIR / "presentation" / "brand" # Corrected path to user's brand folder
 VALIDATION_DIR    = SRC_DIR / "validation" # Consolidated and moved to be under src

@@ -1,66 +1,71 @@
-# loguru_setup.py
-import os # No longer needed for file paths
 import sys
-from pathlib import Path # Import Path for clean path manipulation
-from loguru import logger # Loguru must be installed in the environment
-from typing import Optional # To type hint the optional debug_mode
+from pathlib import Path
+from loguru import logger
 
-from config.config import DEBUG_MODE as GLOBAL_DEBUG_MODE # Import global default
+# --- Project Path Configuration ---
+# Ensure the config module can be found by other scripts.
+try:
+    from . import config
+except ImportError:
+    # This allows the script to be run directly for testing,
+    # though its primary use is as a module.
+    import config
 
-# Global variable to hold the ID of the file handler so it can be removed later
-_file_handler_id: Optional[int] = None
+# --- Global State for Handlers ---
+# Use a dictionary to keep track of handler IDs to prevent duplicates
+# and allow for easy removal and re-adding of handlers.
+_handler_ids = {
+    "file": None,
+    "console": None
+}
 
-def setup_logging(log_file_name: str = "jennai.log", debug_mode: Optional[bool] = None):
+def setup_logging(debug_mode: bool = False):
     """
-    Sets up the global Loguru logger configuration.
-    Logs to console and to 'logs/jennai.log'.
+    Configures Loguru logging for the entire application.
+
+    This setup includes a console logger and a file logger with automatic
+    rotation, retention, and compression to manage disk space.
 
     Args:
-        log_file_name (str): The name of the log file (e.g., "jennai.log", "pytest_session.log"). This function
-                             will attempt to add a file handler for this name if one doesn't exist.
-        debug_mode (Optional[bool]): If True, sets level to DEBUG; otherwise, INFO.
-                                     If None, reads from config.config.DEBUG_MODE.
+        debug_mode (bool): If True, sets the console log level to DEBUG.
+                           Otherwise, it's set to INFO. The file logger
+                           always logs at the DEBUG level.
     """
-    global _file_handler_id
-    # Determine debug mode
-    current_debug_mode = GLOBAL_DEBUG_MODE if debug_mode is None else debug_mode
-    log_level = "DEBUG" if current_debug_mode else "INFO"
-
-    # Always remove previous handlers to ensure a clean setup for the current context
+    # Stop any existing loggers to ensure a clean setup
     logger.remove()
 
-    # Add console handler
-    # Add color tags for different levels
-    # <level> will automatically color based on default, but we can be explicit
-    # <yellow> for WARNING, <red> for ERROR, <bold><red> for CRITICAL, <green> for SUCCESS
-    # Default for INFO is usually plain, DEBUG might be dim or plain.
-    log_format_console = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-    logger.add(sys.stderr, level=log_level, format=log_format_console, colorize=True)
+    console_level = "DEBUG" if debug_mode else "INFO"
+    log_file_path = config.LOGS_DIR / "jennai.log"
 
-    # Add file handler
-    current_script_dir = Path(__file__).resolve().parent
-    jennai_root_path = current_script_dir.parent
-    log_dir = jennai_root_path / 'logs' # Using Path object for clean joining
-    os.makedirs(log_dir, exist_ok=True) # Ensure logs directory exists
-    actual_log_file_path = log_dir / log_file_name
-    # Store the handler ID so we can remove it later to release file locks
-    _file_handler_id = logger.add(str(actual_log_file_path), rotation="10 MB", level=log_level, compression="zip", retention="10 days", enqueue=True)
-    logger.info(f"Loguru setup complete. Console logging active. File logging to: {actual_log_file_path}. Level: {log_level}.")
+    # --- Console Logger ---
+    # This handler prints messages to your terminal.
+    _handler_ids["console"] = logger.add(
+        sys.stderr,
+        level=console_level,
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+    )
+
+    # --- File Logger (with Rotation and Retention) ---
+    # This handler writes messages to a file and manages old logs automatically.
+    _handler_ids["file"] = logger.add(
+        log_file_path,
+        level="DEBUG",  # Always log debug messages to the file
+        format="{time} | {level} | {name}:{function}:{line} | {message}",
+        rotation="10 MB",      # Create a new file when the current one reaches 10 MB.
+        retention="14 days",   # Keep log files for a maximum of 14 days.
+        compression="zip",     # Compress old log files to save space.
+        backtrace=True,        # Show full stack traces for exceptions.
+        diagnose=True,         # Add exception variable values for easier debugging.
+        enqueue=True,          # Make logging non-blocking (good for performance).
+        catch=True             # Automatically catch uncaught exceptions.
+    )
 
 def stop_file_logging():
-    """Removes the file handler from the logger to release the file lock."""
-    global _file_handler_id
-    if _file_handler_id is not None:
-        try:
-            logger.remove(_file_handler_id)
-            _file_handler_id = None # Clear the ID
-            logger.info("File logging handler removed.")
-        except ValueError:
-            # This can happen if the handler was already removed. It's safe to ignore.
-            logger.debug("File handler already removed, nothing to do.")
-            pass
+    """Stops logging to the file, typically before a cleanup operation."""
+    if _handler_ids["file"] is not None:
+        logger.remove(_handler_ids["file"])
+        _handler_ids["file"] = None
 
-def start_file_logging(debug_mode: Optional[bool] = None):
-    """A convenience function to re-initialize logging, including the file handler."""
-    logger.info("Re-initializing logging...")
-    setup_logging(debug_mode=debug_mode)
+def start_file_logging(debug_mode: bool):
+    """Re-initializes all logging handlers."""
+    setup_logging(debug_mode)

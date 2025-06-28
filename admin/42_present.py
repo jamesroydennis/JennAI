@@ -524,7 +524,7 @@ def handle_legacy_menu():
             {"key": "regression_all_presentation", "name": "Regression Testing (All Presentation)"},
             {"key": "regression_all_presentation_report", "name": "Regression Testing & Report (All Presentation)"},
             {"key": "separator", "name": "--- Utilities ---"},
-            {"key": "create_folders", "name": "Initialize/Create Folders"},
+            {"key": "create_directories", "name": "Initialize/Create Directories"},
         ]
         action_map = {action["key"]: action for action in original_menu_actions}
 
@@ -568,7 +568,7 @@ def handle_legacy_menu():
                 stop_file_logging()
                 _execute_test_steps(steps=CLEANUP_STEPS + get_all_presentation_testing_steps(with_allure=True), serve_report=True, is_regression=True)
                 start_file_logging(debug_mode=config.DEBUG_MODE)
-            elif selection_key == "create_folders":
+            elif selection_key == "create_directories":
                 run_command(f'{PY_EXEC} "{PROJECT_ROOT / "admin" / "create_directories.py"}"')
 
 def main():
@@ -579,6 +579,13 @@ def main():
         print("\nRunning in simplified, non-interactive mode. Please use command-line arguments.")
         return
 
+    # --- Environment Validation ---
+    from src.validation.validator import validate_admin_environment
+    is_valid, message = validate_admin_environment()
+    if not is_valid:
+        logger.error(f"Admin environment validation failed: {message}")
+        logger.error("Please check your setup and try again. Aborting.")
+        return
     while True:
         print_header("Presentation Layer - Persona-Driven Console")
 

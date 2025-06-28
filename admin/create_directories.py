@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DIRECTORIES = {
     # Top-level directories
     "admin": {"is_package": False},
+
     "admin/templates": {"is_package": False},
     "admin/templates/flask": {"is_package": False},
     "admin/templates/flask/routes": {"is_package": False},
@@ -28,6 +29,8 @@ DIRECTORIES = {
     "notebooks": {"is_package": False},
     "src": {"is_package": True},
     "tests": {"is_package": True},
+    "validation": {"is_package": True},
+    "validation/tests": {"is_package": True},
     # Business layer
     "src/business": {"is_package": True},
     "src/business/ai": {"is_package": True},

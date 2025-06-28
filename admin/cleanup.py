@@ -2,9 +2,10 @@
 
 
 import sys
+import os
 import shutil
-import subprocess
 from pathlib import Path
+import argparse
 
 # --- Root Project Path Setup (CRITICAL for Imports) ---
 # This block ensures the main /JennAI project root is always on Python's sys.path.
@@ -13,87 +14,126 @@ ROOT = Path(__file__).resolve().parent.parent # Go up two levels from admin/scri
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT)) # Insert at the beginning for higher priority
 
-
 from loguru import logger # Import the logger instance
-from config.loguru_setup import setup_logging # Import the setup function
+from config import config
+from config.loguru_setup import setup_logging
 
-def main():
+def get_size(start_path: Path) -> int:
+    """Calculates the size of a directory or a file in bytes."""
+    if start_path.is_file():
+        return start_path.stat().st_size
+    if start_path.is_dir():
+        total_size = 0
+        for dirpath, dirnames, filenames in os.walk(start_path):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                if not os.path.islink(fp):
+                    total_size += os.path.getsize(fp)
+        return total_size
+    return 0
+
+def main(args):
     """
     Recursively deletes specified Python-related cache folders and other
     temporary folders within the JennAI project root.
     """
     try:
+        if args.dry_run:
+            logger.info("--- DRY RUN MODE ACTIVATED ---")
+            logger.info("No files will be deleted. Calculating potential space savings...")
         # Use the standardized ROOT path.
-        jennai_root_path = ROOT
+        jennai_root_path = config.ROOT
 
         if not jennai_root_path.exists() or not jennai_root_path.is_dir():
             logger.error(f"Project root not found or is not a directory at calculated path: {jennai_root_path}")
             logger.error("Please ensure the script is located in the 'admin' subdirectory of your project.")
             return 1 # Indicate an error
-
-        # This print statement was likely for debugging before logger was integrated.
-        # logger.info(f"JennAI Project Root determined as: {jennai_root_path}") # Already logged by setup_logging
-
         # --- Stop logging to file before deletion ---
         logger.info("Stopping file logging to allow deletion...")
         logger.remove() # Removes all handlers, including the file handler.
         # Re-add a console-only handler to see subsequent messages.
         logger.add(sys.stderr, level="DEBUG") # Assuming we want to maintain verbose output
         logger.info("File logger for cleanup.py removed. Continuing cleanup with console-only logging.")
-        
-        
-        # --- Delete jennai.log file ---
-        logs_dir = jennai_root_path / "logs"
-        
-        # List of log files to delete
-        log_files_to_delete = [
-            "jennai.log",
-            "pytest_session.log"
+
+        total_space_to_be_freed = 0
+        deleted_items_count = 0
+
+        # --- Clean out the entire logs directory ---
+        logs_dir = config.LOGS_DIR
+        if logs_dir.is_dir():
+            logger.info(f"Cleaning all files from log directory: {logs_dir}")
+            for item in logs_dir.iterdir():
+                if item.is_file():
+                    file_size = get_size(item)
+                    total_space_to_be_freed += file_size
+                    deleted_items_count += 1
+                    if args.dry_run:
+                        logger.info(f"  WOULD DELETE log file: {item.name} ({file_size/1024:.2f} KB)")
+                    else:
+                        try:
+                            logger.info(f"  DELETING log artifact: {item.name}")
+                            item.unlink()
+                        except OSError as e:
+                            logger.error(f"  Failed to delete log artifact {item}. Reason: {e}")
+
+        # --- Delete configured top-level directories by their absolute path ---
+        configured_dirs_to_remove = [
+            config.ALLURE_RESULTS_DIR,
+            config.ALLURE_REPORT_DIR,
         ]
+        for dir_path in configured_dirs_to_remove:
+            if dir_path.is_dir():
+                dir_size = get_size(dir_path)
+                total_space_to_be_freed += dir_size
+                deleted_items_count += 1
+                if args.dry_run:
+                    logger.info(f"  WOULD DELETE configured directory: {dir_path} ({dir_size/1024/1024:.2f} MB)")
+                else:
+                    try:
+                        logger.info(f"  DELETING configured directory: {dir_path}")
+                        shutil.rmtree(dir_path)
+                    except OSError as e:
+                        logger.error(f"  Failed to delete {dir_path}. Reason: {e}")
 
-        for log_fn in log_files_to_delete:
-            log_file_path_to_delete = logs_dir / log_fn
-            if log_file_path_to_delete.exists() and log_file_path_to_delete.is_file():
-                try:
-                    log_file_path_to_delete.unlink() # Delete the file
-                    logger.info(f"  DELETED log file: {log_file_path_to_delete}")
-                except OSError as e:
-                    logger.error(f"  Failed to delete log file {log_file_path_to_delete}. Reason: {e}")
-            else:
-                logger.info(f"Log file '{log_fn}' not found (or not a file), no need to delete: {log_file_path_to_delete}")
-
-        # Define the cache folder names to be removed
-        cache_folders_to_remove = [
+        # --- Recursively find and delete common cache folders by name ---
+        cache_folders_to_find_and_remove = [
             '__pycache__',
             '.pytest_cache',
             '.virtual_documents',
-            'allure-results', # Add Allure results directory
-            'allure-report',  # Add Allure report directory
-            '.ipynb_checkpoints' # Add Jupyter Notebook checkpoints
+            '.ipynb_checkpoints', # Add Jupyter Notebook checkpoints
+            'node_modules',       # For Node.js dependencies (can be very large)
+            'dist',               # Common build output directory
+            'build',              # Common build output directory
+            '.angular',           # Angular cache directory
         ]
 
         logger.info(f"Starting comprehensive cleanup under JennAI root: {jennai_root_path}")
-
-        deleted_count = 0
-        for folder_name in cache_folders_to_remove:
+        for folder_name in cache_folders_to_find_and_remove:
             logger.info(f"Searching for and deleting '{folder_name}' folders...")
-
             # Walk through all directories and files under the root
             for path_object in jennai_root_path.rglob(f"*{folder_name}"): # Use rglob for recursive search
                 if path_object.is_dir() and path_object.name == folder_name:
-                    try:
-                        logger.info(f"  DELETING: {path_object}")
-                        shutil.rmtree(path_object)
-                        deleted_count += 1
-                    except OSError as e:
-                        logger.error(f"  Failed to delete {path_object}. Reason: {e}")
+                    dir_size = get_size(path_object)
+                    total_space_to_be_freed += dir_size
+                    deleted_items_count += 1
+                    if args.dry_run:
+                        logger.info(f"  WOULD DELETE: {path_object} ({dir_size/1024/1024:.2f} MB)")
+                    else:
+                        try:
+                            logger.info(f"  DELETING: {path_object}")
+                            shutil.rmtree(path_object)
+                        except OSError as e:
+                            logger.error(f"  Failed to delete {path_object}. Reason: {e}")
 
-        # This print statement can be removed as logger adds its own formatting.
-        # print("--------------------------------------------------------")
-        if deleted_count > 0:
-            logger.success(f"Cleanup complete. {deleted_count} cache folder(s) deleted.")
+        if args.dry_run:
+            logger.success("--- DRY RUN SUMMARY ---")
+            logger.success(f"Found {deleted_items_count} items to delete.")
+            logger.success(f"A total of {total_space_to_be_freed / 1024 / 1024:.2f} MB would be freed.")
         else:
-            logger.info("Cleanup complete. No cache folders matching the criteria were found to delete.")
+            if deleted_items_count > 0:
+                logger.success(f"Cleanup complete. {deleted_items_count} item(s) deleted.")
+            else:
+                logger.info("Cleanup complete. No items matching the criteria were found to delete.")
         return 0 # Indicate success
 
     except Exception as e:
@@ -101,11 +141,11 @@ def main():
         return 1 # Indicate an error
 
 if __name__ == "__main__":
-    # Setup logging first
-    # Pass debug_mode=True or False based on your preference for the cleanup script
-    # You might want cleanup to always be verbose, or respect the global config
-    # For now, let's assume verbose for a utility script
+    parser = argparse.ArgumentParser(description="Clean up temporary project files and directories.")
+    parser.add_argument('--dry-run', action='store_true', help="Show what would be deleted without actually deleting anything.")
+    args = parser.parse_args()
+
     setup_logging(debug_mode=True)
     logger.info("Loguru setup complete for cleanup.py.")
 
-    exit(main()) # Run the cleanup and exit with its code
+    exit(main(args)) # Run the cleanup and exit with its code

@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv  # Import load_dotenv
 import pytest
+from typing import Union
 import subprocess # New import for running external scripts
 from rich.console import Console # Import Console for colored output
 # --- Root Project Path Setup (CRITICAL for Imports) ---
@@ -37,11 +38,7 @@ def _display_pre_test_diagnostics(console: Console):
     console.print("[cyan]  PRE-TEST DIAGNOSTICS[/cyan]")
     console.print("[cyan]" + "=" * 70 + "[/cyan]")
 
-    _run_diagnostic_script(ROOT / "admin" / "show_env.py", "environment display")
-    _run_diagnostic_script(ROOT / "admin" / "show_config.py", "configuration display")
-
-    console.print()  # Add a blank line for spacing
-    _run_diagnostic_script(ROOT / "admin" / "tree.py", "project tree display")
+    _run_diagnostic_script(ROOT / "admin" / "show_context.py", "full context display")
 
 def pytest_configure(config):
     """
@@ -83,19 +80,19 @@ def _build_dynamic_scopes() -> dict:
     # 1. Define static scopes.
     STATIC_SCOPES_CONFIG = {
         "ROOT": None,
-        "SYSTEM": [os.path.normcase(str(ROOT / 'tests'))],
-        "PRESENTATION": [os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests'))],
-        "DESIGNER_COMPILE": [os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests' / 'test_designer.py'))],
-        "CONSTRUCTOR_BLUEPRINTS": [os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests'))],
-        "PERSONA_CRITIQUES": [os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests'))],
-        "BUSINESS": [os.path.normcase(str(ROOT / 'src' / 'business' / 'tests'))],
-        "DATA": [os.path.normcase(str(ROOT / 'src' / 'data' / 'tests'))],
-        "VALIDATION": [os.path.normcase(str(ROOT / 'src' / 'validation' / 'tests'))],
+        "SYSTEM": [os.path.normcase(str(config.ROOT / 'tests'))],
+        "PRESENTATION": [os.path.normcase(str(config.PRESENTATION_DIR / 'tests'))],
+        "DESIGNER_COMPILE": [os.path.normcase(str(config.PRESENTATION_DIR / 'tests' / 'test_designer.py'))],
+        "CONSTRUCTOR_BLUEPRINTS": [os.path.normcase(str(config.PRESENTATION_DIR / 'tests'))],
+        "PERSONA_CRITIQUES": [os.path.normcase(str(config.PRESENTATION_DIR / 'tests'))],
+        "BUSINESS": [os.path.normcase(str(config.BUSINESS_DIR / 'tests'))],
+        "DATA": [os.path.normcase(str(config.DATA_DIR / 'tests'))],
+        "VALIDATION": [os.path.normcase(str(config.VALIDATION_DIR / 'tests'))],
     }
 
     # 2. Define special cases for platform-specific scopes.
     PLATFORM_SCOPE_EXTRAS = {
-        "flask": [os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests' / "test_brand_routes.py"))]
+        "flask": [os.path.normcase(str(config.PRESENTATION_DIR / 'tests' / "test_brand_routes.py"))]
     }
 
     # --- Scope Building Logic ---
@@ -104,7 +101,7 @@ def _build_dynamic_scopes() -> dict:
     scopes = STATIC_SCOPES_CONFIG.copy()
 
     # Dynamically generate and add platform-specific scopes.
-    presentation_tests_dir = ROOT / 'src' / 'presentation' / 'tests'
+    presentation_tests_dir = config.PRESENTATION_DIR / 'tests'
     for platform_name in config.PRESENTATION_APPS.keys():
         scope_name = f"{platform_name.upper()}_PRESENTATION"
 
@@ -127,7 +124,7 @@ def pytest_addoption(parser):
         "--scope", action="store", default="ROOT", help=f"Specify test scope. Available: {', '.join(SCOPES.keys())}"
     )
 
-def _is_in_scope(item, scope: str, whitelisted_paths: list | None) -> bool:
+def _is_in_scope(item, scope: str, whitelisted_paths: Union[list, None]) -> bool:
     """
     Determines if a given test item falls within the specified scope,
     handling both path-based and special name-based filtering.
@@ -181,12 +178,12 @@ def pytest_collection_modifyitems(session, config, items):
 
     # This map links a test file to the implementation directory that must exist for it to be run.
     implementation_map = {
-        os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests' / 'test_angular_app.py')):
-            ROOT / 'src' / 'presentation' / 'angular_app',
-        os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests' / 'test_react_app.py')):
-            ROOT / 'src' / 'presentation' / 'react_app',
-        os.path.normcase(str(ROOT / 'src' / 'presentation' / 'tests' / 'test_vue_app.py')):
-            ROOT / 'src' / 'presentation' / 'vue_app',
+        os.path.normcase(str(config.PRESENTATION_DIR / 'tests' / 'test_angular_app.py')):
+            config.PRESENTATION_DIR / 'angular_app',
+        os.path.normcase(str(config.PRESENTATION_DIR / 'tests' / 'test_react_app.py')):
+            config.PRESENTATION_DIR / 'react_app',
+        os.path.normcase(str(config.PRESENTATION_DIR / 'tests' / 'test_vue_app.py')):
+            config.PRESENTATION_DIR / 'vue_app',
     }
 
     selected_items = []
@@ -203,3 +200,50 @@ def pytest_collection_modifyitems(session, config, items):
     if deselected_items:
         items[:] = selected_items
         config.hook.pytest_deselected(items=deselected_items)
+
+def _get_git_info(command: list) -> str:
+    """Runs a Git command and returns the stripped output, or 'N/A' on error."""
+    try:
+        result = subprocess.run(
+            command,
+            check=True,
+            capture_output=True,
+            text=True,
+            cwd=ROOT
+        )
+        return result.stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return "N/A"
+
+def _generate_allure_environment(allure_dir: Path):
+    """Creates the environment.properties file for the Allure report."""
+    if not allure_dir.is_dir():
+        logger.warning(f"Allure results directory '{allure_dir}' not found. Skipping environment file generation.")
+        return
+
+    env_file = allure_dir / "environment.properties"
+    python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+
+    properties = {
+        "Python": python_version,
+        "Platform": sys.platform,
+        "Project-Root": str(ROOT),
+        "Debug-Mode": str(DEBUG_MODE),
+        "Git-Branch": _get_git_info(["git", "rev-parse", "--abbrev-ref", "HEAD"]),
+        "Git-Commit": _get_git_info(["git", "rev-parse", "--short", "HEAD"]),
+    }
+
+    try:
+        with open(env_file, "w") as f:
+            for key, value in properties.items():
+                f.write(f"{key}={value}\n")
+        logger.success(f"Allure environment file created at: {env_file}")
+    except IOError as e:
+        logger.error(f"Failed to write Allure environment file: {e}")
+
+def pytest_sessionfinish(session):
+    """Hook to generate Allure environment data if --alluredir is used."""
+    allure_dir_str = session.config.getoption("--alluredir")
+    if allure_dir_str:
+        allure_dir = Path(allure_dir_str)
+        _generate_allure_environment(allure_dir if allure_dir.is_absolute() else ROOT / allure_dir)
