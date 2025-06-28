@@ -27,6 +27,8 @@ TEMPLATE_MAP = {
 
 TEMPLATE_DIR = ADMIN_DIR / "templates" / "flask"
 DEST_ROOT = SRC_DIR / "presentation" / "api_server" / "flask_app"
+DIRECTORIES_TO_CREATE = [DEST_ROOT / "routes", DEST_ROOT / "static" / "css", DEST_ROOT / "static" / "js", DEST_ROOT / "static" / "img", DEST_ROOT / "templates"]
+
 
 def ensure_and_copy(src, dst):
     dst.parent.mkdir(parents=True, exist_ok=True)

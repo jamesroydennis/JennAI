@@ -1,10 +1,8 @@
 """
-Test suite for the ARCHITECT persona's blueprints.
+Test suite for the ARCHITECT persona.
 
-This file contains tests that act as the OBSERVER at the highest level.
-It verifies the integrity and completeness of the blueprints that the
-CONTRACTOR, CONSTRUCTOR, and DESIGNER will use. These tests are completely
-agnostic to any concrete presentation framework.
+This file contains tests that verify the ARCHITECT's high-level plans and
+blueprints are consistent and correctly configured.
 """
 import pytest
 from pathlib import Path
@@ -16,48 +14,53 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 # The OBSERVER needs access to the ARCHITECT's master plan (config)
-# and the blueprints used by other personas.
+# and the various blueprints it defines.
 from config import config
-from admin.presentation_utils import get_platform_paths
-import ast
 from admin.inject_brand_assets import TARGETS as DESIGNER_BLUEPRINT
+from conftest import SCOPES
+from config.config import ArchitecturalPersona
+from admin.42_present import MENU_HANDLERS
 
 
 def test_architect_ensures_contractor_is_aware_of_all_platforms():
     """
-    OBSERVER-ARCHITECT TEST: Verifies the CONTRACTOR's list of manageable platforms.
-    (from admin_utils) matches the official list from the ARCHITECT's configuration.
-    This ensures the primary orchestration tool is complete.
+    OBSERVER-ARCHITECT TEST: Verifies that for every presentation platform
+    defined by the ARCHITECT (in config.py), the CONTRACTOR has a corresponding
+    test scope defined (in conftest.py).
     """
-    platform_paths = get_platform_paths()
-    assert set(config.PRESENTATION_APPS.keys()) == set(platform_paths.keys()), \
-        "Critique failed: Contractor's platform awareness (get_platform_paths) is out of sync with Architect's configuration (config.WEB_APP_NAMES)."
-
+    missing_scopes = []
+    for platform_name in config.PRESENTATION_APPS.keys():
+        expected_scope_name = f"{platform_name.upper()}_PRESENTATION"
+        if expected_scope_name not in SCOPES:
+            missing_scopes.append(platform_name)
+    assert not missing_scopes, f"Critique failed: The Contractor's testing configuration (conftest.py) is missing test scopes for the following platforms: {missing_scopes}."
 
 def test_architect_ensures_designer_has_blueprint_for_all_platforms():
     """
-    OBSERVER-ARCHITECT TEST: Verifies that every platform the ARCHITECT has defined.
-    in the master plan (config.PRESENTATION_APPS) has a corresponding entry in the
-    DESIGNER's blueprint (inject_brand_assets.py).
+    OBSERVER-ARCHITECT TEST: Verifies that for every presentation platform
+    defined by the ARCHITECT, a corresponding design blueprint exists in the
+    DESIGNER's configuration (inject_brand_assets.py).
     """
-    missing_blueprints = [name for name in config.PRESENTATION_APPS.keys() if name not in DESIGNER_BLUEPRINT]
-    assert not missing_blueprints, \
-        f"Critique failed: The Designer's blueprint is missing entries for the following platforms defined by the Architect: {missing_blueprints}"
-
+    defined_platforms = set(config.PRESENTATION_APPS.keys())
+    designed_platforms = set(DESIGNER_BLUEPRINT.keys())
+    missing_blueprints = defined_platforms - designed_platforms
+    assert not missing_blueprints, f"Critique failed: The Designer's blueprint is missing configurations for the following platforms: {missing_blueprints}."
 
 def test_architect_ensures_designer_blueprint_is_valid():
-    """
-    OBSERVER-ARCHITECT TEST: Verifies the DESIGNER's blueprint (the TARGETS
-    dictionary in inject_brand_assets.py) is valid. It checks that every
-    source asset file defined in the blueprint actually exists in the brand directory.
-    This prevents runtime errors due to typos or missing source files.
-    """
-    all_source_assets = []
+    """OBSERVER-ARCHITECT TEST: Verifies that every entry in the DESIGNER's blueprint points to a real source asset."""
     for platform, blueprint in DESIGNER_BLUEPRINT.items():
         for src_path in blueprint.get("asset_map", {}).keys():
-            all_source_assets.append(src_path)
+            assert src_path.exists(), f"Critique failed: Designer blueprint for '{platform}' points to a non-existent source asset: '{src_path}'."
 
-    missing_assets = [path for path in all_source_assets if not path.exists()]
-    assert not missing_assets, \
-        f"Critique failed: The Designer's blueprint references source assets that do not exist in '{config.BRAND_DIR}':\n" + "\n".join(map(str, missing_assets))
-        
+def test_architect_ensures_all_personas_have_a_menu_handler():
+    """
+    OBSERVER-ARCHITECT TEST: Verifies that every persona defined in the
+    architecture has a corresponding menu handler implemented in the main
+    presentation console (42_present.py).
+    """
+    defined_personas = {persona.name for persona in ArchitecturalPersona}
+    implemented_handlers = set(MENU_HANDLERS.keys())
+    # The 'legacy' view is a special case and not a persona, so it's excluded from the check.
+    implemented_handlers.discard("legacy")
+    missing_handlers = defined_personas - implemented_handlers
+    assert not missing_handlers, f"Critique failed: The Architect's plan includes personas that are missing menu handlers in 'admin/42_present.py'.\nMissing handlers for: {sorted(list(missing_handlers))}"

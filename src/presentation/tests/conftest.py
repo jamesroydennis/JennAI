@@ -35,13 +35,14 @@ def client(app):
 
 def pytest_collection_modifyitems(config, items):
     """
-    Dynamically skips tests for presentation platforms that have not been constructed.
+    QA_ENGINEER HOOK: Dynamically skips tests for presentation platforms that
+    have not been constructed.
 
-    This hook inspects each collected test. If a test belongs to a specific
-    platform (e.g., 'test_angular_app.py'), it checks if the corresponding
-    application directory exists. If not, it marks all tests in that file
-    to be skipped, providing a clear reason. This fulfills the promise made
-    in the comments of the placeholder test files.
+    This hook embodies the QA Engineer's responsibility to ensure the test suite
+    adapts to the current state of the project. It inspects each collected test,
+    and if a test belongs to a specific platform (e.g., 'test_angular_app.py'),
+    it verifies that the corresponding application directory exists. If not, it
+    marks all tests in that file to be skipped.
     """
     platform_paths = get_platform_paths()
 
@@ -50,11 +51,10 @@ def pytest_collection_modifyitems(config, items):
         match = re.search(r"test_(\w+)_app\.py", str(item.fspath))
         if match:
             platform_name = match.group(1)
-            # The Flask app is part of the core repo, not scaffolded, so its tests should always run.
             if platform_name == "flask":
                 continue
 
             platform_dir = platform_paths.get(platform_name)
             if not platform_dir or not platform_dir.exists():
-                reason = f"Skipping {platform_name} tests: application directory not found at {platform_dir}"
+                reason = f"QA Engineer determined '{platform_name}' is not installed. Skipping tests."
                 item.add_marker(pytest.mark.skip(reason=reason))

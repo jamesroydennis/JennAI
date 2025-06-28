@@ -15,7 +15,7 @@ REACT_APP_DIR = SRC_DIR / "presentation" / "react_app"
 # Define blueprint variables for the Observer's tests.
 DEST_ROOT = REACT_APP_DIR
 TEMPLATE_MAP = {} # No files copied by this script directly
-# DIRECTORIES_TO_CREATE = [REACT_APP_DIR / "src" / "assets", REACT_APP_DIR / "src"] # Directory creation is now handled by the central create_directories.py
+DIRECTORIES_TO_CREATE = [] # Directory creation is handled by 'npx create-react-app'.
 
 def main():
     """Orchestrates the scaffolding of the React presentation layer."""

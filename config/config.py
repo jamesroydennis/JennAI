@@ -130,8 +130,8 @@ class ArchitecturalPersona(Enum):
     CONTRACTOR = auto()   # Manages Constructors and Designers to ensure the Architect's blueprint is deployed to specification on a solid foundation.
     CONSTRUCTOR = auto()  # The developer scaffolding the application framework.
     DESIGNER = auto()     # The designer applying the brand and theme.
-    OBSERVER = auto()     # Ensures the design matches the brand and the construction adheres to the Architect's blueprints.
     QA_ENGINEER = auto()  # Verifies the quality and testability of all components.
+    OBSERVER = auto()     # Ensures the design matches the brand and the construction adheres to the Architect's blueprints.
 
 ROLES_PRESENTATION = [persona.name for persona in ArchitecturalPersona]
 # ============================================================================

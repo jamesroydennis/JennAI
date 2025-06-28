@@ -7,39 +7,16 @@ its specific blueprint.
 import pytest
 from pathlib import Path
 import sys
-import importlib
 
 # --- Root Project Path Setup (CRITICAL for Imports) ---
 ROOT = Path(__file__).resolve().parent.parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from config import config
+# Import the centralized test case generator
+from src.presentation.tests.constructor_test_utils import generate_constructor_test_cases_for_platform
 
-def generate_react_constructor_test_cases():
-    """Dynamically generates test cases for the React constructor blueprint."""
-    cases = []
-    platform_name = "react"
-    try:
-        module_name = f"admin.create_presentation_{platform_name}"
-        module = importlib.import_module(module_name)
-        dest_root = getattr(module, "DEST_ROOT", None)
-        template_map = getattr(module, "TEMPLATE_MAP", {})
-        directories_to_create = getattr(module, "DIRECTORIES_TO_CREATE", [])
-        if not dest_root: return []
-    except ImportError:
-        return [] # If constructor script doesn't exist, no tests are generated.
-
-    for dir_path in directories_to_create:
-        test_id = f"CONSTRUCTOR-creates-dir-{platform_name}-{dir_path.relative_to(dest_root).as_posix().replace('/', '-')}"
-        cases.append(pytest.param(dir_path, "dir", id=test_id))
-    for template_rel, dest_rel in template_map.items():
-        dest_path = dest_root / dest_rel
-        test_id = f"CONSTRUCTOR-creates-file-{platform_name}-{dest_rel.replace('/', '-')}"
-        cases.append(pytest.param(dest_path, "file", id=test_id))
-    return cases
-
-@pytest.mark.parametrize("expected_artifact_path, artifact_type", generate_react_constructor_test_cases())
+@pytest.mark.parametrize("expected_artifact_path, artifact_type", generate_constructor_test_cases_for_platform("react"))
 def test_constructor_react_creates_required_artifacts(expected_artifact_path, artifact_type):
     """OBSERVER TEST: Verifies CONSTRUCTOR-REACT creates a specific artifact correctly."""
     assert expected_artifact_path.exists(), f"Critique failed: Constructor for React did not create '{expected_artifact_path}'."
