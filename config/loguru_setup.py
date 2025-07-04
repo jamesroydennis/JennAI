@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 from loguru import logger
+from typing import Optional
 
 # --- Project Path Configuration ---
 # Ensure the config module can be found by other scripts.
@@ -19,7 +20,7 @@ _handler_ids = {
     "console": None
 }
 
-def setup_logging(debug_mode: bool = False):
+def setup_logging(debug_mode: bool = False, log_file_name: Optional[str] = None):
     """
     Configures Loguru logging for the entire application.
 
@@ -30,12 +31,18 @@ def setup_logging(debug_mode: bool = False):
         debug_mode (bool): If True, sets the console log level to DEBUG.
                            Otherwise, it's set to INFO. The file logger
                            always logs at the DEBUG level.
+        log_file_name (Optional[str]): If provided, this filename will be used
+                                       for the log file inside the LOGS_DIR.
+                                       Defaults to 'jennai.log'.
     """
     # Stop any existing loggers to ensure a clean setup
     logger.remove()
 
     console_level = "DEBUG" if debug_mode else "INFO"
-    log_file_path = config.LOGS_DIR / "jennai.log"
+    if log_file_name:
+        log_file_path = config.LOGS_DIR / log_file_name
+    else:
+        log_file_path = config.LOGS_DIR / "jennai.log"
 
     # --- Console Logger ---
     # This handler prints messages to your terminal.

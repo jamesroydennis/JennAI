@@ -40,13 +40,10 @@ def test_main_py_initializes_successfully(app_config):
         # Assert that main.py exited successfully
         assert process.returncode == 0, f"main.py exited with code {process.returncode}.\nStderr:\n{process.stderr}\nStdout:\n{process.stdout}"
 
-        # Dynamically construct the expected log path to be OS-agnostic.
-        expected_log_path = app_config.ROOT / "logs" / "jennai.log"
-        expected_log_message = f"Loguru setup complete. Console logging active. File logging to: {str(expected_log_path)}. Level: DEBUG."
-
         # Check for key success messages in stderr (where Loguru console output goes)
-        # With the simplified logging, main.py's subprocess will also log its setup.
-        assert expected_log_message in process.stderr
+        # These assertions confirm that the main orchestration script ran through its key stages.
+        # We also check that DEBUG_MODE was correctly passed to and logged by the subprocess.
+        assert "INFO - Running in DEBUG_MODE: True" in process.stderr
         assert "SUCCESS - src/business dependencies configured (conceptual)." in process.stderr
         assert "SUCCESS - src/data dependencies configured (conceptual)." in process.stderr
         assert "SUCCESS - src/presentation dependencies configured (conceptual)." in process.stderr

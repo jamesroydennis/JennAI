@@ -15,7 +15,7 @@ def create_app(container: DependencyContainer) -> Flask:
     CORS(app) # Enable CORS for all routes
 
     # Register the brand routes blueprint
-    from .routes.brand_routes import brand_bp
+    from routes.brand_routes import brand_bp
     app.register_blueprint(brand_bp)
 
     # Route for favicon.ico at the root, as browsers expect it there

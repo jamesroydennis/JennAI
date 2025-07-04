@@ -31,3 +31,18 @@ def serve_favicon():
     except Exception as e:
         current_app.logger.error(f"Error serving favicon: {e}")
         return "Favicon not found", 404
+
+@brand_bp.route('/css/main.css')
+def serve_css():
+    """Serves the main CSS file."""
+    try:
+        # Look for the CSS file in the Flask app's static directory
+        css_path = Path(__file__).parent.parent / "static" / "css" / "main.css"
+        if css_path.exists():
+            return send_from_directory(css_path.parent, css_path.name)
+        else:
+            current_app.logger.warning(f"CSS file not found at {css_path}")
+            return "/* CSS file not found */", 404, {'Content-Type': 'text/css'}
+    except Exception as e:
+        current_app.logger.error(f"Error serving CSS: {e}")
+        return "/* CSS error */", 404, {'Content-Type': 'text/css'}

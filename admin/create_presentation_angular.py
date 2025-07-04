@@ -15,7 +15,10 @@ ANGULAR_APP_DIR = SRC_DIR / "presentation" / "angular_app"
 # Define blueprint variables for the Observer's tests.
 DEST_ROOT = ANGULAR_APP_DIR
 TEMPLATE_MAP = {} # No files copied by this script directly
-DIRECTORIES_TO_CREATE = [] # Directory creation is now handled by the central create_directories.py
+DIRECTORIES_TO_CREATE = [
+    DEST_ROOT / "src" / "assets",
+    DEST_ROOT / "src" / "styles",
+]
 
 def main():
     """Orchestrates the scaffolding of the Angular presentation layer."""

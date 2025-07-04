@@ -73,6 +73,7 @@ ALLOWED_ENVS = WHITELIST_ENVIRONMENTS
 # ============================================================================
 # Dictionary of supported presentation applications, containing their properties.
 PRESENTATION_APPS = {
+    "console": {"name": f"{APP_NAME}-console", "display_name": "Console"},
     "flask":   {"name": f"{APP_NAME}-flask",   "display_name": "Flask"},
     "angular": {"name": f"{APP_NAME}-angular", "display_name": "Angular"},
     "react":   {"name": f"{APP_NAME}-react",   "display_name": "React"},
@@ -97,6 +98,11 @@ ROLES = [
 # ============================================================================
 DEBUG_MODE = os.getenv("DEBUG_MODE", "False").lower() in ('true', '1', 't')
 TESTING_MODE = os.getenv("TESTING_MODE", "False").lower() in ('true', '1', 't')
+READ_ONLY_MODE = os.getenv("READ_ONLY_MODE", "False").lower() in ('true', '1', 't')
+LIVE_INFERENCE_MODE = os.getenv("LIVE_INFERENCE_MODE", "False").lower() in ('true', '1', 't')
+MAINTENANCE_MODE = os.getenv("MAINTENANCE_MODE", "False").lower() in ('true', '1', 't')
+
+
 # ============================================================================
 # 9. (OPTIONAL) BRANDING & ASSET PATHS
 # ============================================================================
@@ -121,10 +127,59 @@ PYTHON_PACKAGES = [
 ]
 
 # ============================================================================
-# 12. ARCHITECTURAL PERSONAS
+# 12. ARCHITECTURAL PERSONAS - CONFIG-DRIVEN APPROACH
 # ============================================================================
+
+# Config-driven persona definitions (NEW APPROACH)
+ARCHITECTURAL_PERSONAS = {
+    "ARCHITECT": {
+        "name": "Architect",
+        "description": "Designs the foundational blueprints (scaffolding, brand) and delegates execution",
+        "icon": "🏗️",
+        "responsibilities": ["Blueprint design", "System architecture", "Delegation oversight"]
+    },
+    "CONTRACTOR": {
+        "name": "Contractor", 
+        "description": "Validates, enforces, and creates contracts when requirements are met",
+        "icon": "📋",
+        "responsibilities": ["Validation", "Enforcement", "Contract creation"]
+    },
+    "CONSTRUCTOR": {
+        "name": "Constructor",
+        "description": "Scaffolds application framework and basic structure",
+        "icon": "🔨", 
+        "responsibilities": ["App scaffolding", "Framework setup", "Basic structure"]
+    },
+    "DESIGNER": {
+        "name": "Designer",
+        "description": "Applies brand assets, compiles SCSS, and implements styling",
+        "icon": "🎨",
+        "responsibilities": ["Brand application", "SCSS compilation", "Asset injection"]
+    },
+    "QA_ENGINEER": {
+        "name": "QA Engineer", 
+        "description": "Verifies quality and testability of all components",
+        "icon": "🔍",
+        "responsibilities": ["Quality assurance", "Test verification", "Component testing"]
+    },
+    "OBSERVER": {
+        "name": "Observer",
+        "description": "Ensures design matches brand and construction adheres to blueprints", 
+        "icon": "👁️",
+        "responsibilities": ["Design compliance", "Blueprint adherence", "Cross-verification"]
+    },
+    "DATA": {
+        "name": "Data",
+        "description": "Manages project database and mock data generation",
+        "icon": "📊", 
+        "responsibilities": ["Database management", "Mock data", "Data validation"]
+    }
+}
+
+# Legacy enum approach (DEPRECATED - kept for backward compatibility during transition)
 class ArchitecturalPersona(Enum):
     """
+    DEPRECATED: Use ARCHITECTURAL_PERSONAS dictionary instead.
     Defines the roles involved in the project's development lifecycle.
     """
     ARCHITECT = auto()    # Designs the foundational blueprints (scaffolding, brand) and delegates execution.
@@ -133,8 +188,10 @@ class ArchitecturalPersona(Enum):
     DESIGNER = auto()     # The designer applying the brand and theme.
     QA_ENGINEER = auto()  # Verifies the quality and testability of all components.
     OBSERVER = auto()     # Ensures the design matches the brand and the construction adheres to the Architect's blueprints.
+    DATA = auto()         # Manages the project's database and mock data.
 
-ROLES_PRESENTATION = [persona.name for persona in ArchitecturalPersona]
+# Maintain backward compatibility
+ROLES_PRESENTATION = list(ARCHITECTURAL_PERSONAS.keys())
 # ============================================================================
 # END OF CONFIGURATION
 # ============================================================================

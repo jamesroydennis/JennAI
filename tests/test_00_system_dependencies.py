@@ -60,9 +60,10 @@ def test_system_dependencies_check_runs_successfully():
             f"check_dependencies.py exited with code {process.returncode}.\n" \
             f"Stdout:\n{process.stdout}\nStderr:\n{process.stderr}"
 
-        # Check that the expected headers are in the script's standard output.
-        assert "=== System Dependency Checks ===" in process.stdout, "Expected 'System Dependency Checks' header not found in output."
-        assert "=== Python Package Checks ===" in process.stdout, "Expected 'Python Package Checks' header not found in output."
+        # Loguru outputs to stderr by default, so we check the combined output to be robust.
+        full_output = process.stdout + process.stderr
+        assert "=== System Dependency Checks ===" in full_output, "Expected 'System Dependency Checks' header not found in output."
+        assert "=== Python Package Checks ===" in full_output, "Expected 'Python Package Checks' header not found in output."
 
     except FileNotFoundError:
         pytest.fail(f"Failed to find Python interpreter: {sys.executable} or check_dependencies.py script.")

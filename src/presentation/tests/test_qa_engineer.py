@@ -8,15 +8,10 @@ has a defined quality contract and that the tools for verification are present.
 import pytest
 from pathlib import Path
 import sys
-import ast
-from admin.presentation_utils import get_platform_paths
-
-# --- Root Project Path Setup (CRITICAL for Imports) ---
-ROOT = Path(__file__).resolve().parent.parent.parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
 from config import config
+import ast
+from admin.presentation_utils import get_platform_paths
 
 def test_qa_engineer_verifies_testing_infrastructure():
     """

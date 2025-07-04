@@ -9,18 +9,18 @@ from pathlib import Path
 import sys
 
 # --- Root Project Path Setup (CRITICAL for Imports) ---
-ROOT = Path(__file__).resolve().parent.parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 # The OBSERVER needs access to the ARCHITECT's master plan (config)
 # and the various blueprints it defines.
 from config import config
+from config.config import ROOT  # Import ROOT from config instead of redefining
 from admin.inject_brand_assets import TARGETS as DESIGNER_BLUEPRINT
 from conftest import SCOPES
 from config.config import ArchitecturalPersona
-from admin.42_present import MENU_HANDLERS
-
+from src.presentation.tests.presentation_test_utils import load_attribute_from_script
 
 def test_architect_ensures_contractor_is_aware_of_all_platforms():
     """
@@ -51,16 +51,19 @@ def test_architect_ensures_designer_blueprint_is_valid():
     for platform, blueprint in DESIGNER_BLUEPRINT.items():
         for src_path in blueprint.get("asset_map", {}).keys():
             assert src_path.exists(), f"Critique failed: Designer blueprint for '{platform}' points to a non-existent source asset: '{src_path}'."
-
-def test_architect_ensures_all_personas_have_a_menu_handler():
+def test_architect_ensures_constructor_can_build_all_platforms():
     """
-    OBSERVER-ARCHITECT TEST: Verifies that every persona defined in the
-    architecture has a corresponding menu handler implemented in the main
-    presentation console (42_present.py).
+    OBSERVER-ARCHITECT TEST: Verifies that for every presentation platform
+    defined by the ARCHITECT, a corresponding 'create_presentation_<platform>.py'
+    script exists for the CONSTRUCTOR to use.
     """
-    defined_personas = {persona.name for persona in ArchitecturalPersona}
-    implemented_handlers = set(MENU_HANDLERS.keys())
-    # The 'legacy' view is a special case and not a persona, so it's excluded from the check.
-    implemented_handlers.discard("legacy")
-    missing_handlers = defined_personas - implemented_handlers
-    assert not missing_handlers, f"Critique failed: The Architect's plan includes personas that are missing menu handlers in 'admin/42_present.py'.\nMissing handlers for: {sorted(list(missing_handlers))}"
+    missing_scripts = []
+    admin_dir = config.ROOT / "admin"
+    for platform_name in config.PRESENTATION_APPS.keys():
+        # The 'console' platform is abstract and doesn't have a creation script.
+        if platform_name == "console":
+            continue
+        expected_script = admin_dir / f"create_presentation_{platform_name}.py"
+        if not expected_script.exists():
+            missing_scripts.append(expected_script.name)
+    assert not missing_scripts, f"Critique failed: The Architect's plan includes platforms that are missing their construction scripts in 'admin/'.\nMissing scripts for: {sorted(missing_scripts)}"

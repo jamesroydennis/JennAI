@@ -67,6 +67,7 @@ DIRECTORIES = {
     "src/presentation/api_server/flask_app/static/js": {"is_package": False},
     "src/presentation/api_server/flask_app/templates": {"is_package": False},
     "src/presentation/api_server/schemas": {"is_package": True},
+    "src/presentation/console_app": {"is_package": True},
     "src/presentation/img": {"is_package": False},
     "src/presentation/react_app": {"is_package": False},
     "src/presentation/react_app/src": {"is_package": False},
@@ -76,6 +77,18 @@ DIRECTORIES = {
     "src/presentation/vue_app/src/assets": {"is_package": False},
     "src/presentation/vue_app/src/styles": {"is_package": False},
     "src/presentation/web_clients": {"is_package": False},
+    # Workflow persona directories (for TDD workflow tests)
+    "blueprints": {"is_package": False},
+    "contractor_decisions": {"is_package": False},
+    "constructor": {"is_package": False},
+    "constructor/received_blueprints": {"is_package": False},
+    "designer": {"is_package": False},
+    "designer/brand_verification": {"is_package": False},
+    "collaboration": {"is_package": False},
+    "collaboration/designer_constructor": {"is_package": False},
+    "observer": {"is_package": False},
+    "observer/approvals": {"is_package": False},
+    "workflow": {"is_package": False},
 }
 
 def main():

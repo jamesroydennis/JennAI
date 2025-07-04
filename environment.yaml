@@ -104,6 +104,7 @@ dependencies:
   - markdown
   - pyyaml  # Required for the dynamic conda_update.py script
   - python-dotenv
+  - pre-commit
   - pip
   - conda-forge::inquirerpy>=0.3.4 # Explicitly specify channel for InquirerPy
   - pip:

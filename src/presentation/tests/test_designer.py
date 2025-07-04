@@ -13,13 +13,14 @@ import sys
 import subprocess
 
 # --- Root Project Path Setup (CRITICAL for Imports) ---
-# This ensures we can import from 'admin' and 'config' to access blueprints.
-ROOT = Path(__file__).resolve().parent.parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 # The OBSERVER needs access to the DESIGNER's blueprint (the TARGETS dictionary).
 from admin.inject_brand_assets import TARGETS as DESIGNER_BLUEPRINT
+from config import config
+from config.config import ROOT  # Import ROOT from config instead of redefining
 from admin.compile_scss import COMPILE_TARGETS
 from admin.presentation_utils import get_platform_paths
 from config import config
@@ -129,7 +130,7 @@ def test_designer_can_compile_scss(scss_compilation_env):
     script correctly compiles a source SCSS file into a non-empty CSS file.
     """
     platform_name, dest_path = scss_compilation_env
-    script_path = ROOT / "admin" / "compile_scss.py"
+    script_path = config.ADMIN_DIR / "compile_scss.py"
     command = [sys.executable, str(script_path), "--target", platform_name]
 
     result = subprocess.run(command, capture_output=True, text=True, check=False)

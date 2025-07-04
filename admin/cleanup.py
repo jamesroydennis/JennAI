@@ -16,7 +16,7 @@ if str(ROOT) not in sys.path:
 
 from loguru import logger # Import the logger instance
 from config import config
-from config.loguru_setup import setup_logging
+from config.loguru_setup import setup_logging, stop_file_logging
 
 def get_size(start_path: Path) -> int:
     """Calculates the size of a directory or a file in bytes."""
@@ -48,12 +48,10 @@ def main(args):
             logger.error(f"Project root not found or is not a directory at calculated path: {jennai_root_path}")
             logger.error("Please ensure the script is located in the 'admin' subdirectory of your project.")
             return 1 # Indicate an error
-        # --- Stop logging to file before deletion ---
-        logger.info("Stopping file logging to allow deletion...")
-        logger.remove() # Removes all handlers, including the file handler.
-        # Re-add a console-only handler to see subsequent messages.
-        logger.add(sys.stderr, level="DEBUG") # Assuming we want to maintain verbose output
-        logger.info("File logger for cleanup.py removed. Continuing cleanup with console-only logging.")
+        # --- Stop logging to file before deletion, keeping console logging active ---
+        logger.info("Stopping file logging to allow deletion of the logs directory...")
+        stop_file_logging()
+        logger.info("File logging handler removed. Cleanup will proceed with console-only logging.")
 
         total_space_to_be_freed = 0
         deleted_items_count = 0

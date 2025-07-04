@@ -6,21 +6,11 @@ import shutil
 import sqlite3
 
 # --- Root Project Path Setup (CRITICAL for Imports) ---
-CONFIG_DIR = Path(__file__).resolve().parent.parent / "config"
-if str(CONFIG_DIR) not in sys.path:
-    sys.path.insert(0, str(CONFIG_DIR))
-
-# Import PROJECT_ROOT from config/conf.py
-try:
-    from config.conf import PROJECT_ROOT
-except ImportError:
-    print("Error: Could not import PROJECT_ROOT from config/conf.py.")
-    print("Please ensure config/conf.py exists and defines PROJECT_ROOT correctly.")
-    sys.exit(1)
-
-# Ensure the overall project root is in sys.path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+
+from config import config
 
 # --- InquirerPy for CLI UI ---
 try:
@@ -35,7 +25,7 @@ except ImportError:
     sys.exit(1)
 
 # --- Configuration for Data Sample Location ---
-SAMPLES_ROOT = PROJECT_ROOT / "src" / "data" / "samples"
+SAMPLES_ROOT = config.SAMPLE_DATA_DIR
 LLM_SAMPLES_DIR = SAMPLES_ROOT / "llm"
 MOCK_LLM_FILE = LLM_SAMPLES_DIR / "mock_llms.py"
 
@@ -171,7 +161,7 @@ CREATE TABLE questions_and_hypotheses (
 );
 """
 
-DATABASE_FILE = PROJECT_ROOT / "jennai_db.sqlite"
+DATABASE_FILE = config.DB_PATH
 
 def connect_db():
     return sqlite3.connect(DATABASE_FILE)
@@ -267,11 +257,21 @@ def main():
             ).execute()
             if selection == "install_data":
                 print_header("Installing Mock LLM Data")
-                destroy_mock_llm_data()
-                initialize_database()
-                populate_mock_models()
-                create_mock_llm_file()
-                color_print([("green", "\nMock LLM data installation complete.")])
+                confirmed = inquirer.confirm(
+                    message="WARNING: This will destroy any existing mock data and database before creating new data. Continue?",
+                    default=False,
+                    confirm_message="Confirmed. Proceeding with installation...",
+                    reject_message="Installation cancelled."
+                ).execute()
+
+                if confirmed:
+                    destroy_mock_llm_data()
+                    initialize_database()
+                    populate_mock_models()
+                    create_mock_llm_file()
+                    color_print([("green", "\nMock LLM data installation complete.")])
+
+                # Always pause so the user can see the result (cancelled or completed)
                 input("\nPress Enter to return to the menu...")
             elif selection == "destroy_data":
                 print_header("Destroying Mock LLM Data")

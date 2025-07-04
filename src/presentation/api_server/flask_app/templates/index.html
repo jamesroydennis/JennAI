@@ -1,24 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ app_name }}</title>
-    <link rel="icon" href="{{ url_for('brand.serve_favicon') }}">
-    <style>
-        body { font-family: sans-serif; background-color: #1a1a1a; color: #e0e0e0; text-align: center; padding: 20px 5%; max-width: 800px; margin: auto; }
-        img { max-width: 300px; margin-bottom: 20px; }
-        h1 { color: #00aaff; }
-        .content-section { text-align: left; margin-top: 40px; border-top: 1px solid #444; padding-top: 20px; }
-    </style>
-</head>
-<body>
-    <img src="{{ url_for('brand.serve_logo') }}" alt="{{ app_name }} Logo" />
-    <h1>Welcome to {{ app_name }}</h1>
-    <p>The intelligent frontier awaits.</p>
+{% extends "base.html" %}
 
-    <div class="content-section">{{ vision_statement|safe }}</div>
-    <div class="content-section">{{ mission_statement }}</div>
+{% block content %}
+    <div class="hero-section">
+        <h1>JennAI</h1>
+        <h2>Bridging the Unyielding Question</h2>
+        <p>This application is the result of a persona-driven development process, demonstrating a fully integrated and testable system.</p>
+    </div>
 
-</body>
-</html>
+    {% if mission_statement %}
+    <div class="mission-content">
+        <h3>Mission</h3>
+        <p><em>{{ mission_statement }}</em></p>
+    </div>
+    {% endif %}
+
+    {% if problem_statement %}
+    <div class="problem-content">
+        <h3>The Challenge</h3>
+        <div class="content">
+            {{ problem_statement|safe }}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if seed_content %}
+    <div class="seed-content">
+        <h3>The Seed</h3>
+        <p><em>{{ seed_content }}</em></p>
+    </div>
+    {% endif %}
+
+    {% if vision_statement %}
+    <div class="vision-content">
+        <h3>Our Vision</h3>
+        <div class="content">
+            {{ vision_statement|safe }}
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}

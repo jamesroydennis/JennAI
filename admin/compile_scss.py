@@ -40,14 +40,70 @@ COMPILE_TARGETS = {
 
 def check_sass_installed():
     """Checks if the Dart Sass CLI is installed and accessible."""
+    import os
+    import shutil
+    
+    # First try to find sass in the system PATH
+    sass_path = shutil.which("sass")
+    if sass_path:
+        try:
+            subprocess.run([sass_path, "--version"], check=True, capture_output=True, text=True)
+            logger.success(f"Sass CLI found at: {sass_path}")
+            return True
+        except subprocess.CalledProcessError:
+            pass
+    
+    # If not found in PATH, try common installation locations
+    common_paths = [
+        os.path.expanduser("~\\AppData\\Roaming\\npm\\sass.cmd"),  # Windows npm global
+        os.path.expanduser("~\\AppData\\Roaming\\npm\\sass"),      # Windows npm global
+        "C:\\Program Files\\nodejs\\sass.cmd",                      # System-wide npm
+        "C:\\Program Files\\nodejs\\sass",                          # System-wide npm
+    ]
+    
+    for sass_cmd in common_paths:
+        if os.path.exists(sass_cmd):
+            try:
+                subprocess.run([sass_cmd, "--version"], check=True, capture_output=True, text=True)
+                logger.success(f"Sass CLI found at: {sass_cmd}")
+                return True
+            except subprocess.CalledProcessError:
+                continue
+    
+    # Last resort: try the command directly in case it's in PATH but shutil.which didn't find it
     try:
         subprocess.run(["sass", "--version"], check=True, capture_output=True, text=True)
-        logger.success("Sass CLI found.")
+        logger.success("Sass CLI found via direct command.")
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
         logger.error("Sass CLI ('sass' command) not found.")
         logger.info("Please install it globally via npm: npm install -g sass")
         return False
+
+def get_sass_command():
+    """Gets the correct sass command path."""
+    import os
+    import shutil
+    
+    # First try to find sass in the system PATH
+    sass_path = shutil.which("sass")
+    if sass_path:
+        return sass_path
+    
+    # If not found in PATH, try common installation locations
+    common_paths = [
+        os.path.expanduser("~\\AppData\\Roaming\\npm\\sass.cmd"),  # Windows npm global
+        os.path.expanduser("~\\AppData\\Roaming\\npm\\sass"),      # Windows npm global
+        "C:\\Program Files\\nodejs\\sass.cmd",                      # System-wide npm
+        "C:\\Program Files\\nodejs\\sass",                          # System-wide npm
+    ]
+    
+    for sass_cmd in common_paths:
+        if os.path.exists(sass_cmd):
+            return sass_cmd
+    
+    # Default fallback
+    return "sass"
 
 def main(target: str):
     """Compiles the main SCSS file for the specified presentation layer."""
@@ -73,15 +129,21 @@ def main(target: str):
         return
 
     dest_path.parent.mkdir(parents=True, exist_ok=True)
-    command = f"sass {src_path}:{dest_path}"
-    logger.info(f"Executing command: {command}")
+    
+    sass_cmd = get_sass_command()
+    command = [sass_cmd, str(src_path), str(dest_path)]
+    logger.info(f"Executing command: {' '.join(command)}")
 
     try:
-        subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+        result = subprocess.run(command, check=True, capture_output=True, text=True)
         logger.success(f"Successfully compiled '{src_path.name}' to '{dest_path.relative_to(PROJECT_ROOT)}'")
+        if result.stdout:
+            logger.info(f"Sass output: {result.stdout}")
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to compile SCSS for '{target}'.")
         logger.error(f"Sass CLI Error:\n{e.stderr}")
+        if e.stdout:
+            logger.error(f"Sass CLI Output:\n{e.stdout}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Compile SCSS for a presentation layer.")

@@ -21,6 +21,12 @@ PRESENTATION_DIR = PROJECT_ROOT / "src" / "presentation"
 # This dictionary defines the asset destinations for each presentation framework.
 # It's the single source of truth for asset injection.
 TARGETS = {
+    "console": {
+        "img_dir": None,
+        "css_dir": None,
+        "text_dir": None,
+        "asset_map": {} # The console is abstract and has no assets.
+    },
     "flask": {
         "img_dir": PRESENTATION_DIR / "api_server" / "flask_app" / "static" / "img",
         "css_dir": PRESENTATION_DIR / "api_server" / "flask_app" / "static" / "css",

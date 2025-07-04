@@ -16,11 +16,10 @@ from config import config # Now we can import config
 from rich.console import Console
 from rich.table import Table
 
-def show_configuration():
+def show_configuration(console: Console):
     """
     Displays the project's configuration from config.py in a formatted table.
     """
-    console = Console()
     table = Table(
         title="[bold cyan]Configuration[/bold cyan]",
         header_style="bold magenta",
@@ -36,16 +35,13 @@ def show_configuration():
         # Filter for public, uppercase constants, which is the convention for config values.
         if not key.startswith("_") and key.isupper():
             value = getattr(config, key)
-
             # Pretty print lists for better readability
             if isinstance(value, list):
                 value_str = "\n".join(f"• {item}" for item in value)
             else:
                 value_str = str(value)
-
             table.add_row(key, value_str)
-
     console.print(table)
 
 if __name__ == "__main__":
-    show_configuration()
+    show_configuration(Console())

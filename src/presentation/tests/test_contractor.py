@@ -8,8 +8,6 @@ CONTRACTOR's tools and configurations are in sync with the ARCHITECT's master pl
 import pytest
 from pathlib import Path
 import sys
-import subprocess
-import re
 
 # --- Root Project Path Setup (CRITICAL for Imports) ---
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -19,11 +17,15 @@ if str(ROOT) not in sys.path:
 # The OBSERVER needs access to the ARCHITECT's master plan (config)
 # and the CONTRACTOR's testing configuration (conftest).
 from config import config
+from config.config import ROOT  # Import ROOT from config instead of redefining
 from conftest import SCOPES
 from config.config import ArchitecturalPersona
 from admin.inject_brand_assets import TARGETS as DESIGNER_BLUEPRINT
 from admin.compile_scss import COMPILE_TARGETS
-from admin.presentation_utils import get_platform_paths
+from admin.presentation_utils import get_presentation_apps
+import subprocess
+import re
+
 
 def test_contractor_has_test_scope_for_every_platform():
     """
@@ -162,7 +164,7 @@ def generate_contractor_scss_compile_test_cases():
     Only creates tests for platforms that are installed and have a source SCSS file.
     """
     cases = []
-    platform_paths = get_platform_paths()
+    platform_paths = get_presentation_apps()
     for platform_name, target_config in COMPILE_TARGETS.items():
         platform_root = platform_paths.get(platform_name)
         src_path = target_config.get("src")
@@ -180,7 +182,7 @@ def test_contractor_verifies_scss_can_be_compiled(contractor_scss_compilation_en
     styling is buildable before proceeding with orchestration.
     """
     platform_name, dest_path = contractor_scss_compilation_env
-    script_path = ROOT / "admin" / "compile_scss.py"
+    script_path = config.ROOT / "admin" / "compile_scss.py"
     command = [sys.executable, str(script_path), "--target", platform_name]
 
     result = subprocess.run(command, capture_output=True, text=True, check=False)
@@ -250,5 +252,303 @@ def test_contractor_verifies_constructor_fulfills_designer_needs(dependency_info
     all the necessary directories that the DESIGNER needs to implement the brand.
     This ensures the "handoff" from constructor to designer is valid.
     """
-    missing_dirs = {str(d.relative_to(ROOT)) for d in dependency_info["required_dirs"]} - {str(d.relative_to(ROOT)) for d in dependency_info["constructor_created_dirs"]}
+    missing_dirs = {str(d.relative_to(config.ROOT)) for d in dependency_info["required_dirs"]} - {str(d.relative_to(config.ROOT)) for d in dependency_info["constructor_created_dirs"]}
     assert not missing_dirs, f"Critique failed: The Contractor found that the CONSTRUCTOR for '{dependency_info['platform_name']}' does not create all the directories required by the DESIGNER.\nMissing directories:\n" + "\n".join(sorted(list(missing_dirs)))
+
+def test_contractor_brand_compilation_validation():
+    """
+    CONTRACTOR TEST: Critical validation that brand SCSS is compiled to CSS.
+    
+    This test ensures the CONTRACTOR fulfills their core responsibility:
+    - SCSS files from brand directory must be compiled to CSS
+    - CSS files must exist and be accessible to the presentation app
+    - Brand implementation must be complete and functional
+    
+    FAILURE INDICATES: Contractor has not ensured brand is properly applied.
+    """
+    all_platform_paths = get_presentation_apps()
+    
+    for platform_name, platform_info in config.PRESENTATION_APPS.items():
+        if platform_name == 'console':  # Console doesn't use CSS
+            continue
+            
+        # Get the platform base path
+        platform_base = all_platform_paths.get(platform_name)
+        if not platform_base:
+            continue
+            
+        css_dir = platform_base / 'static' / 'css'
+        
+        # Check if SCSS files exist (Designer should have injected them)
+        scss_file = css_dir / 'main.scss'
+        css_file = css_dir / 'main.css'
+        
+        if scss_file.exists():
+            # If SCSS exists, CSS MUST exist (Contractor responsibility)
+            assert css_file.exists(), \
+                f"CONTRACTOR FAILURE for {platform_name}: " \
+                f"SCSS file exists at {scss_file} but CSS file is missing at {css_file}. " \
+                f"The Contractor must ensure SCSS is compiled to CSS."
+            
+            # CSS file must not be empty
+            css_content = css_file.read_text()
+            assert len(css_content.strip()) > 0, \
+                f"CONTRACTOR FAILURE for {platform_name}: " \
+                f"CSS file at {css_file} is empty. " \
+                f"The Contractor must ensure SCSS compilation produces valid CSS."
+            
+            # CSS must contain brand colors (basic validation)
+            assert '#87CEEB' in css_content or 'rgb(135, 206, 235)' in css_content, \
+                f"CONTRACTOR FAILURE for {platform_name}: " \
+                f"CSS file at {css_file} does not contain brand colors. " \
+                f"The Contractor must ensure brand theme is properly compiled."
+
+
+def test_contractor_brand_content_integration():
+    """
+    CONTRACTOR TEST: Validates that brand content files are integrated into templates.
+    
+    This test ensures the CONTRACTOR verifies:
+    - Mission, vision, problem statement are accessible to the app
+    - Brand images and assets are properly linked
+    - Templates reference brand content correctly
+    """
+    all_platform_paths = get_presentation_apps()
+    
+    for platform_name, platform_info in config.PRESENTATION_APPS.items():
+        if platform_name == 'console':  # Console doesn't use templates
+            continue
+
+        # Get the platform base path
+        platform_base = all_platform_paths.get(platform_name)
+        if not platform_base:
+            continue
+
+        # Check that brand content files exist
+        brand_dir = config.BRAND_DIR
+        mission_file = brand_dir / 'mission.txt'
+        vision_file = brand_dir / 'vision.md'
+        
+        if mission_file.exists() and vision_file.exists():
+            # Templates should reference these files or load their content
+            templates_dir = platform_base / 'templates'
+            if templates_dir.exists():
+                template_files = list(templates_dir.glob('*.html'))
+                # At least one template should exist if brand content is available
+                assert len(template_files) > 0, \
+                    f"CONTRACTOR FAILURE for {platform_name}: " \
+                    f"Brand content exists but no templates found in {templates_dir}."
+
+
+def test_contractor_creates_contract_when_all_validations_pass():
+    """
+    CONTRACTOR TEST: Contract creation when all validation steps pass.
+    
+    This test validates the core contractor workflow:
+    1. When brand assets are injected ✅
+    2. When SCSS is compiled to CSS ✅ 
+    3. When all brand requirements are validated ✅
+    4. When compliance enforcement passes ✅
+    5. THEN a formal contract MUST be created ✅
+    
+    FAILURE INDICATES: Contractor has not created required contract documentation.
+    """
+    all_platform_paths = get_presentation_apps()
+    
+    for platform_name, platform_info in config.PRESENTATION_APPS.items():
+        if platform_name == 'console':  # Console doesn't use CSS contracts
+            continue
+            
+        platform_base = all_platform_paths.get(platform_name)
+        if not platform_base:
+            continue
+            
+        # Step 1: Check if brand assets are injected (Designer's work)
+        css_dir = platform_base / 'static' / 'css'
+        scss_file = css_dir / 'main.scss'
+        
+        # Step 2: Check if SCSS is compiled to CSS (Designer's work)  
+        css_file = css_dir / 'main.css'
+        
+        # Step 3: Check if brand requirements are met
+        templates_dir = platform_base / 'templates'
+        base_template = templates_dir / 'base.html'
+        
+        # Only proceed with contract validation if all prerequisites are met
+        if (scss_file.exists() and 
+            css_file.exists() and 
+            css_file.stat().st_size > 0 and
+            base_template.exists()):
+            
+            # Step 4: Verify CSS contains brand colors (validation)
+            css_content = css_file.read_text()
+            brand_colors_present = ('#87CEEB' in css_content or 
+                                 'rgb(135, 206, 235)' in css_content)
+            
+            # Step 5: Verify templates reference CSS correctly (enforcement)
+            template_content = base_template.read_text()
+            css_linked = 'main.css' in template_content
+            
+            # IF ALL VALIDATIONS PASS, CONTRACTOR MUST CREATE CONTRACT
+            if brand_colors_present and css_linked:
+                # Contract file should exist
+                contracts_dir = config.PRESENTATION_DIR / 'contracts'
+                contract_file = contracts_dir / f'{platform_name}-brand-contract.md'
+                
+                assert contract_file.exists(), \
+                    f"CONTRACTOR FAILURE for {platform_name}: " \
+                    f"All validations passed (assets injected ✅, SCSS compiled ✅, " \
+                    f"brand colors present ✅, CSS linked ✅) but NO CONTRACT created. " \
+                    f"Expected contract at: {contract_file}"
+                
+                # Contract must not be empty
+                contract_content = contract_file.read_text()
+                assert len(contract_content.strip()) > 0, \
+                    f"CONTRACTOR FAILURE for {platform_name}: " \
+                    f"Contract exists at {contract_file} but is empty."
+                
+                # Contract must contain essential elements
+                assert 'BRAND IMPLEMENTATION CONTRACT' in contract_content, \
+                    f"CONTRACTOR FAILURE for {platform_name}: " \
+                    f"Contract at {contract_file} missing required header."
+                
+                assert platform_name in contract_content.lower(), \
+                    f"CONTRACTOR FAILURE for {platform_name}: " \
+                    f"Contract at {contract_file} doesn't specify platform."
+                
+                assert 'VALIDATED' in contract_content or 'PASSED' in contract_content, \
+                    f"CONTRACTOR FAILURE for {platform_name}: " \
+                    f"Contract at {contract_file} doesn't show validation status."
+
+
+def test_contractor_scaffold_validation():
+    """
+    CONTRACTOR VALIDATION: Verifies that presentation app scaffolding meets requirements.
+
+    This test validates that the basic structure and required files are in place
+    for each platform, ensuring scaffold compliance with architectural contracts.
+    """
+    validation_failures = []
+    all_platform_paths = get_presentation_apps()
+
+    for platform_name, platform_config in config.PRESENTATION_APPS.items():
+        platform_base = all_platform_paths.get(platform_name)
+        if not platform_base:
+            continue
+        
+        # Check if platform directory exists
+        if not platform_base.exists():
+            validation_failures.append(f"{platform_name}: Directory does not exist at {platform_base}")
+            continue
+        
+        # Check for required platform-specific files
+        required_files = []
+        if platform_name == "flask":
+            required_files = ["app.py", "static", "templates"]
+        elif platform_name == "angular":
+            required_files = ["package.json", "src", "angular.json"]
+        elif platform_name == "react":
+            required_files = ["package.json", "src", "public"]
+        elif platform_name == "vue":
+            required_files = ["package.json", "src", "public"]
+            
+        for required_file in required_files:
+            file_path = platform_base / required_file
+            if not file_path.exists():
+                validation_failures.append(f"{platform_name}: Missing required file/directory: {required_file}")
+    
+    assert not validation_failures, \
+        f"CONTRACTOR VALIDATION FAILURE: Scaffold validation failed:\n" + \
+        "\n".join(f"  - {failure}" for failure in validation_failures)
+
+def test_contractor_brand_compliance():
+    """
+    CONTRACTOR VALIDATION: Verifies that brand assets are properly integrated.
+
+    This test validates that all platforms have the required brand assets
+    in place and properly referenced, ensuring brand compliance contracts.
+    """
+    validation_failures = []
+    all_platform_paths = get_presentation_apps()
+
+    for platform_name, platform_config in config.PRESENTATION_APPS.items():
+        platform_base = all_platform_paths.get(platform_name)
+        if not platform_base:
+            continue
+        
+        if not platform_base.exists():
+            validation_failures.append(f"{platform_name}: Platform not scaffolded")
+            continue
+        
+        # Check for brand assets integration
+        if platform_name == "flask":
+            # Check for static assets
+            static_dir = platform_base / "static"
+            if static_dir.exists():
+                # Check for favicon
+                if not (static_dir / "favicon.ico").exists():
+                    validation_failures.append(f"{platform_name}: Missing favicon.ico in static directory")
+                
+                # Check for logo in images
+                images_dir = static_dir / "images"
+                if images_dir.exists():
+                    logo_files = list(images_dir.glob("logo.*"))
+                    if not logo_files:
+                        validation_failures.append(f"{platform_name}: Missing logo file in static/images")
+                else:
+                    validation_failures.append(f"{platform_name}: Missing static/images directory")
+            else:
+                validation_failures.append(f"{platform_name}: Missing static directory")
+    
+    assert not validation_failures, \
+        f"CONTRACTOR VALIDATION FAILURE: Brand compliance validation failed:\n" + \
+        "\n".join(f"  - {failure}" for failure in validation_failures)
+
+def test_contractor_asset_integration():
+    """
+    CONTRACTOR VALIDATION: Verifies that assets are properly integrated into templates.
+
+    This test validates that brand assets are not only present but also
+    properly referenced in the application templates and configurations.
+    """
+    validation_failures = []
+    all_platform_paths = get_presentation_apps()
+
+    for platform_name, platform_config in config.PRESENTATION_APPS.items():
+        platform_base = all_platform_paths.get(platform_name)
+        if not platform_base:
+            continue
+        
+        if not platform_base.exists():
+            validation_failures.append(f"{platform_name}: Platform not scaffolded")
+            continue
+        
+        # Platform-specific asset integration checks
+        if platform_name == "flask":
+            # Check if templates reference the favicon
+            templates_dir = platform_base / "templates"
+            if templates_dir.exists():
+                template_files = list(templates_dir.glob("*.html"))
+                favicon_referenced = False
+                logo_referenced = False
+                
+                for template_file in template_files:
+                    try:
+                        content = template_file.read_text(encoding='utf-8')
+                        if "favicon.ico" in content:
+                            favicon_referenced = True
+                        if "logo" in content.lower():
+                            logo_referenced = True
+                    except Exception as e:
+                        validation_failures.append(f"{platform_name}: Error reading template {template_file.name}: {e}")
+                
+                if not favicon_referenced:
+                    validation_failures.append(f"{platform_name}: Favicon not referenced in templates")
+                if not logo_referenced:
+                    validation_failures.append(f"{platform_name}: Logo not referenced in templates")
+            else:
+                validation_failures.append(f"{platform_name}: Missing templates directory")
+    
+    assert not validation_failures, \
+        f"CONTRACTOR VALIDATION FAILURE: Asset integration validation failed:\n" + \
+        "\n".join(f"  - {failure}" for failure in validation_failures)

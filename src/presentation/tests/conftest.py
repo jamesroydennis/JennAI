@@ -7,7 +7,7 @@ from core.dependency_container import DependencyContainer
 from config import config
 
 # --- Root Project Path Setup (CRITICAL for Imports) ---
-ROOT = Path(__file__).resolve().parent.parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from admin.presentation_utils import get_platform_paths

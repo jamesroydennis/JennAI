@@ -1,0 +1,128 @@
+{
+  "blueprint_metadata": {
+    "created_by": "Architect",
+    "creation_date": "2025-07-02",
+    "blueprint_version": "1.0",
+    "status": "approved",
+    "based_on": [
+      "src/presentation/brand/",
+      "notebooks/presentation_setup.ipynb",
+      "src/presentation/notebooks/presentation_blueprint.ipynb"
+    ]
+  },
+  "project_overview": {
+    "name": "JennAI Presentation Layer",
+    "mission": "To bridge the unyielding question",
+    "primary_framework": "Flask",
+    "brand_theme": "Technical sophistication with human-centered design"
+  },
+  "brand_assets": {
+    "logo": {
+      "primary": "jennai-logo.png",
+      "favicon_set": "jennai-favicon_io/"
+    },
+    "backgrounds": [
+      "background.jpg",
+      "background-light.jpg", 
+      "circuit-dark.jpg",
+      "circuit-light.jpg",
+      "heart-blackbackground.jpg",
+      "heart-blueforeground.jpg"
+    ],
+    "content_files": [
+      "mission.txt",
+      "vision.md", 
+      "problem_statement.md"
+    ],
+    "theme_source": "theme.scss"
+  },
+  "technical_requirements": {
+    "framework": "Flask",
+    "styling": "SCSS compilation to CSS",
+    "fonts": ["Inter", "Open Sans"],
+    "primary_colors": {
+      "background": "#87CEEB",
+      "primary": "#008B8B", 
+      "accent": "#FF6F61",
+      "text": "#333333"
+    }
+  },
+  "directory_structure": {
+    "root": "src/presentation/api_server/flask_app/",
+    "required_files": [
+      "app.py",
+      "static/css/main.css",
+      "static/css/theme.scss",
+      "static/js/scripts.js",
+      "static/img/jennai-logo.png",
+      "static/img/favicon.ico",
+      "templates/base.html",
+      "templates/index.html",
+      "routes/main_routes.py"
+    ]
+  },
+  "persona_handoffs": {
+    "contractor": {
+      "receives": "This complete blueprint for validation",
+      "must_deliver": "Feasibility assessment and implementation contract",
+      "decides": "Which presentation platform to prioritize"
+    },
+    "constructor": {
+      "receives": "Validated blueprint and contracts from contractor", 
+      "must_deliver": "Implemented Flask application structure",
+      "follows": "Directory structure and file specifications"
+    },
+    "designer": {
+      "receives": "Constructed application framework",
+      "must_deliver": "Brand-compliant styling and asset integration",
+      "ensures": "SCSS compilation and visual consistency"
+    },
+    "observer": {
+      "receives": "Completed implementation from all personas",
+      "must_deliver": "Final approval of brand adherence and blueprint compliance",
+      "validates": "Success criteria achievement"
+    }
+  },
+  "success_criteria": {
+    "technical": [
+      "Flask application runs without errors",
+      "All brand assets properly served",
+      "SCSS compiles successfully",
+      "Templates render correctly"
+    ],
+    "brand": [
+      "Mission and vision displayed accurately",
+      "Brand colors applied consistently", 
+      "Logo integration complete",
+      "Content messaging aligned"
+    ],
+    "architectural": [
+      "Directory structure matches blueprint",
+      "Separation of concerns maintained",
+      "Scalable for future development",
+      "Compatible with existing project"
+    ]
+  },
+  "implementation_phases": [
+    {
+      "phase": 1,
+      "persona": "Contractor",
+      "tasks": ["Validate blueprint", "Create implementation contracts", "Choose presentation platform"]
+    },
+    {
+      "phase": 2, 
+      "persona": "Constructor",
+      "tasks": ["Create directory structure", "Implement Flask application", "Set up routing"]
+    },
+    {
+      "phase": 3,
+      "persona": "Designer", 
+      "tasks": ["Copy brand assets", "Compile SCSS", "Integrate templates"]
+    },
+    {
+      "phase": 4,
+      "persona": "Observer",
+      "tasks": ["Validate implementation", "Verify brand compliance", "Approve final deliverable"]
+    }
+  ]
+}

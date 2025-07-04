@@ -1,5 +1,8 @@
 // Super Awesome Website Theme - Main Stylesheet
 
+// --- SCSS Module Imports ---
+@use 'sass:color';
+
 // --- Google Font Imports ---
 // Inter for Headings: Modern, clean, highly legible, optimized for UI
 // Open Sans for Body: Highly readable, versatile, humanist sans-serif
@@ -122,7 +125,7 @@ a {
   color: $theme-accent-1; // Using the reddish accent for links
   text-decoration: none;
   &:hover {
-    color: darken($theme-accent-1, 15%); // Slightly darker red on hover
+    color: color.adjust($theme-accent-1, $lightness: -15%); // Slightly darker red on hover
     text-decoration: underline;
   }
 }
@@ -138,7 +141,7 @@ a {
   font-size: 1em;
   transition: background-color 0.3s ease;
   &:hover {
-    background-color: darken($theme-accent-1, 10%);
+    background-color: color.adjust($theme-accent-1, $lightness: -10%);
   }
 }
 
