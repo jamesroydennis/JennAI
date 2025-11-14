@@ -6,6 +6,7 @@ data handling, and presentation layers.
 
 ## Project Structure
 
+- `.github/agents/`: Custom GitHub Copilot agents (including **Peter**, our coding agent).
 - `admin/`: Administrative scripts (cleanup, folder creation, regression runner).
 - `config/`: Configuration files and logging setup.
 - `core/`: Core utilities like the dependency injection container.
@@ -94,3 +95,25 @@ This script will:
     allure generate allure-results -o allure-report --clean
     allure open allure-report
     ```
+
+## Meet Peter - Your Coding Agent
+
+**Peter** is JennAI's custom GitHub Copilot coding agent, specialized in the JennAI codebase and architecture. Peter can help you with:
+
+- Writing Python code following JennAI's architectural patterns
+- Implementing Flask web application features
+- Working with AI services and business logic
+- Writing comprehensive tests with pytest
+- Understanding the monorepo structure and dependency injection patterns
+
+### Using Peter
+
+If you're using GitHub Copilot, you can invoke Peter for specialized assistance:
+
+```
+@peter help me implement a new feature in the Flask app
+```
+
+Peter knows the JennAI codebase inside and out and can provide context-aware coding assistance aligned with the project's mission: "To bridge the unyielding question."
+
+For more information about Peter and other custom agents, see [`.github/agents/README.md`](.github/agents/README.md).
