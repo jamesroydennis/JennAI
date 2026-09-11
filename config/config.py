@@ -102,6 +102,20 @@ READ_ONLY_MODE = os.getenv("READ_ONLY_MODE", "False").lower() in ('true', '1', '
 LIVE_INFERENCE_MODE = os.getenv("LIVE_INFERENCE_MODE", "False").lower() in ('true', '1', 't')
 MAINTENANCE_MODE = os.getenv("MAINTENANCE_MODE", "False").lower() in ('true', '1', 't')
 
+# ============================================================================
+# 8b. AI PROVIDER CONFIGURATION
+# ============================================================================
+# Supported AI providers and the environment variable holding their API key.
+# Add new providers here as additional implementations of IAIService are created.
+AI_PROVIDERS = {
+    "gemini": {"api_key_env": "GOOGLE_API_KEY"},
+    "openai": {"api_key_env": "OPENAI_API_KEY"},
+}
+
+# The active AI provider, selectable via the AI_PROVIDER environment variable.
+# Defaults to "gemini" to preserve existing behavior.
+AI_PROVIDER = os.getenv("AI_PROVIDER", "gemini").lower()
+
 
 # ============================================================================
 # 9. (OPTIONAL) BRANDING & ASSET PATHS

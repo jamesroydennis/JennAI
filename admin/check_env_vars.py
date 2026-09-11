@@ -14,15 +14,20 @@ from rich.console import Console
 from rich.table import Table
 
 # Load environment variables from .env file so os.getenv() works as expected.
+# This must happen before importing config.config, since AI_PROVIDER is
+# resolved from the environment at import time.
 load_dotenv(dotenv_path=ROOT / ".env")
+
+from config.config import AI_PROVIDER, AI_PROVIDERS
 
 def main():
     """
     Checks for the presence of critical environment variables and displays their status.
     """
     console = Console()
+    # Only the API key for the currently configured AI_PROVIDER is required.
     REQUIRED_VARS = [
-        "GOOGLE_API_KEY",
+        AI_PROVIDERS[AI_PROVIDER]["api_key_env"],
         # Add other critical environment variables here as the project grows
     ]
 

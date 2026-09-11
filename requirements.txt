@@ -1,5 +1,6 @@
 pydantic
 google-generativeai
+openai
 loguru>=0.7.0
 pytest>=7.0
 pytest-loguru
