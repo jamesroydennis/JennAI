@@ -8,12 +8,19 @@ class AIGenerator(IAIService): # Inherit from IAIService
     """
     Concrete implementation of IAIService using a Gemini-like model.
     """
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, provider: str = "gemini", api_resource: str = "gemini-pro"):
         if not api_key:
             logger.error("API key must be provided for AIGenerator.")
             raise ValueError("API key must be provided for AIGenerator.")
+        normalized_provider = provider.strip().lower()
+        if normalized_provider != "gemini":
+            logger.error(f"Unsupported AI provider: '{provider}'.")
+            raise ValueError(f"Unsupported AI provider: '{provider}'.")
+        normalized_resource = api_resource.strip() or "gemini-pro"
         self.api_key = api_key
-        self.model = GenerativeModel("gemini-pro") # Initialize the model
+        self.provider = normalized_provider
+        self.api_resource = normalized_resource
+        self.model = GenerativeModel(normalized_resource) # Initialize the configured model/resource
         logger.info(f"AIGenerator initialized with API Key (masked): {api_key[:5]}...")
 
     def generate_text(self, prompt: str, options: Optional[Dict[str, Any]] = None) -> str:

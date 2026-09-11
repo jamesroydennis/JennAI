@@ -20,6 +20,13 @@ VERSION = "0.1.0"  # Your project's version
 GEMINI_VERSION = "2025-06-27T07:00:00Z"  # A timestamp to mark the state of the codebase when Gemini assisted
 
 # ============================================================================
+# 1.1 AI PROVIDER CONFIGURATION
+# ============================================================================
+AI_PROVIDER = os.getenv("AI_PROVIDER", "gemini").strip().lower()
+AI_API_RESOURCE = os.getenv("AI_API_RESOURCE", "gemini-pro").strip()
+AI_API_KEY = os.getenv("AI_API_KEY", "").strip() or os.getenv("GOOGLE_API_KEY", "").strip()
+
+# ============================================================================
 # 2. ROOT & DIRECTORY STRUCTURE
 # ============================================================================
 ROOT = Path(__file__).resolve().parent.parent

@@ -14,14 +14,19 @@ def configure_project_business_dependencies(container: DependencyContainer):
     logger.info("INFO - Configuring src/business dependencies (conceptual).")
 
     # --- AI Service Registration (Conceptual) ---
+    from config.config import AI_API_KEY, AI_API_RESOURCE, AI_PROVIDER
+    from src.business.ai.gemini_api import AIGenerator
     from src.business.interfaces.IAIService import IAIService
-    # Placeholder for a concrete AI service implementation
-    class AIGenerator(IAIService):
-        def generate_text(self, prompt: str) -> str:
-            logger.info(f"AIGenerator: Generating text for prompt: {prompt[:50]}...")
-            return "Conceptual AI generated text."
-    container.register_singleton(IAIService, AIGenerator)
-    logger.info("Registered AIGenerator for IAIService.")
+
+    container.register_singleton(
+        IAIService,
+        lambda: AIGenerator(
+            api_key=AI_API_KEY,
+            provider=AI_PROVIDER,
+            api_resource=AI_API_RESOURCE,
+        ),
+    )
+    logger.info(f"Registered AIGenerator for IAIService using provider '{AI_PROVIDER}'.")
     # We log success to align with the integration test's expectations for this layer.
     logger.success("SUCCESS - src/business dependencies configured (conceptual).")
 
