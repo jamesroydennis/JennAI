@@ -22,7 +22,7 @@ def main():
     """
     console = Console()
     REQUIRED_VARS = [
-        "GOOGLE_API_KEY",
+        "AI_API_KEY",
         # Add other critical environment variables here as the project grows
     ]
 
@@ -33,6 +33,8 @@ def main():
     all_found = True
     for var in REQUIRED_VARS:
         value = os.getenv(var)
+        if var == "AI_API_KEY":
+            value = value or os.getenv("GOOGLE_API_KEY")
         if value:
             # For security, show that it's set but not the value itself.
             status = "[green]✅ Set[/green]"
